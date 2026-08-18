@@ -91,10 +91,21 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Baked into the bundle: Pages and the Worker are different origins.
+      # Baked into the bundle: Pages and the Worker are different origins, and
+      # the origin is fixed at BUILD time, so it is selected per tool here rather
+      # than read at runtime. Picking the wrong one fails every scan with a CORS
+      # error and nothing useful in the console.
+      #
+      # VITE_LUMIOGUARD_APP_URL is THE switch for the optional integration. Left
+      # unset - which is what a fork gets - the report ships with no hand-off
+      # button, no offer and no LumioGuard wordmark anywhere on the page.
       - name: build web
         env:
-          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_SLOPMETER }}
+          VITE_API_BASE_URL: >-
+            ${{ inputs.tool == 'slopmeter'
+                && vars.VITE_API_BASE_URL_SLOPMETER
+                || vars.VITE_API_BASE_URL_LEAKPEEK }}
+          VITE_LUMIOGUARD_APP_URL: ${{ vars.VITE_LUMIOGUARD_APP_URL }}
         run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run build
 
       - run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run deploy
