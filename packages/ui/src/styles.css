@@ -1,0 +1,519 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    /*
+     * Both elements, not just body. Clipping body alone leaves the root still
+     * tracking the pre-clip width, so the page reported 650px of scrollable
+     * content inside a 390px viewport while nothing was visibly out of place.
+     */
+    overflow-x: clip;
+  }
+
+  /*
+   * Ruled stock. Fixed, so the page moves over the paper rather than dragging
+   * it — and it is the reason the drawn frames read as drawn rather than as an
+   * odd border-radius.
+   */
+  body {
+    @apply bg-paper-base bg-rule-lined font-sans text-body text-ink-1 antialiased;
+    background-attachment: fixed;
+    /*
+     * Ink is allowed past the edge of the paper; the page is not allowed to
+     * scroll sideways because of it. The splash behind the seal, the second
+     * pass of every drawn frame and the tilt on the render all bleed by a few
+     * pixels each, which on a narrow screen added up to 39px of empty
+     * horizontal scroll. `clip` rather than `hidden`: hidden would make this a
+     * scroll container and take `position: sticky` with it.
+     */
+    overflow-x: clip;
+  }
+
+  :focus-visible {
+    @apply rounded-radius-sm shadow-elev-ring outline-none;
+  }
+}
+
+@layer components {
+  /*
+   * The drawn box.
+   *
+   * Uneven per-corner radii are what make a CSS rectangle read as something a
+   * pen made. Four hands cycle across the grid so no two neighbours match — a
+   * repeated identical "hand-drawn" shape reads as fake faster than a plain
+   * rectangle does.
+   *
+   * And it is drawn twice: the ::after is the second pass of the pen, slightly
+   * off. Nobody draws a box once.
+   */
+  .pen-box {
+    @apply relative border-[1.7px] border-pen-600 bg-paper-raised p-6;
+    border-radius: theme("borderRadius.drawn-a");
+  }
+
+  .pen-box::after {
+    content: "";
+    position: absolute;
+    inset: -4px 2px 1px -3px;
+    pointer-events: none;
+    border: 1px solid theme("colors.pen.700");
+    border-radius: inherit;
+    opacity: 0.55;
+  }
+
+  .pen-box--b {
+    border-radius: theme("borderRadius.drawn-b");
+  }
+  .pen-box--c {
+    border-radius: theme("borderRadius.drawn-c");
+  }
+  .pen-box--d {
+    border-radius: theme("borderRadius.drawn-d");
+  }
+
+  /* Provenance is quarantined by its frame, not by a disclaimer. */
+  .pen-box--dashed {
+    @apply border-dashed;
+  }
+
+  /* The reading, ringed in the second pen. */
+  .pen-box--red {
+    @apply border-red-700;
+  }
+  .pen-box--red::after {
+    border-color: theme("colors.red.700");
+    opacity: 0.4;
+  }
+
+  /* Panel title: the written register. */
+  .pen-title {
+    @apply m-0 font-hand text-h3 text-hand;
+  }
+
+  /* Kicker: the printed register, at the 12px floor. */
+  .pen-kicker {
+    @apply mt-[2px] text-micro font-bold uppercase text-ink-3;
+  }
+}
+
+@layer utilities {
+  /*
+   * The scan is the one authored moment. Everything else on the page stays
+   * still.
+   *
+   * The final state is the DOM default, so a failed script or a reduced-motion
+   * visitor still reads the answer. These only ever add motion to something
+   * already correct.
+   */
+  @keyframes strike {
+    0% {
+      transform: translate(84px, -232px) scale(4.2) rotate(26deg);
+      opacity: 0;
+      filter: blur(11px);
+    }
+    20% {
+      opacity: 0.6;
+    }
+    44% {
+      transform: translate(44px, -104px) scale(2.35) rotate(11deg);
+      opacity: 1;
+      filter: blur(5px);
+    }
+    64% {
+      transform: translate(11px, -24px) scale(1.32) rotate(1deg);
+      filter: blur(1.6px);
+    }
+    /* the bite: smaller than rest, pressed into the paper */
+    75% {
+      transform: translate(0, 0) scale(0.9) rotate(-0.8deg);
+      filter: blur(0);
+    }
+    85% {
+      transform: translate(0, 0) scale(1.07) rotate(-4.8deg);
+    }
+    93% {
+      transform: translate(0, 0) scale(0.978) rotate(-2.6deg);
+    }
+    100% {
+      transform: translate(0, 0) scale(1) rotate(-3.2deg);
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+
+  /* the blow, felt by the page: a damped shudder, not a wobble */
+  @keyframes jolt {
+    0% {
+      transform: translate(0, 0);
+    }
+    16% {
+      transform: translate(-2px, 4px);
+    }
+    34% {
+      transform: translate(3px, -3px);
+    }
+    54% {
+      transform: translate(-2px, 2px);
+    }
+    74% {
+      transform: translate(1px, -1px);
+    }
+    100% {
+      transform: translate(0, 0);
+    }
+  }
+
+  @keyframes spat {
+    0% {
+      transform: translate(0, 0) scale(0.1);
+      opacity: 0.95;
+    }
+    18% {
+      opacity: 0.9;
+    }
+    100% {
+      transform: translate(var(--dx), var(--dy)) scale(1.25);
+      opacity: 0;
+    }
+  }
+
+  /*
+   * What arrives with the reading settles into place; what was on screen
+   * through the read does not.
+   *
+   * This used to be positional — every panel but the first — which was right
+   * when the report was the only thing that appeared. The verdict, the render
+   * and the culprits are all mounted from the first moment now, so the panels
+   * that settle are named rather than counted: re-animating a panel that never
+   * left says something changed where nothing did.
+   */
+  .settles-in {
+    animation: sweep-in 380ms cubic-bezier(0.2, 0, 0, 1) both;
+    animation-delay: 40ms;
+  }
+  .settles-in--late {
+    animation-delay: 110ms;
+  }
+
+  /*
+   * The panel beside the render is not empty while the read runs; it is being
+   * ruled. Lines laid down in turn, held, then lifted and laid down again —
+   * the same pen as the narration under the meter, so the wait reads as one
+   * instrument rather than two. It never fills or counts: there is nothing
+   * honest to fill it with until the reading lands.
+   */
+  @keyframes ruling {
+    0% {
+      clip-path: inset(-40% 100% -40% 0);
+      opacity: 0.85;
+    }
+    18%,
+    74% {
+      clip-path: inset(-40% -2% -40% 0);
+      opacity: 0.85;
+    }
+    93%,
+    100% {
+      clip-path: inset(-40% -2% -40% 0);
+      opacity: 0;
+    }
+  }
+
+  .ruling {
+    animation: ruling 2800ms cubic-bezier(0.22, 0.75, 0.3, 1) infinite both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .settles-in,
+    .ruling {
+      animation: none;
+    }
+    .ruling {
+      opacity: 0.5;
+    }
+  }
+
+  /*
+   * The wait is written, not spun.
+   *
+   * Each pass is laid down left to right the way a pen lays ink, so the one
+   * moving thing on the screen belongs to the world rather than being a
+   * borrowed spinner. The clip runs a little past both edges: at exactly 0 the
+   * last glyph's overhang is shaved, and descenders are cut off the bottom.
+   */
+  @keyframes write {
+    from {
+      clip-path: inset(-30% 100% -30% 0);
+    }
+    to {
+      clip-path: inset(-30% -6% -30% 0);
+    }
+  }
+
+  .writing {
+    animation: write 520ms cubic-bezier(0.22, 0.75, 0.3, 1) both;
+  }
+
+  /* The nib resting on the line between passes. */
+  @keyframes nib {
+    0%,
+    45% {
+      opacity: 1;
+    }
+    55%,
+    100% {
+      opacity: 0.2;
+    }
+  }
+
+  .nib {
+    animation: nib 1100ms steps(1, end) infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .writing,
+    .nib {
+      animation: none;
+    }
+  }
+
+  /*
+   * The verdict landing, in four beats.
+   *
+   * The meter has the whole panel while it reads. When the answer arrives the
+   * needle locks first, then the meter contracts to make room, the figure is
+   * written into the space that opened, and the stamp comes down last. Each
+   * beat waits for the one before it; fired together they read as a flinch
+   * rather than as a sequence.
+   *
+   * The needle survives the contraction because it rests on `left: score%`,
+   * which is width-independent. It slides in with the meter rather than being
+   * re-animated, so the answer never moves off the band it landed on.
+   */
+  .verdict-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /*
+   * The figure takes a column of its own from 768px, not from 1024px.
+   *
+   * Stacked, the stamp and the number claim a full-width row and use a quarter
+   * of it — 503px of blank paper beside them at 768px, and 249px of panel
+   * height that the same content does not cost on a desktop. The column is set
+   * to the die's own width there (168px, the seal's size below `lg`) so the
+   * meter keeps everything the figure does not need.
+   */
+  @media (min-width: 768px) {
+    .verdict-grid {
+      grid-template-columns: 0 minmax(0, 1fr);
+      column-gap: 0;
+      transition: grid-template-columns 640ms cubic-bezier(0.16, 1, 0.3, 1), column-gap 640ms
+        cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    /*
+     * 168px is the die's own width below `lg`, and the gutter is tighter than
+     * the desktop's 44px because the meter needs what is left: at 28px the way
+     * on came to 477px against 475px of column and wrapped the primary onto its
+     * own line, missing by two pixels at exactly 768px and fitting at 770.
+     */
+    .verdict-grid.is-open {
+      grid-template-columns: 168px minmax(0, 1fr);
+      column-gap: 20px;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .verdict-grid.is-open {
+      grid-template-columns: 200px minmax(0, 1fr);
+      column-gap: 44px;
+    }
+  }
+
+  /* the passes stepping aside for the answer */
+  @keyframes pass-out {
+    to {
+      opacity: 0;
+      transform: translateY(-12px);
+    }
+  }
+
+  .pass-out {
+    animation: pass-out 320ms cubic-bezier(0.4, 0, 1, 1) both;
+  }
+
+  /*
+   * The figure arrives oversized and soft and settles to size, the same move
+   * the stamp makes, so the two read as one hand. Anchored left so the digits
+   * grow out of their own left edge rather than drifting across the column.
+   */
+  @keyframes figure-in {
+    from {
+      opacity: 0;
+      transform: scale(1.22);
+      filter: blur(7px);
+    }
+    55% {
+      opacity: 1;
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+      filter: blur(0);
+    }
+  }
+
+  .figure-in {
+    animation: figure-in 700ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    transform-origin: left center;
+  }
+
+  /* the denominator, a beat behind the number it belongs to */
+  @keyframes denominator-in {
+    from {
+      opacity: 0;
+      transform: translateY(7px) scale(0.86);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .denominator-in {
+    animation: denominator-in 460ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 260ms;
+    transform-origin: left bottom;
+  }
+
+  /* the verdict in words, then what to do about it */
+  @keyframes rise-in {
+    from {
+      opacity: 0;
+      transform: translateY(14px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .rise-in {
+    animation: rise-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  .rise-in-late {
+    animation: rise-in 600ms cubic-bezier(0.16, 1, 0.3, 1) both;
+    animation-delay: 160ms;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .verdict-grid {
+      transition: none;
+    }
+    .pass-out,
+    .figure-in,
+    .denominator-in,
+    .rise-in,
+    .rise-in-late {
+      animation: none;
+    }
+  }
+
+  /*
+   * Light crossing the way on, again every few seconds.
+   *
+   * Two things this gets wrong if written the obvious way. An ease-out makes
+   * the band crawl as it leaves, so it reads as stuck against the edge rather
+   * than as light passing: the travel is linear, at the speed a reflection
+   * actually moves. And a sweep on a loop with no gap is a checkout page, so
+   * the crossing takes a fifth of the cycle and the rest is the pause, spent
+   * parked off the right edge where nothing shows.
+   *
+   * Clipped by the chip's own drawn radius, so the light stops where the ink
+   * does rather than at a rectangle nobody drew.
+   */
+  @keyframes sheen {
+    0% {
+      transform: translateX(-130%) skewX(-18deg);
+    }
+    20% {
+      transform: translateX(330%) skewX(-18deg);
+    }
+    100% {
+      transform: translateX(330%) skewX(-18deg);
+    }
+  }
+
+  .sheen {
+    position: relative;
+    overflow: hidden;
+  }
+
+  .sheen::after {
+    content: "";
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 34%;
+    pointer-events: none;
+    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+    animation: sheen 4600ms linear 780ms infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .sheen::after {
+      animation: none;
+      opacity: 0;
+    }
+  }
+
+  /* Held back on its own state: the reading arrives ~600ms before the stamp
+     lands, so tying the seal's reveal to "scanning" showed it fully formed and
+     only then animated it. */
+  .is-armed .seal-wrap {
+    opacity: 0;
+  }
+
+  .is-stamping .seal {
+    animation: strike 660ms cubic-bezier(0.16, 0.86, 0.22, 1) both;
+    will-change: transform, filter;
+  }
+
+  .is-stamping .seal-jolt {
+    animation: jolt 300ms cubic-bezier(0.25, 0.9, 0.35, 1) both;
+    animation-delay: 495ms;
+  }
+
+  .is-stamping .splash {
+    opacity: 1;
+  }
+
+  .is-stamping .splash ellipse {
+    animation: spat 700ms cubic-bezier(0.15, 0.95, 0.3, 1) forwards;
+    animation-delay: calc(495ms + var(--d, 0ms));
+  }
+
+  .splash ellipse {
+    transform-box: fill-box;
+    transform-origin: center;
+    transform: scale(0);
+    opacity: 0;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .is-stamping .seal,
+    .is-stamping .seal-jolt,
+    .is-stamping .splash ellipse {
+      animation: none;
+    }
+    .is-stamping .splash {
+      opacity: 0;
+    }
+    .is-armed .seal-wrap {
+      opacity: 1;
+    }
+  }
+}

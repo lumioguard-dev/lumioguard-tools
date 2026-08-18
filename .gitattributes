@@ -1,0 +1,10 @@
+# LF in the repository and LF in the working tree, on every platform.
+#
+# Without this, Windows' `core.autocrlf=true` checks every file out with CRLF
+# while biome.json pins `"lineEnding": "lf"`, so the formatter and the checkout
+# disagree by construction: `pnpm lint` came back with 27 line-ending errors
+# immediately after a merge, on files nobody had touched. Two settings that must
+# agree and cannot fail together.
+#
+# `text=auto` still lets git detect binaries and leave them alone.
+* text=auto eol=lf

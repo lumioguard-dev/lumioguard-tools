@@ -1,0 +1,8 @@
+# `packages/*` is what every tool shares; `tools/*` is one folder per tool, each
+# holding its own `api`, `web` and `core`. A new tool is added by creating
+# `tools/<name>/` — the glob picks it up with no edit here.
+packages:
+  - "packages/*"
+  - "tools/*/api"
+  - "tools/*/web"
+  - "tools/*/core"

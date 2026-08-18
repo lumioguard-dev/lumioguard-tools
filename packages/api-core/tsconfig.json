@@ -1,0 +1,10 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "@lumioguard/shared": ["../shared/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

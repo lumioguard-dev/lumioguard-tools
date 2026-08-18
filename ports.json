@@ -1,0 +1,13 @@
+{
+  "$comment": "Dev port allocations. THE source of truth; CONTRIBUTING.md explains the blocks. Read by each tool's vite.config.ts (proxy target + server port) and by scripts/dev-worker.mjs (the Worker's --port), so a tool's two numbers are one number and cannot drift apart.",
+  "host": "127.0.0.1",
+  "reserved": {
+    "$comment": "Owned by the stack-guard repo. Nothing here may bind these.",
+    "stack-guard-web": 5173,
+    "stack-guard-api": 8787
+  },
+  "tools": {
+    "slopmeter": { "web": 5210, "api": 8810 },
+    "leakpeek": { "web": 5220, "api": 8820 }
+  }
+}
