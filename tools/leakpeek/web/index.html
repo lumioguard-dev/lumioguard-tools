@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Leakpeek, what is this site leaking?</title>
+    <meta
+      name="description"
+      content="Reads a deployed site and reports what it exposes: secrets in the bundle, a database with RLS missing, source maps, absent security headers. Built for sites made with AI tools."
+    />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta name="color-scheme" content="light dark" />
+    <!-- Before first paint, so a visitor who chose dark last time never sees a
+         frame of light paper. Inline and synchronous on purpose. -->
+    <script>
+      (function () {
+        try {
+          // Must match THEME_STORAGE_KEY in @lumioguard/design-tokens, which
+          // useTheme reads; the pre-paint script and the app have to agree or a
+          // saved dark choice flashes light for one frame. The key is shared
+          // across tools and origins isolate storage, so its name is cosmetic.
+          var stored = localStorage.getItem("slopmeter-theme");
+          document.documentElement.setAttribute(
+            "data-theme",
+            stored === "dark" || stored === "light" ? stored : "light"
+          );
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+    <!-- Two registers: Architects Daughter is what a person wrote, Archivo is
+         what a machine printed. The split carries meaning, not emphasis. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Architects+Daughter&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

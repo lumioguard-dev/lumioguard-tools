@@ -1,0 +1,21 @@
+name = "lumioguard-leakpeek-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+[vars]
+ALLOWED_ORIGINS = "*"
+
+[env.production]
+name = "lumioguard-leakpeek-api"
+
+# leakpeek-api.lumioguard.dev, attached as a custom domain in the dashboard: the
+# deploy token has no zone-level permission, so declaring the route here fails
+# the deploy at the route step even after the script uploads. ONE label deep, on
+# the Free plan's `*.lumioguard.dev` wildcard cert.
+
+[env.production.vars]
+# The client is served from Pages, a different origin, so CORS is load-bearing.
+ALLOWED_ORIGINS = "https://lumioguard-leakpeek-web.pages.dev"
+# Only this deployment records. Absent from [vars] so a fork's plain
+# `wrangler deploy` posts nowhere; recording also needs LEAKPEEK_INGEST_SECRET.
+LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"
