@@ -1,0 +1,49 @@
+{
+  "name": "lumioguard-tools",
+  "private": true,
+  "version": "0.1.0",
+  "description": "A home for URL-only tools that read a public website and report something true about it. Each tool is a detection engine, a Worker and a client; they share the contracts, tokens and surface in packages/.",
+  "keywords": [
+    "website-audit",
+    "static-analysis",
+    "security-scanner",
+    "cloudflare-workers",
+    "monorepo",
+    "typescript"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/lumiostack/lumioguard-tools#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lumiostack/lumioguard-tools.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lumiostack/lumioguard-tools/issues"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.12.3",
+  "scripts": {
+    "build": "turbo run build",
+    "typecheck": "turbo run typecheck",
+    "test": "turbo run test --concurrency=1",
+    "lint": "biome check .",
+    "format": "biome format --write .",
+    "dev": "turbo run dev",
+    "deploy": "turbo run deploy"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "1.9.4",
+    "@types/node": "^22.10.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "@biomejs/biome": "1.9.4"
+    }
+  }
+}

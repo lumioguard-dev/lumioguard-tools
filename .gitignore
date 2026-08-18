@@ -1,0 +1,32 @@
+node_modules/
+dist/
+coverage/
+.turbo/
+.vite/
+.wrangler/
+*.tsbuildinfo
+
+.env
+.env.*
+*.env
+.env.local
+.dev.vars
+!.env.example
+
+.dev-logs/
+
+# Impeccable's working directory: per-run critiques, question logs and local
+# config. Scratch output of a tool that reads the code, not part of the code.
+# Matches the folder only, so `impeccableRules.ts` in the rule pack is untouched.
+.impeccable/
+
+# Impeccable regenerates PRODUCT.md on every run. Each tool's README is the
+# authority on what it is, so a second generated description of the same tool
+# is a copy that goes stale unnoticed.
+PRODUCT.md
+
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/*
+!.vscode/extensions.json

@@ -1,0 +1,76 @@
+name: Release
+
+# Tags the root package.json version and bumps it. Does NOT deploy.
+on:
+  workflow_dispatch:
+    inputs:
+      next_bump:
+        description: "After tagging, bump the version to prepare the next release"
+        type: choice
+        options:
+          - patch
+          - minor
+          - major
+        default: patch
+
+permissions:
+  contents: write # create the tag + Release, and push the version bump
+
+jobs:
+  # Reuse the full gate so a release can never tag an unbuildable commit.
+  build:
+    uses: ./.github/workflows/build.yml
+
+  tag-and-release:
+    name: tag + Release + bump
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # need tags + history to push the bump
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.12.3 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      - name: Read the release version
+        id: v
+        run: echo "version=$(node scripts/set-monorepo-version.mjs --print)" >> "$GITHUB_OUTPUT"
+
+      - name: Fail if the tag already exists
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          if git rev-parse "v$VERSION" >/dev/null 2>&1; then
+            echo "::error::tag v$VERSION already exists — bump the version first"
+            exit 1
+          fi
+
+      - name: Create tag + GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: gh release create "v$VERSION" --target "${{ github.sha }}" --title "v$VERSION" --generate-notes
+
+      - name: Bump the version for the next cycle
+        env:
+          BUMP: ${{ inputs.next_bump }}
+          VERSION: ${{ steps.v.outputs.version }}
+        run: |
+          NEXT=$(node -e "const [a,b,c]=process.env.VERSION.split('.').map(Number);const t=process.env.BUMP;console.log(t==='major'?(a+1)+'.0.0':t==='minor'?a+'.'+(b+1)+'.0':a+'.'+b+'.'+(c+1))")
+          node scripts/set-monorepo-version.mjs "$NEXT"
+          git config user.name "LumioGuard DevOps"
+          git config user.email "hello@lumioguard.dev"
+          # -u only: `git add -A` sweeps untracked package.json files into master.
+          git add -u -- '*.json'
+          git commit -m "chore(release): bump to v$NEXT for next release [skip ci]"
+          git push origin "HEAD:${{ github.ref_name }}"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.v.outputs.version }}
+        run: echo "Released **v$VERSION**. Deploy it with the Deploy workflow (version=$VERSION)." >> "$GITHUB_STEP_SUMMARY"

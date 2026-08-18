@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "types": ["vite/client"],
+    "paths": {
+      "@lumioguard/shared": ["../shared/src/index.ts"],
+      "@lumioguard/web-core": ["../web-core/src/index.ts"],
+      "@lumioguard/design-tokens": ["../design-tokens/src/index.ts"],
+      "@lumioguard/design-tokens/tailwind": ["../design-tokens/src/tailwind/plugin.ts"]
+    }
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx"]
+}

@@ -1,0 +1,100 @@
+name: Deploy
+
+# Deploys one tool from a released tag, api first (see CONTRIBUTING.md).
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Released version to deploy, e.g. 0.1.0 (checks out tag v0.1.0)"
+        required: true
+        type: string
+      tool:
+        description: "Which tool to deploy"
+        required: true
+        type: choice
+        options:
+          - slopmeter
+          - leakpeek
+      target:
+        description: "Which half of it"
+        required: true
+        default: both
+        type: choice
+        options:
+          - both
+          - api
+          - web
+
+# Never let two deploys of the same tool overlap; let an in-flight one finish.
+concurrency:
+  group: deploy-${{ inputs.tool }}
+  cancel-in-progress: false
+
+env:
+  CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+  CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+jobs:
+  verify:
+    name: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.12.3 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint
+      - run: pnpm typecheck
+      - run: pnpm test
+
+  deploy-api:
+    name: deploy ${{ inputs.tool }} api
+    needs: verify
+    if: inputs.target == 'both' || inputs.target == 'api'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.12.3 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
+
+  deploy-web:
+    name: deploy ${{ inputs.tool }} web
+    needs: [verify, deploy-api]
+    # `always()` so a web-only deploy is not blocked by the api job being skipped.
+    if: always() && needs.verify.result == 'success' && (inputs.target == 'both' || inputs.target == 'web') && needs.deploy-api.result != 'failure'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: v${{ inputs.version }}
+      - uses: pnpm/action-setup@v4
+        with: { version: 9.12.3 }
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+
+      # Baked into the bundle: Pages and the Worker are different origins.
+      - name: build web
+        env:
+          VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL_SLOPMETER }}
+        run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run build
+
+      - run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run deploy
