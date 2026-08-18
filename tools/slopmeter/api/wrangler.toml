@@ -1,0 +1,32 @@
+name = "lumioguard-slopmeter-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-18"
+
+# SLOPMETER_INGEST_SECRET is a secret, not a var: set it with
+# `wrangler secret put SLOPMETER_INGEST_SECRET` and give LumioGuard's public-api
+# the same value under the same name. Unset, readings are simply not recorded
+# and the scan is unaffected.
+
+# No LUMIOGUARD_API_BASE_URL here on purpose. The default environment is what a
+# fork's `wrangler deploy` uses, and an address in it would send that fork's
+# readings to an API it does not own. Recording is opt-in, per environment.
+[vars]
+ALLOWED_ORIGINS = "*"
+
+[env.production]
+name = "lumioguard-slopmeter-api"
+
+# slopmeter-api.lumioguard.dev, attached as a custom domain in the dashboard:
+# the deploy token has no zone-level permission, and declaring it here fails the
+# whole deploy at the route step even after the script uploads.
+#
+# ONE label deep. lumioguard.dev is on the Free plan, whose Universal SSL cert
+# covers the apex and `*.lumioguard.dev` only — `slopmeter.api.lumioguard.dev`
+# sits outside that wildcard and would serve a TLS error.
+
+[env.production.vars]
+# The client is served from Pages, a different origin to this Worker, so CORS is
+# load-bearing. Comma-separated: add the origin, not a wildcard, if it ever gets
+# a domain of its own.
+ALLOWED_ORIGINS = "https://lumioguard-slopmeter-web.pages.dev"
+LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"

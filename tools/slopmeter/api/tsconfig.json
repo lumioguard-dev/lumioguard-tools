@@ -1,0 +1,15 @@
+{
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    // No rootDir/outDir: wrangler bundles this Worker, so tsc only typechecks.
+    // Setting rootDir would reject the workspace sources reached through paths.
+    "noEmit": true,
+    "types": ["@cloudflare/workers-types"],
+    "paths": {
+      "@lumioguard/shared": ["../../../packages/shared/src/index.ts"],
+      "@lumioguard/api-core": ["../../../packages/api-core/src/index.ts"],
+      "@lumioguard/slopmeter-core": ["../core/src/index.ts"]
+    }
+  },
+  "include": ["src/**/*.ts"]
+}

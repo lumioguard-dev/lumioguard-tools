@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <title>Slopmeter</title>
+  <rect width="32" height="32" rx="7" fill="#c83b01"/>
+  <path d="M6 22a10 10 0 0 1 20 0" fill="none" stroke="#ffe9df" stroke-width="3" stroke-linecap="round"/>
+  <path d="M16 22 22.5 13" fill="none" stroke="#ffffff" stroke-width="3" stroke-linecap="round"/>
+</svg>
