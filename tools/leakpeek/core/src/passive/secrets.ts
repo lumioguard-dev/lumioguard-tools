@@ -1,12 +1,12 @@
 import type { ExposureFinding } from '../domain/ExposureFinding.js';
 
 /**
- * Secrets baked into the served client bundle — the most common real leak on an
+ * Secrets baked into the served client bundle: the most common real leak on an
  * AI-built site, and fully passive: it is read from what the browser already
  * downloaded, nothing is probed.
  *
  * Two things this must get right. First, evidence is MASKED here, at the source,
- * so a raw key never travels further than this function — the report proves the
+ * so a raw key never travels further than this function: the report proves the
  * key exists without reprinting it (see the README). Second, a
  * Supabase `anon` key in a bundle is NORMAL and is not reported: it is public by
  * design. Only the `service_role` key is a leak, and the two are told apart by
@@ -93,7 +93,7 @@ export function scanForSecrets(sources: string): ExposureFinding[] {
   const seen = new Set<string>();
 
   // Supabase service_role: a JWT whose decoded role is service_role. The anon
-  // key is a JWT too and is deliberately NOT reported — it is meant to be public.
+  // key is a JWT too and is deliberately NOT reported: it is meant to be public.
   for (const token of sources.match(JWT) ?? []) {
     if (jwtRole(token) !== 'service_role') continue;
     const key = `service_role:${token.slice(0, 12)}`;

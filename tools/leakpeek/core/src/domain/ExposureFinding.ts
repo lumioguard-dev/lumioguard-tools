@@ -1,6 +1,6 @@
 import type { ExposureCategory, Severity } from '@lumioguard/shared';
 
-/** One exposure, as the engine produces it — a superset of the wire finding. */
+/** One exposure, as the engine produces it: a superset of the wire finding. */
 export interface ExposureFinding {
   readonly code: string;
   readonly severity: Severity;

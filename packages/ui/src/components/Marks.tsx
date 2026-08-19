@@ -1,7 +1,7 @@
 /**
  * Axis marks and the reel, drawn rather than borrowed.
  *
- * Every path here is an irregular curve with round joins — a geometric icon set
+ * Every path here is an irregular curve with round joins: a geometric icon set
  * would sit on this surface as the one machine-made thing on a page of drawn
  * boxes. Each axis carries its own mark so the four never blur together, which
  * is the whole point of keeping them apart.
@@ -29,7 +29,7 @@ function Frame({
   );
 }
 
-/** Scored — the only axis allowed to move the number. */
+/** Scored: the only axis allowed to move the number. */
 export function MarkScored({ className }: MarkProps): JSX.Element {
   return (
     <Frame {...(className === undefined ? {} : { className })}>
@@ -60,7 +60,7 @@ export function MarkReel(): JSX.Element {
 /**
  * The rule under the rail: one pen stroke, ruled.
  *
- * It used to bow — three shallow curves across the width, so the stroke was
+ * It used to bow: three shallow curves across the width, so the stroke was
  * never quite level. Straight by decision; the frames it sits above keep their
  * hands, and this one line does not.
  */

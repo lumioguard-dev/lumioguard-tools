@@ -24,7 +24,7 @@ export function useSiteScan<T>(address: string, run: RunScan<T>): SiteScanState<
   const [isScanning, setIsScanning] = useState(true);
 
   // Held in a ref so the ADDRESS alone drives the effect. Callers pass an inline
-  // arrow, whose identity changes every render — as a dependency it would abort
+  // arrow, whose identity changes every render: as a dependency it would abort
   // and restart the scan on each one.
   const runRef = useRef(run);
   runRef.current = run;

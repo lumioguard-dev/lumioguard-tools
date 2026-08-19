@@ -3,7 +3,7 @@
  *
  * One flag governs every mention of it: the hand-off button and its offer, the
  * wordmark on the masthead, and the credit in the colophon. A fork that sets
- * nothing ships a tool that never says the word — which is the point. It must
+ * nothing ships a tool that never says the word, which is the point. It must
  * not advertise something it does not have, and there is no address here to
  * fall back to.
  */
@@ -22,7 +22,7 @@ export const LUMIOGUARD_ENABLED = AUDIT_ORIGIN !== null;
  *
  * Never a sign-in path: that route has moved before and every visitor who
  * clicked landed on a 404. The app's own gate decides whether a login is needed.
- * The key comes from the reading, never derived from the address — deriving it
+ * The key comes from the reading, never derived from the address: deriving it
  * would carry everyone who scanned a host to the same stranger's verdict.
  */
 export function fullAuditUrl(siteKey: string | null): string | null {

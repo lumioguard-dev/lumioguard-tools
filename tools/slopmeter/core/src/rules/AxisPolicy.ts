@@ -29,7 +29,7 @@ export const QUALITY_AXIS_RULES: ReadonlySet<string> = new Set([
   'impeccable.low-contrast',
   'impeccable.gray-on-colored',
 
-  // Measured off the axis — fires on 0% of generated pages, 18% of hand-built.
+  // Measured off the axis: fires on 0% of generated pages, 18% of hand-built.
   'structure.oversized-payload',
   // 0% vs 16%: the generated templates all ship a viewport tag.
   'structure.no-viewport',

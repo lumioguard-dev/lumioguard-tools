@@ -62,6 +62,24 @@ actually designed comes out clean; a hand-coded page of stock defaults does not.
 
 ---
 
+## Try them
+
+Both are hosted and free to use:
+
+| | |
+|---|---|
+| **Leakpeek** | [lumioguard-leakpeek-web.pages.dev](https://lumioguard-leakpeek-web.pages.dev) |
+| **Slopmeter** | [lumioguard-slopmeter-web.pages.dev](https://lumioguard-slopmeter-web.pages.dev) |
+
+If you want something to point them at,
+[leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/) is a deliberately
+broken app kept for exactly that. It is the site in both screenshots above.
+
+**Only scan a site you own, or one whose owner has asked you to.** Leakpeek
+proves a finding by actually reading the target's backend, which is a real
+request against someone else's infrastructure. See [SECURITY.md](SECURITY.md)
+for what each tool does to a site, and how to report a flaw in them.
+
 ## Run them yourself
 
 Everything here is MIT-licensed and runs on your own machine. Node 22+ and

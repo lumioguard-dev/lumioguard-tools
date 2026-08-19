@@ -15,7 +15,7 @@ const PEN = {
 /**
  * The line weight is the page's, not the icon's. These are drawn at 52 units
  * and set at 60 or 76, so without this every stroke would come out heavier than
- * the panel it sits in — and heavier on a wide screen than on a narrow one.
+ * the panel it sits in, and heavier on a wide screen than on a narrow one.
  */
 const NS = 'non-scaling-stroke';
 

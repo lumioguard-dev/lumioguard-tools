@@ -31,7 +31,7 @@ export type ExposureCategory = (typeof CATEGORIES)[number];
  * One exposure, as the visitor is shown it. No `fix` on the wire, deliberately:
  * the remediation is the reason to continue into LumioGuard.
  *
- * `evidence` is STRUCTURAL and redacted by construction — shapes and counts,
+ * `evidence` is STRUCTURAL and redacted by construction: shapes and counts,
  * never values. The report renders on sites the visitor does not own, so it must
  * prove a hole without becoming the leak.
  */

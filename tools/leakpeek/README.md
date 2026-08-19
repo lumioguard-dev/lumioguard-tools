@@ -66,6 +66,16 @@ unauthenticated RPC, Base44-style auth bypass, and the Firebase / PocketBase /
 Appwrite variants of open rules. Those platforms are fingerprinted today but
 never probed.
 
+## Only scan what you own
+
+Leakpeek proves a finding by reading the target's backend: it asks a discovered
+table for rows and reports whether any came back. That is a real request against
+someone else's infrastructure, and whether it is welcome is not something a tool
+can decide for you.
+
+Scan a site you own, or one whose owner has asked you to. The guarantees below
+are what keep the read honest; they are not permission.
+
 ## The three guarantees
 
 **Read, never write.** The probe engine issues `GET` only. No

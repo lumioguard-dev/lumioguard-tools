@@ -6,12 +6,14 @@ import {
   type ScanRequest,
   analyzeRequestSchema,
   crawlRequestSchema,
+  hostOf,
   scanRequestSchema,
 } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getContainer } from './container.js';
 import type { Bindings } from './http/env.js';
+import { readingFrom } from './mappers/ReadingMapper.js';
 import { recorderConfigFrom } from './services/ReadingRecorder.js';
 
 export type { Env } from './http/env.js';
@@ -42,7 +44,11 @@ const crawlSite = async (
   const report = await container.crawlService.crawlSite(url, options);
 
   const config = recorderConfigFrom(context.env);
-  const siteKey = config === null ? null : await container.recorder.record(report, config);
+  const host = hostOf(report.entry);
+  const siteKey =
+    config === null
+      ? null
+      : await container.recorder.record(readingFrom(report, host), config, host);
 
   return { ...report, siteKey };
 };

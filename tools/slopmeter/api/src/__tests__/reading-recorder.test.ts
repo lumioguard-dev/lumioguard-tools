@@ -1,16 +1,24 @@
 import { createHmac } from 'node:crypto';
-import type { CrawlResponse } from '@lumioguard/shared';
+import { ReadingRecorder, type ReadingTransport } from '@lumioguard/api-core';
+import { type CrawlResponse, hostOf } from '@lumioguard/shared';
 import { describe, expect, it, vi } from 'vitest';
-import {
-  ReadingRecorder,
-  type ReadingTransport,
-  recorderConfigFrom,
-} from '../services/ReadingRecorder.js';
+import { readingFrom } from '../mappers/ReadingMapper.js';
+import { recorderConfigFrom } from '../services/ReadingRecorder.js';
 
 /** 32-byte hex, the shape the deployed secret takes. */
 const SECRET = 'a1b2c3d4e5f6071829304a5b6c7d8e9f0112233445566778899aabbccddeeff0';
 
-const CONFIG = { endpoint: 'https://api.test/api/external/slopmeter/readings', secret: SECRET };
+const CONFIG = {
+  endpoint: 'https://api.test/api/external/slopmeter/readings',
+  secret: SECRET,
+  signatureHeader: 'x-slopmeter-signature',
+  timestampHeader: 'x-slopmeter-timestamp',
+};
+
+/** The recorder now takes the mapped payload and the host, not the raw report. */
+function recorded(r: CrawlResponse = report()) {
+  return [readingFrom(r, hostOf(r.entry)), CONFIG, hostOf(r.entry)] as const;
+}
 
 function report(overrides: Partial<CrawlResponse> = {}): CrawlResponse {
   return {
@@ -87,7 +95,7 @@ describe('recorderConfigFrom', () => {
 describe('the recorded reading', () => {
   it('returns the key LumioGuard minted', async () => {
     const { send } = captor();
-    await expect(new ReadingRecorder(send).record(report(), CONFIG)).resolves.toBe('K7M2XQ');
+    await expect(new ReadingRecorder(send).record(...recorded())).resolves.toBe('K7M2XQ');
   });
 
   // The key identifies a READING and only the side holding the uniqueness
@@ -95,14 +103,14 @@ describe('the recorded reading', () => {
   // would be this Worker guessing at that.
   it('sends no key of its own', async () => {
     const { calls, send } = captor();
-    await new ReadingRecorder(send).record(report(), CONFIG);
+    await new ReadingRecorder(send).record(...recorded());
 
     expect(JSON.parse(calls[0]?.body ?? '{}')).not.toHaveProperty('siteKey');
   });
 
   it('signs the timestamp with the body, keyed by the hex-DECODED secret', async () => {
     const { calls, send } = captor();
-    await new ReadingRecorder(send).record(report(), CONFIG);
+    await new ReadingRecorder(send).record(...recorded());
 
     const sent = calls[0];
     expect(sent).toBeDefined();
@@ -123,7 +131,7 @@ describe('the recorded reading', () => {
 
   it('reports the host, not the scanned path', async () => {
     const { calls, send } = captor();
-    await new ReadingRecorder(send).record(report(), CONFIG);
+    await new ReadingRecorder(send).record(...recorded());
 
     const body = JSON.parse(calls[0]?.body ?? '{}');
     // www is not a different site, and the entry was a deep link.
@@ -136,7 +144,7 @@ describe('the recorded reading', () => {
   it('sends the heaviest tells first and no more than ten', async () => {
     const many = Array.from({ length: 25 }, (_, i) => signal(`tell ${i}`, i));
     const { calls, send } = captor();
-    await new ReadingRecorder(send).record(report({ signals: many }), CONFIG);
+    await new ReadingRecorder(send).record(...recorded(report({ signals: many })));
 
     const body = JSON.parse(calls[0]?.body ?? '{}');
     expect(body.payload.signals).toHaveLength(10);
@@ -151,8 +159,7 @@ describe('the recorded reading', () => {
   it('carries no rule identity', async () => {
     const { calls, send } = captor();
     await new ReadingRecorder(send).record(
-      report({ signals: [signal('Lorem ipsum', 22)] }),
-      CONFIG,
+      ...recorded(report({ signals: [signal('Lorem ipsum', 22)] })),
     );
 
     const body = calls[0]?.body ?? '';
@@ -171,13 +178,13 @@ describe('what a failed recording costs', () => {
       throw new Error('econnrefused');
     };
 
-    await expect(new ReadingRecorder(send).record(report(), CONFIG)).resolves.toBeNull();
+    await expect(new ReadingRecorder(send).record(...recorded())).resolves.toBeNull();
   });
 
   it('answers null when the API refuses the reading', async () => {
     const { send } = captor({ status: 400 });
 
-    await expect(new ReadingRecorder(send).record(report(), CONFIG)).resolves.toBeNull();
+    await expect(new ReadingRecorder(send).record(...recorded())).resolves.toBeNull();
   });
 
   // About to be printed into an href, so a shape change upstream must cost the
@@ -191,14 +198,14 @@ describe('what a failed recording costs', () => {
   it.each(malformed)('answers null for %s (%s)', async (body) => {
     const { send } = captor({ body });
 
-    await expect(new ReadingRecorder(send).record(report(), CONFIG)).resolves.toBeNull();
+    await expect(new ReadingRecorder(send).record(...recorded())).resolves.toBeNull();
   });
 
   it('logs the status and the host, and nothing else', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const { send } = captor({ status: 400 });
 
-    await new ReadingRecorder(send).record(report(), CONFIG);
+    await new ReadingRecorder(send).record(...recorded());
 
     expect(warn).toHaveBeenCalledWith('[reading] rejected', { status: 400, host: 'example.com' });
     warn.mockRestore();

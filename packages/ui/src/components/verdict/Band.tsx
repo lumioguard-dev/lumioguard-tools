@@ -126,7 +126,7 @@ export function Band({
       </div>
 
       {/* Every station in the same hand: colour and size carry which one is
-          tuned, never the typeface. 14px is the ceiling — at 16px the two centre
+          tuned, never the typeface. 14px is the ceiling: at 16px the two centre
           names collide.
 
           The end stations are anchored to the ends of the track rather than

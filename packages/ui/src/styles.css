@@ -15,7 +15,7 @@
 
   /*
    * Ruled stock. Fixed, so the page moves over the paper rather than dragging
-   * it — and it is the reason the drawn frames read as drawn rather than as an
+   * it, and it is the reason the drawn frames read as drawn rather than as an
    * odd border-radius.
    */
   body {
@@ -42,7 +42,7 @@
    * The drawn box.
    *
    * Uneven per-corner radii are what make a CSS rectangle read as something a
-   * pen made. Four hands cycle across the grid so no two neighbours match — a
+   * pen made. Four hands cycle across the grid so no two neighbours match: a
    * repeated identical "hand-drawn" shape reads as fake faster than a plain
    * rectangle does.
    *
@@ -184,7 +184,7 @@
    * What arrives with the reading settles into place; what was on screen
    * through the read does not.
    *
-   * This used to be positional — every panel but the first — which was right
+   * This used to be positional, every panel but the first, which was right
    * when the report was the only thing that appeared. The verdict, the render
    * and the culprits are all mounted from the first moment now, so the panels
    * that settle are named rather than counted: re-animating a panel that never
@@ -200,7 +200,7 @@
 
   /*
    * The panel beside the render is not empty while the read runs; it is being
-   * ruled. Lines laid down in turn, held, then lifted and laid down again —
+   * ruled. Lines laid down in turn, held, then lifted and laid down again:
    * the same pen as the narration under the meter, so the wait reads as one
    * instrument rather than two. It never fills or counts: there is nothing
    * honest to fill it with until the reading lands.
@@ -301,7 +301,7 @@
    * The figure takes a column of its own from 768px, not from 1024px.
    *
    * Stacked, the stamp and the number claim a full-width row and use a quarter
-   * of it — 503px of blank paper beside them at 768px, and 249px of panel
+   * of it: 503px of blank paper beside them at 768px, and 249px of panel
    * height that the same content does not cost on a desktop. The column is set
    * to the die's own width there (168px, the seal's size below `lg`) so the
    * meter keeps everything the figure does not need.

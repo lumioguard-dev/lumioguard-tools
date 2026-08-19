@@ -24,7 +24,7 @@ export interface PassiveInput {
 
 /**
  * The result of reading the served page: findings that need no probing, the
- * detected stack, and the two things the active tier acts on — a Supabase target
+ * detected stack, and the two things the active tier acts on: a Supabase target
  * to read, and source-map URLs to check for reachability.
  */
 export interface PassiveResult {

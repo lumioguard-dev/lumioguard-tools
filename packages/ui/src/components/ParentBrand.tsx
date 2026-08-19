@@ -5,7 +5,7 @@ const LINK =
 
 /**
  * The parent wordmark beside the tool's own, or nothing when the integration is
- * off — in which case the tool stands under its own name alone.
+ * off: in which case the tool stands under its own name alone.
  */
 export function ParentWordmark({ className }: { readonly className?: string }): JSX.Element | null {
   if (AUDIT_ORIGIN === null) return null;

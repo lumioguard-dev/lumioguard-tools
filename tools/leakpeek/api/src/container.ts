@@ -1,4 +1,4 @@
-import { ReadingRecorder } from './services/ReadingRecorder.js';
+import { ReadingRecorder } from '@lumioguard/api-core';
 import { ScanService } from './services/ScanService.js';
 
 export interface Container {

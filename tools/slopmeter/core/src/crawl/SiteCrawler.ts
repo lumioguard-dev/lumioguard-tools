@@ -21,7 +21,7 @@ interface Frontier {
  *
  * The frontier is drained level by level, so `maxPages` buys width across a
  * level and `depth` buys levels. A competitor that strips the path and only
- * scans a domain root cannot see anything one click deep — which is exactly
+ * scans a domain root cannot see anything one click deep, which is exactly
  * where unfinished pages live.
  */
 export class SiteCrawler {

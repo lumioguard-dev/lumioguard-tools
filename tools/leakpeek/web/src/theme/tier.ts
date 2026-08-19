@@ -48,10 +48,18 @@ const SEVERITY_INK: Record<Severity, string> = {
 export function severityInk(severity: Severity): string {
   return SEVERITY_INK[severity];
 }
-/** The instrument's configuration: what varies about drawing an exposure verdict. */
+/**
+ * The instrument's configuration: what varies about drawing an exposure verdict.
+ *
+ * `inkFor` takes a plain string, because the component draws every tool's ladder
+ * and knows none of their vocabularies. Looked up rather than asserted: casting
+ * the string to an ExposureTier would hand `TIER_INK` a key it may not have, and
+ * the miss is `undefined`, which reaches an inline style and paints the seal
+ * with no colour at all, on the one element the whole report is built around.
+ */
 export const VERDICT_SCALE: VerdictScale = {
   bands: BANDS,
   max: EXPOSURE_MAX,
-  inkFor: (tier) => tierInk(tier as ExposureTier),
+  inkFor: (tier) => BANDS.find((candidate) => candidate.tier === tier)?.ink ?? ink[2],
   wordmark: 'LEAKPEEK',
 };

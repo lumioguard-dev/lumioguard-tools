@@ -87,7 +87,7 @@ export const copyRules: readonly Rule[] = [
     // Density, not a flat count: a long article using a few em-dashes is fine;
     // a short page with one per clause is the tell.
     evaluate: (ctx) => {
-      const count = countMatches(ctx.content.text, /—/g);
+      const count = countMatches(ctx.content.text, /: /g);
       if (count < 4) return null;
       const length = Math.max(ctx.content.text.length, 1);
       return evidence(count / length > 1 / 500, `${count} em-dashes in ${length} chars`);

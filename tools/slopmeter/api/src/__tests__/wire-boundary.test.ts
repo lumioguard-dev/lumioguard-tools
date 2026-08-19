@@ -33,7 +33,7 @@ describe('the wire never carries rule identity', () => {
 
     expect(json).not.toContain('ruleId');
     expect(json).not.toContain('category');
-    // Every rule id in the catalogue, checked individually — a single leak is
+    // Every rule id in the catalogue, checked individually: a single leak is
     // a leak, and the ids share prefixes that a coarse regex would miss.
     for (const rule of registry.all()) {
       expect(json).not.toContain(rule.id);
@@ -59,7 +59,7 @@ describe('the wire never carries rule identity', () => {
     expect(lorem?.weight).toBe(22);
     expect(lorem?.evidence).toBe('placeholder Latin still in the copy');
 
-    // Provenance is still reported — it just costs nothing.
+    // Provenance is still reported: it just costs nothing.
     expect(response.provenance.length).toBeGreaterThan(0);
   });
 

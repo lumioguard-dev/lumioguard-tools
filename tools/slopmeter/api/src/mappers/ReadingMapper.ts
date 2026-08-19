@@ -12,7 +12,7 @@ function severityFor(weight: number): 'high' | 'medium' | 'low' {
 
 /**
  * The reading as LumioGuard stores it. The only place the wire is decided, and
- * nothing here identifies a rule — the rule pack is the product. `findings` is
+ * nothing here identifies a rule: the rule pack is the product. `findings` is
  * the envelope every tool speaks; `payload` is what only Slopmeter reads.
  */
 export function readingFrom(report: CrawlResponse, host: string): Record<string, unknown> {

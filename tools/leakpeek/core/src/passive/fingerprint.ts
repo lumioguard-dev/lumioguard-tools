@@ -2,7 +2,7 @@ import type { DetectedStackDto } from '@lumioguard/shared';
 
 /**
  * What a site's response reveals about the platforms behind it. Reported to
- * choose probes and name the funnel — never scored.
+ * choose probes and name the funnel: never scored.
  *
  * Every signal is one the platform EMITS ABOUT ITSELF. Anything weaker is
  * dropped rather than hedged: a reader takes "Cloudflare (a guess)" as
@@ -48,7 +48,7 @@ function detectBuilder(sources: string, host: string): string | null {
 }
 
 function detectBackend(sources: string): string | null {
-  // The actual project endpoint, not the word — the 20-char ref is the tell.
+  // The actual project endpoint, not the word: the 20-char ref is the tell.
   if (/https?:\/\/[a-z0-9]{20}\.supabase\.co/i.test(sources)) return 'Supabase';
   if (/[a-z0-9-]+\.firebaseio\.com|[a-z0-9-]+\.firebaseapp\.com/i.test(sources)) return 'Firebase';
   if (/[a-z0-9-]+\.pocketbase\.io/i.test(sources)) return 'PocketBase';

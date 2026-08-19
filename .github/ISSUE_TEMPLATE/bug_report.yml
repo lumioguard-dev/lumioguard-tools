@@ -1,0 +1,75 @@
+name: Bug report
+description: Something behaved differently from how it is documented
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. If this is a security flaw in the tools
+        themselves, please do not file it here. See
+        [SECURITY.md](../blob/master/SECURITY.md) for the private route.
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool
+      options:
+        - leakpeek
+        - slopmeter
+        - both
+        - the shared packages
+    validations:
+      required: true
+
+  - type: input
+    id: url
+    attributes:
+      label: The address you scanned
+      description: >-
+        Only include it if it is yours, or public and you are happy to name it.
+        A finding is often impossible to reproduce without one, but never paste
+        a URL that carries a token.
+      placeholder: https://example.com/
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected, and what happened instead
+      description: >-
+        For a wrong score or a wrong finding, say which one and why you think it
+        is wrong. "Rule X fires on my hand-written page" is a good report.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: How to reproduce it
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where you ran it
+      options:
+        - the hosted tool
+        - locally, from a clone
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: For a local run, `git rev-parse --short HEAD`.
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Node and OS, if you ran it locally
+      placeholder: node 22.11.0, Windows 11

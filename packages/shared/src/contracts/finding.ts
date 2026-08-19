@@ -9,7 +9,7 @@ export const tierSchema = enumOf(TIER_NAMES);
  *
  * Deliberately NOT on the wire: the rule's id, its category, and its position
  * in the catalogue. Those describe the detector rather than the page, and the
- * rule pack is the product — publishing it hands anyone the means to clone the
+ * rule pack is the product: publishing it hands anyone the means to clone the
  * instrument or to tune a page against it rule by rule. `id` is opaque and
  * valid only within the response that produced it; it exists so a list can be
  * keyed, and carries no meaning beyond that.

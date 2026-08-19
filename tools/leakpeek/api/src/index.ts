@@ -5,7 +5,7 @@ import { type Context, Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { getContainer } from './container.js';
 import type { Bindings } from './http/env.js';
-import { recorderConfigFrom } from './services/ReadingRecorder.js';
+import { readingFrom, recorderConfigFrom } from './services/ReadingRecorder.js';
 
 export type { Env } from './http/env.js';
 
@@ -33,7 +33,10 @@ const scan = async (input: ExposureRequest, context: Context<Bindings>): Promise
   const report = await container.scanService.scan(input.url);
 
   const config = recorderConfigFrom(context.env);
-  const siteKey = config === null ? null : await container.recorder.record(report, config);
+  const siteKey =
+    config === null
+      ? null
+      : await container.recorder.record(readingFrom(report), config, report.host);
 
   return { ...report, siteKey };
 };

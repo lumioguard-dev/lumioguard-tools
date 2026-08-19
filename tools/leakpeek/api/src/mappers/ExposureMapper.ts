@@ -9,7 +9,7 @@ import type { DetectedStackDto, ExposureFindingDto, ExposureResponse } from '@lu
 
 /**
  * Findings → the wire response. The internal `code` is dropped and each finding
- * gets an opaque, position-based id — the id exists so a list can be keyed, and
+ * gets an opaque, position-based id: the id exists so a list can be keyed, and
  * carries nothing about the detector. Score, tier and headline are derived here
  * from the ordered set so the number and the top line always agree with the list.
  */

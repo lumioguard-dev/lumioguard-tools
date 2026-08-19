@@ -18,7 +18,7 @@ const CDN_UTILITY_FRAMEWORK =
  * Removes what a stylesheet contains but does not paint: `@keyframes` bodies
  * (an animation step is not a component) and custom-property declarations (a
  * declared token may never be referenced, and `--x-box-shadow:` otherwise reads
- * as `box-shadow:`). `var(--x)` references survive — they have no colon.
+ * as `box-shadow:`). `var(--x)` references survive: they have no colon.
  */
 function stripNonPainting(css: string): string {
   return css

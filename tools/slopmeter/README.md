@@ -93,7 +93,8 @@ web/    React + Vite client
 ```
 
 `core` never imports from `api`, and `web` never imports `core`, which would ship
-113 rules to the browser. Anything both need lives in `@lumioguard/shared`.
+the whole rule pack to the browser where anyone could read it. Anything both need
+lives in `@lumioguard/shared`.
 
 The surface, transport and browser-side plumbing are shared with the other tools
 via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.

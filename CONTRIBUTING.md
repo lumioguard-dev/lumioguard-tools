@@ -23,7 +23,7 @@ below.
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
-All four must pass. Lint must be *clean*, not merely quieter — if a rule is wrong
+All four must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
 for this codebase, turn it off in `biome.json` with a reason rather than
 scattering suppressions.
 
@@ -54,7 +54,7 @@ is domain vocabulary and belongs in `shared`.
 
 **`core` does no I/O.** Fetching, screenshots and the clock live in `api`
 services. That is what lets the engines be tested against fixtures with no
-network, and it is not negotiable — a `fetch` in `core` breaks the whole suite's
+network, and it is not negotiable: a `fetch` in `core` breaks the whole suite's
 offline guarantee.
 
 Within a package, group by what the code is *for*, not by what kind of file it
@@ -89,6 +89,52 @@ Everything binds **`127.0.0.1`, never `localhost`**. On a machine that resolves
 `localhost` to `::1` first, the proxy dials an address the Worker is not
 listening on and every request fails with nothing in the Worker's log.
 
+## Testing
+
+Tests live beside what they cover, in a `__tests__` folder. They run on Node
+with no DOM and no network, which is what keeps the whole suite a few seconds.
+
+What is worth a test here is narrower than "everything", and wider than "the
+happy path". The ones that earn their place guard something that would fail
+**silently**:
+
+- **A boundary.** `TargetResolver` refusing a private address, the error mapper
+  answering generically, `ApiClient` rejecting a body that is the wrong shape.
+  Break one of these and nothing on screen looks wrong.
+- **A promise the product makes.** Leakpeek's prober only ever issuing `GET`;
+  a critical finding pinning the score into the top band; the rule pack staying
+  off the wire.
+- **Two things that must agree.** A colour token and the custom property it
+  points at; the critical floor and the band it names. Assert them against each
+  other, never against a copy of the number.
+
+A test that restates the implementation is worse than no test: it fails when the
+code is refactored and passes when the behaviour is wrong.
+
+### The UI is measured, not mocked
+
+There are no jsdom or component tests, deliberately. A component that renders
+without throwing tells you almost nothing about a report whose whole job is to
+be read and believed, and the defects that actually shipped here were an arc of
+type under the 12px floor and a needle running to -18.9%, off the end of its own
+track. Neither would fail a render test.
+
+UI is checked in a real browser against the live DOM: overflow, contrast,
+collisions, and the *rendered* box rather than the intended one, because a
+rotated element's bounding box is wider than the element. Animation is sampled frame by
+frame. What is unit-tested is the pure logic underneath: the band maths, the
+token contract, the scale each verdict is drawn against.
+
+### The parity suite
+
+`slopmeter/core` carries a suite that re-scores a cached corpus and requires
+**exact** matches. That corpus is not in this repository, so it skips itself
+unless `SLOPMETER_PARITY_ROOT` points at a checkout of it.
+
+Where it runs, it is the safety net for any engine change: if it drifts, the
+change altered scoring, whether or not that was the intent. Never retune the
+fixtures to make it pass.
+
 ## Adding a tool
 
 1. Create `tools/<name>/{core,api,web}`. The workspace globs pick it up with no
@@ -101,8 +147,8 @@ listening on and every request fails with nothing in the Worker's log.
 
 ## Deploying
 
-Each tool owns its own Worker and Pages project and ships on its own — releasing
-one never touches a sibling. That independence is why the repo is laid out by
+Each tool owns its own Worker and Pages project and ships on its own, so
+releasing one never touches a sibling. That independence is why the repo is laid out by
 tool rather than by layer.
 
 | Part | Cloudflare resource | Name |
@@ -117,8 +163,8 @@ projects are not:
 pnpm dlx wrangler pages project create lumioguard-<tool>-web --production-branch main
 ```
 
-Then set two repository secrets — `CLOUDFLARE_API_TOKEN` (with *Workers Scripts:
-Edit* and *Pages: Edit*) and `CLOUDFLARE_ACCOUNT_ID` — and one variable per tool,
+Then set two repository secrets, `CLOUDFLARE_API_TOKEN` (with *Workers Scripts:
+Edit* and *Pages: Edit*) and `CLOUDFLARE_ACCOUNT_ID`, plus one variable per tool,
 `VITE_API_BASE_URL_<TOOL>`, holding the deployed Worker's origin.
 
 That last one matters. In development Vite proxies `/api` to the local Worker, so
@@ -129,8 +175,8 @@ it wrong and every scan fails CORS with no useful error. Point each Worker's
 
 **Shipping.** GitHub → Actions → **Deploy** → Run workflow; pick the tool and
 whether to ship `api`, `web` or `both`. It typechecks, lints and runs the suite
-first — a deploy that skips the suite ships the regression the suite exists to
-catch. Order within a tool is deliberate: **api first**, because the web bundle
+first, because a deploy that skips the suite ships the regression the suite
+exists to catch. Order within a tool is deliberate: **api first**, because the web bundle
 is built against the Worker's origin.
 
 **Rollback.** Workers and Pages both keep deployment history:

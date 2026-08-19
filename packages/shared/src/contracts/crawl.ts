@@ -54,7 +54,7 @@ export const crawlResponseSchema = z.object({
    * LumioGuard. Minted by the recorder, not derived from the address: two
    * people scanning one host are two readings and must not share a key.
    *
-   * Null when the reading was not recorded — recording is switched off, or the
+   * Null when the reading was not recorded: recording is switched off, or the
    * recorder was unreachable. The report still renders; it simply has no
    * reading to hand on, so the audit link goes to the app's front door.
    */

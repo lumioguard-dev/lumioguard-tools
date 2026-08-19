@@ -9,7 +9,7 @@ export interface Env {
    * the signature is the only thing that distinguishes a real reading from
    * anyone who can spell the URL. 32-byte hex.
    *
-   * Unset disables recording entirely — the scan still runs and still answers.
+   * Unset disables recording entirely: the scan still runs and still answers.
    * Recording is a side effect of a reading, never a precondition for one.
    */
   SLOPMETER_INGEST_SECRET?: string;

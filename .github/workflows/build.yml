@@ -1,7 +1,16 @@
 name: Build
 
-# Manual only (Actions minutes). `workflow_call` is what Release reuses.
+# Every pull request, because a contributor cannot see a gate they are not run
+# through: without this a PR arrives with no lint, no typecheck and no tests,
+# and the first person to find out is whoever merges it.
+#
+# Pushes to master are covered too, so a direct push cannot skip what a PR
+# must pass. `workflow_call` is what Release reuses; `workflow_dispatch` keeps
+# the manual run.
 on:
+  pull_request:
+  push:
+    branches: [master]
   workflow_dispatch:
   workflow_call:
 

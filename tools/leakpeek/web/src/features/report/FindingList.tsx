@@ -86,7 +86,7 @@ export function FindingList({
           {backendProbed
             ? 'The scanner read the page, its scripts and its backend, and found nothing exposed.'
             : 'The scanner read the page and its scripts and found nothing exposed. It found no backend to read, so nothing here says the data is safe.'}{' '}
-          That is the checks Leakpeek runs today — not a guarantee the whole app is safe, only that
+          That is the checks Leakpeek runs today: not a guarantee the whole app is safe, only that
           these did not fire.
         </p>
       </Panel>

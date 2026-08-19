@@ -35,7 +35,7 @@ interface FetchedPage {
 }
 
 /**
- * The page fetch and the script fetches — the read-only I/O the passive tier
+ * The page fetch and the script fetches: the read-only I/O the passive tier
  * needs. Isolated behind a class so the engine stays pure and testable from a
  * fixture. The active probes (Supabase, source maps) live in ProbeRunner.
  */

@@ -32,7 +32,7 @@ const FICTIONAL_PHONE = /\b(?:555-01\d{2}|123-456-7890)\b/g;
 const DEAD_TEL = /tel:[^"'\s>]*(?:555-?01\d{2}|123-?456-?7890)/i;
 
 /**
- * An invitation to make contact — not the bare word "email", which on a page
+ * An invitation to make contact: not the bare word "email", which on a page
  * worth reading is a column header, a form label or a feature name.
  */
 const CONTACT_INTENT =
