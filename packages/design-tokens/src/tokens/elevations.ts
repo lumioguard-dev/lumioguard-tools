@@ -1,6 +1,6 @@
 // This world is flat print: a drawn box has no depth and does not pretend to.
-// Elevation is reserved for things that genuinely float — the enlarged
-// screenshot, a dialog — and reads as shadow cast on paper, not glow. A
+// Elevation is reserved for things that genuinely float: the enlarged
+// screenshot, a dialog, and reads as shadow cast on paper, not glow. A
 // zero-offset coloured halo is decoration, and this product charges other pages
 // for it.
 //

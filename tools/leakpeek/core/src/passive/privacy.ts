@@ -3,7 +3,7 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
 /**
  * Vibe-coded apps optimise for a working app, not a compliant one: the model
  * ships the analytics snippet because it was asked for a landing page with
- * analytics, and never pauses to ask whether it needs consent — consent is a
+ * analytics, and never pauses to ask whether it needs consent: consent is a
  * legal requirement, not a feature.
  */
 
@@ -13,7 +13,7 @@ interface Signature {
 }
 
 /**
- * Trackers are matched only by the DOMAIN their script loads from — a
+ * Trackers are matched only by the DOMAIN their script loads from: a
  * request to googletagmanager.com IS Google Analytics.
  */
 const TRACKERS: readonly Signature[] = [

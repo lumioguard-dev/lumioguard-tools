@@ -100,7 +100,7 @@ function Colophon(): JSX.Element {
         <ParentCredit />
       </p>
 
-      {/* Printed, not written, and not lowercased — a legal notice is the one
+      {/* Printed, not written, and not lowercased: a legal notice is the one
           string here that is neither the product's voice nor its wordmark.
 
           The year is read rather than typed. A copyright line that silently

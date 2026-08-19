@@ -3,13 +3,13 @@ import { weightInk } from '../../theme/tier.js';
 
 interface TellListProps {
   readonly findings: readonly FindingDto[];
-  /** Uncounted observations show no mark — the absence is the point. */
+  /** Uncounted observations show no mark: the absence is the point. */
   readonly showWeights?: boolean;
 }
 
 /**
  * One line per observation: what was found, and the evidence that keyed it. The
- * evidence sits on the line rather than behind a disclosure — a verdict a
+ * evidence sits on the line rather than behind a disclosure: a verdict a
  * reader cannot check is an opinion.
  *
  * The weight is the magnitude. A drawn bar beside it restated the same number

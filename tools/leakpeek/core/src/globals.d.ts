@@ -23,5 +23,5 @@ declare class URL {
   toString(): string;
 }
 
-/** Base64 decode — used to read a JWT payload without a crypto dependency. */
+/** Base64 decode: used to read a JWT payload without a crypto dependency. */
 declare function atob(data: string): string;

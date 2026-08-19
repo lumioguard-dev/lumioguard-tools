@@ -5,7 +5,7 @@ import type { DetectedStackDto } from '@lumioguard/shared';
  * The platforms the site named about itself, drawn as tags.
  *
  * EACH TAG CARRIES ITS OWN LEAD-IN. One heading has to be true of everything
- * under it, and the only one that fitted all three roles was "built with" —
+ * under it, and the only one that fitted all three roles was "built with":
  * which then claimed a site was built with Cloudflare. Two words per tag remove
  * a whole class of false claim.
  *
@@ -19,7 +19,7 @@ const PEN = {
   strokeLinejoin: 'round',
 } as const;
 
-/** The stroke is the page's, not the icon's — hold its weight at any size. */
+/** The stroke is the page's, not the icon's: hold its weight at any size. */
 const NS = 'non-scaling-stroke';
 
 /** A wand with a spark: what made the site. */

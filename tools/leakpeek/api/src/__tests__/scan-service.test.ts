@@ -5,7 +5,7 @@ import { PageFetcher } from '../services/PageFetcher.js';
 import { ProbeRunner } from '../services/ProbeRunner.js';
 import { ScanService } from '../services/ScanService.js';
 
-// A JWT with a chosen role, unsigned — the signature is never read.
+// A JWT with a chosen role, unsigned: the signature is never read.
 function jwt(role: string): string {
   const enc = (o: unknown) => Buffer.from(JSON.stringify(o)).toString('base64url');
   // The signature segment must be ≥10 chars to match the JWT regex, as a real

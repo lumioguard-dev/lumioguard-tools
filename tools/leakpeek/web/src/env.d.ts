@@ -8,7 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_API_BASE_URL?: string;
   /**
    * Origin of the LumioGuard app. THE switch for the whole optional
-   * integration: unset — the default — there is no hand-off button, no offer
+   * integration: unset, the default, there is no hand-off button, no offer
    * and no parent wordmark anywhere on the page. There is no fallback address,
    * so a fork advertises nothing it does not have.
    *

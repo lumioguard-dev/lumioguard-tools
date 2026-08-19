@@ -4,3 +4,5 @@ export { NOT_FOUND, toHttpFailure } from './http/errors.js';
 export type { HttpFailure } from './http/errors.js';
 export { PageFetchError } from './services/PageFetchError.js';
 export { InvalidTargetError, TargetResolver } from './services/TargetResolver.js';
+export { ReadingRecorder } from './services/ReadingRecorder.js';
+export type { ReadingTransport, RecorderConfig } from './services/ReadingRecorder.js';

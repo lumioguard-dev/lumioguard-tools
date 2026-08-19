@@ -374,7 +374,7 @@ export const impeccableRules: readonly Rule[] = [
     label: 'Body text spaced too wide to read',
     // The selector must be a complete token: a bare `p` in an alternation also
     // matches the "p" inside "letter-spacing", which fired on every Tailwind
-    // build's own .tracking-widest definition — 149 false positives.
+    // build's own .tracking-widest definition: 149 false positives.
     evaluate: (ctx) =>
       evidence(
         /(?:^|[}\s,])(?:body|p|\.(?:body|prose|content|copy)[\w-]*)\s*(?:,[^{]{0,60})?\{[^}]{0,200}?(?<![\w-])letter-spacing\s*:\s*0?\.(?:0[6-9]|[1-9])\d*em/i.test(

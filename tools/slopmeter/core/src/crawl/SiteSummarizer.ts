@@ -25,8 +25,8 @@ export class SiteSummarizer {
   }
 
   /**
-   * Signals that hide off the front door are surfaced — the most interesting
-   * thing a crawl finds — but reported, never charged.
+   * Signals that hide off the front door are surfaced: the most interesting
+   * thing a crawl finds, but reported, never charged.
    */
   public summarize(
     entry: string,

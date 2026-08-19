@@ -7,7 +7,7 @@ import { defineConfig } from 'vite';
 import { HOST, portsFor } from '../../../scripts/ports.mjs';
 
 // One row, two consumers: this app's port and the Worker it proxies to. They
-// were separate literals here and in api/package.json — a pair that must agree
+// were separate literals here and in api/package.json: a pair that must agree
 // and cannot fail together. Reading throws on a collision, so a clash surfaces
 // when a server starts rather than as a proxy quietly answering from the wrong
 // tool. See CONTRIBUTING.md.

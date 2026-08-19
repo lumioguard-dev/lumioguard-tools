@@ -12,7 +12,7 @@ import {
 
 /**
  * The active tier: the only place that touches a target's backend. Every request
- * here is a READ — method GET, no body — and there is no code path that issues
+ * here is a READ, method GET, no body, and there is no code path that issues
  * anything else. That is the whole read-only guarantee (see the README), and
  * keeping the network in one small class is what makes it checkable at a glance.
  *
@@ -48,7 +48,7 @@ export class ProbeRunner {
     return [];
   }
 
-  /** Sensitive files served from the site root — `.env`, `.git`. Reads only. */
+  /** Sensitive files served from the site root: `.env`, `.git`. Reads only. */
   public async checkExposedFiles(origin: string): Promise<ExposureFinding[]> {
     const findings: ExposureFinding[] = [];
     for (const check of EXPOSED_FILE_CHECKS) {

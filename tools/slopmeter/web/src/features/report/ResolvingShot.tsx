@@ -97,7 +97,7 @@ export function ResolvingShot({
               onError={() => setFailed(true)}
               // 16:9, not a fixed height. The renderer returns a 1200×900
               // frame and a fixed 210/290px box cropped it to whatever that
-              // height happened to take — a different slice of the page at
+              // height happened to take: a different slice of the page at
               // every breakpoint. A ratio crops the same way at every width,
               // and the panels either side are spanned to suit it rather than
               // the other way round.
@@ -116,10 +116,13 @@ export function ResolvingShot({
         </div>
       </figure>
 
+      {/* biome-ignore lint/a11y/useKeyWithClickEvents: opened with showModal(), so Escape already closes it natively, and the Close button below is focusable */}
       <dialog
         ref={dialog}
         className="w-full max-w-[min(96vw,1200px)] border-0 bg-transparent p-0 backdrop:bg-[color-mix(in_srgb,var(--paper-sunk)_88%,transparent)]"
         aria-label="Enlarged render of the scanned page"
+        // Closes on a click that lands on the BACKDROP, which is the dialog
+        // element itself: a click inside lands on the div and is left alone.
         onClick={(event) => {
           if (event.target === dialog.current) dialog.current?.close();
         }}

@@ -1,6 +1,6 @@
 /** Two grounds for one world. */
 
-export interface ColorRamp {
+export type ColorRamp = {
   readonly 50: string;
   readonly 100: string;
   readonly 200: string;
@@ -11,16 +11,22 @@ export interface ColorRamp {
   readonly 700: string;
   readonly 800: string;
   readonly 900: string;
-}
+};
 
 /** Named because it appears in the inferred type of exported colour groups. */
-export interface Pair {
+export type Pair = {
   readonly fg: string;
   readonly bg: string;
   readonly dot: string;
-}
+};
 
-export interface Palette {
+/**
+ * A type alias, not an interface, and that is load-bearing: an interface has no
+ * implicit index signature, so `Palette` did not satisfy `Branch` and every use
+ * of the tree walk below reached past the type with `as unknown as`. The alias
+ * satisfies it structurally and the casts disappear.
+ */
+export type Palette = {
   /** The drawn line. */
   readonly pen: ColorRamp;
   /** The second pen. Index rules, the marker, charges, the stamp. */
@@ -84,7 +90,7 @@ export interface Palette {
     readonly popover: string;
     readonly modal: string;
   };
-}
+};
 
 export const lightPalette: Palette = {
   pen: {
@@ -248,19 +254,30 @@ function walk(
 /** `{ '--pen-600': '#4664cc', ... }` for one theme's `:root` block. */
 export function cssVariablesFor(palette: Palette): Record<string, string> {
   const out: Record<string, string> = {};
-  walk(palette as unknown as Branch, [], (name, value) => {
+  walk(palette, [], (name, value) => {
     out[name] = value;
   });
   return out;
 }
 
-function mirror(node: Branch, path: readonly string[]): Branch {
+/**
+ * Rebuilds a branch with every leaf replaced by the `var()` that points at it.
+ *
+ * Generic over the branch so the SHAPE survives the walk: the caller gets the
+ * palette's own type back rather than an anonymous tree it then has to assert
+ * into place. Every leaf is a string before and after, so the shape really is
+ * preserved; only the values change.
+ */
+function mirror<T extends Branch>(node: T, path: readonly string[]): T {
   const out: Record<string, string | Branch> = {};
   for (const [key, value] of Object.entries(node)) {
     const next = [...path, key];
     out[key] = typeof value === 'string' ? `var(--${next.join('-')})` : mirror(value, next);
   }
-  return out;
+  // The one assertion in this file, and it is contained: TypeScript cannot see
+  // that a recursively rebuilt record has the shape it was handed, and the
+  // alternative is every CALLER asserting instead.
+  return out as T;
 }
 
 /**
@@ -268,7 +285,4 @@ function mirror(node: Branch, path: readonly string[]): Branch {
  * what the app imports, so a token is theme-aware wherever it is used, in a
  * Tailwind class or in an inline style.
  */
-export const tokenRefs: Palette = mirror(
-  lightPalette as unknown as Branch,
-  [],
-) as unknown as Palette;
+export const tokenRefs: Palette = mirror(lightPalette, []);

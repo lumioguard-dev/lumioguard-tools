@@ -15,8 +15,8 @@ export interface ScanServiceDeps {
 
 /**
  * One scan, end to end: resolve the target, read the served page, run the
- * passive checks, then — only if the page pointed at a backend or shipped a
- * source map — run the read-only active probes and fold their findings in.
+ * passive checks, then: only if the page pointed at a backend or shipped a
+ * source map: run the read-only active probes and fold their findings in.
  *
  * `backendProbed` reports whether a backend was actually read, so the surface can
  * say "no backend found to probe" rather than implying a database was checked
@@ -56,7 +56,7 @@ export class ScanService {
     // Only true when a backend was actually found and read. It was once pinned
     // to `true` because the exposed-file check always runs, which made the clean
     // report say it had read "the page, its scripts and its backend" on sites
-    // that expose no backend at all — the report claiming a check it never made.
+    // that expose no backend at all: the report claiming a check it never made.
     const backendProbed = passive.supabase !== null;
     if (passive.supabase !== null) {
       active.push(...(await this.prober.probeSupabase(passive.supabase)));

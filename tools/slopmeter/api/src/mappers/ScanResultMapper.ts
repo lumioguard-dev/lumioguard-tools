@@ -1,10 +1,10 @@
-import type { FindingDto, ScanResponse, Tier } from '@lumioguard/shared';
+import type { FindingDto, ScanResponse } from '@lumioguard/shared';
 import type { Finding, ScanResult, TierResolver } from '@lumioguard/slopmeter-core';
 import type { ScreenshotProvider } from '../services/ScreenshotProvider.js';
 
 /**
  * Keeps the wire shape a deliberate choice rather than a leak of the domain
- * model — which here is a security boundary, not only a design one. The rule
+ * model, which here is a security boundary, not only a design one. The rule
  * pack is the product: ids, categories and the catalogue itself stay server
  * side, and only what a visitor is actually told crosses the wire.
  */
@@ -23,7 +23,7 @@ export class ScanResultMapper {
       host: result.host,
       title: result.title,
       score: result.score.value,
-      tier: result.tier as Tier,
+      tier: result.tier,
       tierDescription: this.tierResolver.describe(result.score.value),
       headline: result.headline,
       breakdown: {

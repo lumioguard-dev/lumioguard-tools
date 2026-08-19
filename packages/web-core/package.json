@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/web-core",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "private": true,
   "type": "module",
   "description": "Browser-side transport and scan state every tool's client shares.",
@@ -24,8 +24,8 @@
     "@types/react": "^18.3.18",
     "react": "^18.3.1",
     "typescript": "^5.7.2",
-    "vite": "^5.4.11",
-    "vitest": "^2.1.9",
+    "vite": "^6.3.6",
+    "vitest": "^3.2.4",
     "zod": "^3.23.8"
   }
 }

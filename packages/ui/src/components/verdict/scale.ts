@@ -2,7 +2,7 @@
  * What a tool's ladder looks like on the instrument.
  *
  * Injected rather than imported, because the two things that vary between tools
- * are the bands themselves and the word struck into the seal — everything else
+ * are the bands themselves and the word struck into the seal: everything else
  * about drawing a verdict is the same. Passing this keeps the components free of
  * any one tool's vocabulary.
  */

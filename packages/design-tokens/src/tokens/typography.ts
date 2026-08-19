@@ -1,6 +1,6 @@
 /**
  * Two faces, two registers, and which one a string gets is a decision about
- * what made it — not about emphasis.
+ * what made it: not about emphasis.
  */
 export const fontFamily = {
   hand: ['Architects Daughter', 'ui-rounded', 'cursive'],

@@ -44,7 +44,7 @@ export interface RuleSpec {
 
 /**
  * Most rules differ only in their predicate, so they are instances of one
- * class rather than ninety subclasses — inheritance here would be ceremony,
+ * class rather than ninety subclasses: inheritance here would be ceremony,
  * not structure. Rules that need real behaviour of their own subclass `Rule`.
  */
 export class PredicateRule extends Rule {

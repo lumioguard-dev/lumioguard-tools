@@ -1,0 +1,12 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Security flaw in these tools
+    url: https://github.com/lumiostack/lumioguard-tools/security/advisories/new
+    about: >-
+      Report privately, never as an issue. Anything that makes a tool write to a
+      target, leak a target's data, or forge an ingest signature belongs here.
+  - name: A scan you disagree with
+    url: https://github.com/lumiostack/lumioguard-tools/issues/new?template=bug_report.yml
+    about: >-
+      A wrong score or a wrong finding is a bug. Bring the URL and say which
+      part you think is wrong.

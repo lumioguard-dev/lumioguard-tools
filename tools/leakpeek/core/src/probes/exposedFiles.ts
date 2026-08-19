@@ -6,7 +6,7 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
  * this module says what a response means.
  *
  * The trap to avoid is an SPA that answers 200 with its index.html for every
- * unknown path — so a 200 only counts when the body actually looks like the file
+ * unknown path, so a 200 only counts when the body actually looks like the file
  * it asked for, never when it looks like HTML.
  */
 
@@ -29,7 +29,7 @@ export const EXPOSED_FILE_CHECKS: readonly ExposedFileCheck[] = Object.freeze([
     severity: 'critical',
     title: 'The .env file is served in production',
     detail:
-      'The environment file is publicly downloadable. It usually holds database URLs, API keys and secrets — everything meant to stay on the server.',
+      'The environment file is publicly downloadable. It usually holds database URLs, API keys and secrets: everything meant to stay on the server.',
     looksLikeFile: (b) => !looksLikeHtml(b) && /^[A-Z][A-Z0-9_]*=/m.test(b),
     fix: 'Stop serving dotfiles from the web root, and rotate every secret the file contained.',
   },

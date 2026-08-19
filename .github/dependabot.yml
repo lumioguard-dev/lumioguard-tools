@@ -1,0 +1,43 @@
+version: 2
+
+updates:
+  # One workspace, one PR stream. Grouped so a routine week is one review and
+  # not fifteen: the build tooling here is a single decision in practice, and
+  # a bump to wrangler drags miniflare, undici, ws and sharp with it whether
+  # they are listed separately or not.
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: [dependencies]
+    groups:
+      # What actually ships. Kept apart from everything else because these are
+      # the only bumps that can reach a user, so they deserve a real read.
+      runtime:
+        patterns:
+          - hono
+          - zod
+          - react
+          - react-dom
+      # Build and test tooling. Nothing here reaches a user's browser or a
+      # deployed Worker, so it can move together.
+      tooling:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - hono
+          - zod
+          - react
+          - react-dom
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    labels: [dependencies]
+    groups:
+      actions:
+        patterns:
+          - "*"

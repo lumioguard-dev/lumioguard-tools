@@ -14,7 +14,7 @@ type AnyEnv = object;
  *
  * A reader's job is reading input; it has no business with the Worker's
  * bindings. Passing the context dragged the env into this type, and Hono's
- * Context is invariant — so every handler typed against its own bindings became
+ * Context is invariant, so every handler typed against its own bindings became
  * unassignable. The narrower parameter is both the honest interface and the one
  * that composes.
  */

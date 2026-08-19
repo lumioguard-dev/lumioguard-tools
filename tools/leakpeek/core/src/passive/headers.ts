@@ -4,7 +4,7 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
  * Missing response-security headers. Low severity by design: an absent header is
  * a hardening gap, not an open door, and reporting it at the same weight as a
  * readable database would teach people to ignore the colour. These are the ones
- * whose absence has a concrete attack, not the full checklist — a wall of
+ * whose absence has a concrete attack, not the full checklist: a wall of
  * "consider adding" advisories is noise a first-time visitor scrolls past.
  *
  * `headers` is lower-cased keys, as a fetch delivers them.
@@ -24,7 +24,7 @@ const RULES: readonly HeaderRule[] = [
     header: 'content-security-policy',
     title: 'No Content-Security-Policy',
     detail:
-      'Without a CSP, a single injected script runs with full access to the page — the main defence against XSS is simply absent.',
+      'Without a CSP, a single injected script runs with full access to the page: the main defence against XSS is simply absent.',
     fix: "Add a Content-Security-Policy header, starting from default-src 'self'.",
   },
   {

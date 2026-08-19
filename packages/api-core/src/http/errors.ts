@@ -14,7 +14,7 @@ function failure(status: HttpFailure['status'], code: string, message: string): 
 /**
  * An upstream site that will not load is a 502, not a 500: the caller's request
  * was fine and retrying against a different target will work. Anything
- * unrecognised is logged and answered generically — internal messages carry
+ * unrecognised is logged and answered generically: internal messages carry
  * file paths and rule source, and the rule pack is the product.
  */
 export function toHttpFailure(error: unknown): HttpFailure {

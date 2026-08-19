@@ -7,7 +7,7 @@ const NAMED_ENTITIES: Readonly<Record<string, string>> = {
   quot: '"',
   apos: "'",
   nbsp: ' ',
-  mdash: '—',
+  mdash: ': ',
   ndash: '–',
   hellip: '…',
   rsquo: '’',

@@ -74,7 +74,7 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
        * No easing, on the effect or on a pass. `easing` in the options eases
        * the whole iteration rather than each pass, so an infinite loop of it
        * ran the middle passes fast, the outer ones slow, and brought the
-       * needle to a dead stop at the seam every 5.2 seconds — the hunt visibly
+       * needle to a dead stop at the seam every 5.2 seconds: the hunt visibly
        * hesitating at one end of the band on a cycle. Linear at a distance-paced
        * tempo, the loop has no seam to see.
        */
@@ -115,7 +115,7 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
 
     /*
      * Paced the same way, so the hand does not change the moment the answer
-     * arrives — the settle picks the needle up at the speed the hunt was
+     * arrives: the settle picks the needle up at the speed the hunt was
      * running it. The convergence is carried by the passes getting shorter
      * rather than by the needle slowing on each one, which is also what makes
      * the first pass right whatever the hunt was doing when the read landed:

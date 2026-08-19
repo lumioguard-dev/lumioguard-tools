@@ -2,7 +2,7 @@
 //
 // Two registers carry the whole system and the split is load-bearing: `pen`
 // blue is what was written by hand, `ink` greys are what was printed by a
-// machine, and `red` is the second pen — index rules, markers, charges, stamps.
+// machine, and `red` is the second pen: index rules, markers, charges, stamps.
 //
 // Every export here is a `var()` reference; the values live in palette.ts, one
 // set per theme. Import these anywhere, including inline styles, and the theme

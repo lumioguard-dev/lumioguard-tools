@@ -10,7 +10,7 @@ import { EXPOSED_FILE_CHECKS, interpretExposedFile } from '../probes/exposedFile
 import { interpretTableRead } from '../probes/supabase.js';
 import { scoreExposure } from '../scoring/ExposureScore.js';
 
-// A JWT with a chosen `role` claim, unsigned — the signature is not read.
+// A JWT with a chosen `role` claim, unsigned: the signature is not read.
 function jwt(role: string): string {
   const header = Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url');
   const payload = Buffer.from(JSON.stringify({ role, iss: 'supabase' })).toString('base64url');
@@ -181,7 +181,7 @@ describe('passive orchestration', () => {
 
   it('does not fingerprint a tool from a mere mention of its name', () => {
     // A customer list / footer credit naming these tools must not be read as
-    // being built on them — the stripe.com false positive.
+    // being built on them: the stripe.com false positive.
     const html =
       '<html><body>Trusted by Supabase and Lovable. Built at bolt.new? No.</body></html>';
     const result = analyzePassive({

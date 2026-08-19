@@ -1,0 +1,75 @@
+name: Detection proposal
+description: A new Slopmeter rule, or a new Leakpeek check
+labels: [detection]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Detections are the product, so this template asks for more than an idea.
+        The bar is evidence, not plausibility: several rules that everyone
+        agreed were obvious were measured *off* the score because they fired
+        more often on hand-built pages than generated ones.
+
+  - type: dropdown
+    id: tool
+    attributes:
+      label: Which tool
+      options:
+        - slopmeter (a tell that a page is still the template)
+        - leakpeek (something a site is exposing)
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What it detects
+      description: One sentence, as a visitor would read it.
+      placeholder: A heading painted with a gradient instead of a colour.
+    validations:
+      required: true
+
+  - type: textarea
+    id: evidence
+    attributes:
+      label: What proves it
+      description: >-
+        What exactly is read, and what makes the result conclusive rather than
+        suggestive? For Leakpeek: what does a positive read return, and could it
+        be proven without writing anything? For Slopmeter: what is measured?
+    validations:
+      required: true
+
+  - type: textarea
+    id: examples
+    attributes:
+      label: Sites it fires on
+      description: >-
+        Public URLs where this is true, and, just as useful, URLs where you
+        expected it to fire and it should not. A rule is only as good as the
+        pages it does not fire on.
+      value: |
+        Fires on:
+        -
+
+        Should NOT fire on:
+        -
+    validations:
+      required: true
+
+  - type: textarea
+    id: falsepositives
+    attributes:
+      label: How it could be wrong
+      description: >-
+        Every rule has a case where a deliberate choice looks like a default.
+        What is this one's? For Leakpeek, is there a reading where the thing
+        found is public by design, like a Supabase anon key?
+    validations:
+      required: true
+
+  - type: input
+    id: weight
+    attributes:
+      label: Suggested weight or severity
+      description: Slopmeter weights are points; Leakpeek is critical/high/medium/low.

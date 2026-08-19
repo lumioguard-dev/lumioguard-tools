@@ -1,4 +1,4 @@
-import { TargetResolver } from '@lumioguard/api-core';
+import { ReadingRecorder, TargetResolver } from '@lumioguard/api-core';
 import {
   SiteCrawler,
   SlopAnalyzer,
@@ -9,7 +9,6 @@ import { ScanResultMapper } from './mappers/ScanResultMapper.js';
 import { SiteReportMapper } from './mappers/SiteReportMapper.js';
 import { CrawlService } from './services/CrawlService.js';
 import { PageFetcher } from './services/PageFetcher.js';
-import { ReadingRecorder } from './services/ReadingRecorder.js';
 import { ScanService } from './services/ScanService.js';
 import { MShotsScreenshotProvider } from './services/ScreenshotProvider.js';
 import { SnapshotLoader } from './services/SnapshotLoader.js';

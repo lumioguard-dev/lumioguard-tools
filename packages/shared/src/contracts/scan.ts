@@ -21,7 +21,7 @@ export const scanResponseSchema = z.object({
   /** What built the page. Reported, never scored. */
   provenance: z.array(findingSchema),
   /**
-   * Retired from the surface, kept on the wire. See slopmeter's README — the engine
+   * Retired from the surface, kept on the wire. See slopmeter's README: the engine
    * still classifies onto this axis and existing callers still read it.
    */
   unassessable: z.array(findingSchema),
