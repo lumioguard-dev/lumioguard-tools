@@ -65,13 +65,15 @@ export class SiteSummarizer {
     const signals = [...union.values()].sort((a, b) => b.weight - a.weight);
     const pages = scored.map((s) => s.page);
     const homepage = pages.find((p) => p.depth === 0) ?? null;
-    const worst = pages.length === 0 ? null : pages.reduce((a, b) => (b.score > a.score ? b : a));
+    // Worst is the LOWEST now: the scale runs higher-is-better.
+    const worst = pages.length === 0 ? null : pages.reduce((a, b) => (b.score < a.score ? b : a));
     const scores = pages.map((p) => p.score).sort((a, b) => a - b);
     const mid = median(scores);
     const mean =
       scores.length === 0 ? 0 : Math.round(scores.reduce((a, s) => a + s, 0) / scores.length);
 
-    const value = Math.max(0, Math.min(100, Math.max(homepage?.score ?? 0, mid)));
+    // The worse of the homepage and the median, which is the LOWER of the two.
+    const value = Math.max(0, Math.min(100, Math.min(homepage?.score ?? 100, mid)));
     const hidden = signals.filter((s) => s.weight > 0 && !s.onHomepage);
 
     return new SiteReportClass({
@@ -92,7 +94,10 @@ export class SiteSummarizer {
         worstPage: worst === null ? null : { url: worst.url, score: worst.score, tier: worst.tier },
         hiddenSignals: hidden.length,
         hiddenWeight: hidden.reduce((total, s) => total + s.weight, 0),
-        hiddenDelta: homepage === null ? null : value - homepage.score,
+        // How much WORSE the site score is than the homepage alone, so it stays
+        // a positive number for a crawl that found something behind the front
+        // door. The subtraction flips with the scale.
+        hiddenDelta: homepage === null ? null : homepage.score - value,
         uniqueSignals: signals.filter((s) => s.weight > 0).length,
       },
       signals,

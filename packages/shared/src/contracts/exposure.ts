@@ -39,6 +39,8 @@ export const exposureFindingSchema = z.object({
   /** Opaque and valid only within this response; exists so a list can be keyed. */
   id: z.string(),
   severity: severitySchema,
+  /** What this finding cost the score. Lets a multi-tool surface rank across tools. */
+  weight: z.number(),
   category: categorySchema,
   title: z.string(),
   detail: z.string(),
@@ -64,7 +66,7 @@ export const exposureResponseSchema = z.object({
   url: z.string(),
   host: z.string(),
   title: z.string().nullable(),
-  /** 0–100, HIGHER IS WORSE. See exposureTier.ts. */
+  /** 0–100, HIGHER IS BETTER. 100 is a site leaking nothing. See exposureTier.ts. */
   score: z.number(),
   tier: exposureTierSchema,
   tierDescription: z.string(),

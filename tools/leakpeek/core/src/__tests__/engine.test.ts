@@ -150,13 +150,14 @@ describe('scoring', () => {
         fix: null,
       },
     ]);
-    expect(result.score).toBeGreaterThanOrEqual(60);
+    expect(result.score).toBeLessThanOrEqual(40);
     expect(result.tier).toBe('Wide Open');
   });
 
-  it('a clean site is Sealed at zero', () => {
+  // Higher is better: a site leaking nothing is the top of the scale.
+  it('a clean site is Sealed at a hundred', () => {
     const result = scoreExposure([]);
-    expect(result.score).toBe(0);
+    expect(result.score).toBe(100);
     expect(result.tier).toBe('Sealed');
   });
 });

@@ -1,3 +1,5 @@
+import { BAND_EDGES, type ScoreBand, type TrackSegment, trackOf } from './band.js';
+
 /** Band names describe the OUTPUT, never the author. */
 export const Tier = {
   HandCrafted: 'Hand-Crafted',
@@ -11,51 +13,39 @@ export type Tier = (typeof Tier)[keyof typeof Tier];
 export const SCORE_MIN = 0;
 export const SCORE_MAX = 100;
 
-export interface TierBand {
+export interface TierBand extends ScoreBand {
   readonly tier: Tier;
-  readonly from: number;
-  /** Inclusive. Unbounded on the last band so any score resolves. */
-  readonly to: number;
-  readonly description: string;
 }
 
 /** Ordered low to high; the first band whose ceiling is not exceeded wins. */
 export const TIER_BANDS: readonly TierBand[] = Object.freeze([
   {
-    tier: Tier.HandCrafted,
-    from: 0,
-    to: 19,
-    description: 'Almost nothing here comes out of a box.',
-  },
-  {
-    tier: Tier.LightlyTemplated,
-    from: 20,
-    to: 39,
-    description: 'Mostly deliberate, leaning on a few defaults the crowd also uses.',
+    tier: Tier.PureSlop,
+    ...BAND_EDGES[0],
+    description: 'Stock everything. The template is still showing.',
   },
   {
     tier: Tier.HeavilyTemplated,
-    from: 40,
-    to: 59,
+    ...BAND_EDGES[1],
     description: 'Untouched defaults across copy, layout and type.',
   },
   {
-    tier: Tier.PureSlop,
-    from: 60,
-    to: Number.POSITIVE_INFINITY,
-    description: 'Stock everything. The template is still showing.',
+    tier: Tier.LightlyTemplated,
+    ...BAND_EDGES[2],
+    description: 'Mostly deliberate, leaning on a few defaults the crowd also uses.',
+  },
+  {
+    tier: Tier.HandCrafted,
+    ...BAND_EDGES[3],
+    description: 'Almost nothing here comes out of a box.',
   },
 ]);
 
 export const TIER_NAMES: readonly Tier[] = Object.freeze(TIER_BANDS.map((band) => band.tier));
 
-export interface TrackSegment {
-  readonly left: number;
-  readonly width: number;
-}
+export type { TrackSegment };
 
 /** A band's place on the 0–100 track, as percentages. */
 export function bandTrack(band: TierBand): TrackSegment {
-  const width = Math.min(band.to + 1 - band.from, SCORE_MAX - band.from);
-  return { left: band.from, width };
+  return trackOf(band, SCORE_MAX);
 }

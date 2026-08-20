@@ -423,53 +423,6 @@
     }
   }
 
-  /*
-   * Light crossing the way on, again every few seconds.
-   *
-   * Two things this gets wrong if written the obvious way. An ease-out makes
-   * the band crawl as it leaves, so it reads as stuck against the edge rather
-   * than as light passing: the travel is linear, at the speed a reflection
-   * actually moves. And a sweep on a loop with no gap is a checkout page, so
-   * the crossing takes a fifth of the cycle and the rest is the pause, spent
-   * parked off the right edge where nothing shows.
-   *
-   * Clipped by the chip's own drawn radius, so the light stops where the ink
-   * does rather than at a rectangle nobody drew.
-   */
-  @keyframes sheen {
-    0% {
-      transform: translateX(-130%) skewX(-18deg);
-    }
-    20% {
-      transform: translateX(330%) skewX(-18deg);
-    }
-    100% {
-      transform: translateX(330%) skewX(-18deg);
-    }
-  }
-
-  .sheen {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .sheen::after {
-    content: "";
-    position: absolute;
-    inset: 0 auto 0 0;
-    width: 34%;
-    pointer-events: none;
-    background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.4), transparent);
-    animation: sheen 4600ms linear 780ms infinite;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    .sheen::after {
-      animation: none;
-      opacity: 0;
-    }
-  }
-
   /* Held back on its own state: the reading arrives ~600ms before the stamp
      lands, so tying the seal's reveal to "scanning" showed it fully formed and
      only then animated it. */

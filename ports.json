@@ -1,13 +1,27 @@
 {
-  "$comment": "Dev port allocations. THE source of truth; CONTRIBUTING.md explains the blocks. Read by each tool's vite.config.ts (proxy target + server port) and by scripts/dev-worker.mjs (the Worker's --port), so a tool's two numbers are one number and cannot drift apart.",
+  "$comment": "Dev port allocations. THE source of truth; CONTRIBUTING.md explains the blocks. Read by the console's vite.config.ts (its own port and one proxy target per tool) and by scripts/dev-worker.mjs (each Worker's --port and --inspector-port), so a tool's numbers are one number each and cannot drift apart.",
   "host": "127.0.0.1",
   "reserved": {
-    "$comment": "Owned by the stack-guard repo. Nothing here may bind these.",
+    "$comment": "Owned by the stack-guard repo, plus wrangler's default inspector port. Nothing here may bind these.",
     "stack-guard-web": 5173,
-    "stack-guard-api": 8787
+    "stack-guard-api": 8787,
+    "wrangler-default-inspector": 9229
   },
   "tools": {
-    "slopmeter": { "web": 5210, "api": 8810 },
-    "leakpeek": { "web": 5220, "api": 8820 }
+    "slopmeter": {
+      "api": 8810,
+      "inspector": 9810
+    },
+    "leakpeek": {
+      "api": 8820,
+      "inspector": 9820
+    },
+    "citecheck": {
+      "api": 8830,
+      "inspector": 9830
+    }
+  },
+  "apps": {
+    "console": 5200
   }
 }

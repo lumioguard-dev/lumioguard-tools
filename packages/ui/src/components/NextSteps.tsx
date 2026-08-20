@@ -5,7 +5,7 @@ export function NextSteps({
   siteKey,
   offer,
 }: {
-  readonly siteKey: string | null;
+  readonly siteKey: string | null | readonly (string | null)[];
   /** What the hand-off is worth, in this tool's own words. */
   readonly offer: string;
 }): JSX.Element | null {
@@ -26,9 +26,12 @@ export function NextSteps({
         href={href}
         target="_blank"
         rel="noreferrer noopener"
-        className="sheen inline-flex shrink-0 items-center gap-[10px] self-start rounded-drawn-chip border-2 border-pen-300 bg-pen-400 px-5 py-[13px] font-sans text-16 font-semibold text-paper-raised no-underline transition-colors hover:bg-pen-300 sm:self-auto sm:px-6 lg:px-7 lg:py-[15px] lg:text-17"
+        className="inline-flex shrink-0 items-center gap-[10px] self-start rounded-drawn-chip border-2 border-pen-300 bg-pen-400 px-5 py-[13px] font-sans text-16 font-semibold text-paper-raised no-underline transition-colors hover:bg-pen-300 sm:self-auto sm:px-6 lg:px-7 lg:py-[15px] lg:text-17"
       >
-        Log in to LumioGuard
+        {/* Set lowercase rather than typed lowercase, as the masthead does: the
+            document keeps the real name, so a copy or a bookmark still spells
+            it properly. */}
+        Log in to <span className="lowercase">LumioGuard</span>
         <svg
           viewBox="0 0 22 15"
           className="h-[15px] w-[22px] fill-none stroke-current"

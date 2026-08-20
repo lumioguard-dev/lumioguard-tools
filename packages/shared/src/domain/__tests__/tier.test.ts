@@ -9,8 +9,10 @@ describe('the tier ladder', () => {
     }
   });
 
-  it('resolves every score in range, and beyond it', () => {
-    expect(TIER_BANDS.at(-1)?.to).toBe(Number.POSITIVE_INFINITY);
+  // Higher is better: the ladder ends at the top of the scale, worst band first.
+  it('runs from the worst band to the best, and ends at the top of the scale', () => {
+    expect(TIER_BANDS[0]?.tier).toBe(Tier.PureSlop);
+    expect(TIER_BANDS.at(-1)?.to).toBe(SCORE_MAX);
   });
 
   it('fills the track exactly once', () => {
@@ -23,11 +25,11 @@ describe('the tier ladder', () => {
   });
 
   it('holds the thresholds the scoring is tuned against', () => {
-    expect(TIER_BANDS.map((band) => [band.tier, band.to])).toEqual([
-      [Tier.HandCrafted, 19],
-      [Tier.LightlyTemplated, 39],
-      [Tier.HeavilyTemplated, 59],
-      [Tier.PureSlop, Number.POSITIVE_INFINITY],
+    expect(TIER_BANDS.map((band) => [band.tier, band.from, band.to])).toEqual([
+      [Tier.PureSlop, 0, 40],
+      [Tier.HeavilyTemplated, 41, 60],
+      [Tier.LightlyTemplated, 61, 80],
+      [Tier.HandCrafted, 81, 100],
     ]);
   });
 });

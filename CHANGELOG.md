@@ -16,6 +16,14 @@ the old number down.
 
 ### Added
 
+- **Citecheck**, a third tool: what stops an answer engine reading a site and
+  quoting it. Empty-without-JavaScript pages, crawlers turned away, no
+  machine-readable claims, nothing an answer could be lifted from.
+- **Readout**, one front end over all three tools. Pick which readings to run,
+  paste an address, and they run at once under a single verdict. Each tool's
+  `web` package is gone: a tool has no page of its own now, its surface is a
+  folder inside the console.
+
 - `SECURITY.md`: how to report a flaw in the tools privately, what each tool
   does to a site it reads, and the line on scanning only what you own.
 - `CODE_OF_CONDUCT.md`, issue templates for bugs and detection proposals, and a
@@ -24,6 +32,29 @@ the old number down.
 
 ### Changed
 
+- **BREAKING: every score now runs 0-100 where HIGHER IS BETTER.** It ran the
+  other way in all three tools, while the app they hand off to has always scored
+  higher-is-better; two directions in one product is a reader asking which way
+  this particular number goes and getting it wrong quietly. A site that scored
+  26 yesterday scores 74 today, and the bands mirror with it: the best is 81-100
+  and the worst is 0-40. Anything holding an old number, including a stored
+  reading, is reading it upside down until it is migrated.
+- Each tool's ladder now takes its band edges from one shared list rather than
+  repeating them, and the consolidated verdict is the LOWEST of the readings
+  that ran rather than the highest.
+- The hand-off now carries **every** reading's site key, joined by `_` in the
+  one `sitekey` parameter, so all three land in LumioGuard rather than only the
+  one that set the verdict. A repeated parameter was tried first: the app parses
+  its search with zod, `sitekey` is a string there, and `?sitekey=A&sitekey=B`
+  arrived as an array and threw before any route matched, rendering a blank
+  page. The separator is outside the key alphabet, so a joined value can only
+  split one way. The worst reading is still first, and decides where the visitor
+  lands.
+- Each reading's score is now stamped into its own section's heading instead of
+  sitting in a strip above it. Two panels named the same tool and put the number
+  a screen away from the findings it was the sum of. The tier's sentence went
+  with the strip: the findings under it are the explanation, and a line
+  restating the band in other words read as a caption rather than a verdict.
 - CI now runs on every pull request and on pushes to master, rather than only
   when dispatched by hand. A contributor could previously open a pull request
   and receive no lint, no typecheck and no tests.
@@ -39,6 +70,10 @@ the old number down.
 
 ### Fixed
 
+- The hand-off button no longer sweeps a band of light across itself on a loop,
+  and spells the name the way every other surface does: typed properly in the
+  document, set lowercase for the eye, so a copy or a bookmark still gets it
+  right.
 - The verdict seal could paint with no colour at all. `inkFor` cast the tier
   string it was handed, so a tier outside the ladder returned `undefined` into
   an inline style, on the one element the whole report is built around. It now

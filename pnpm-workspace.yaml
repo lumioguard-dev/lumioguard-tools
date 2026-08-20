@@ -1,8 +1,12 @@
-# `packages/*` is what every tool shares; `tools/*` is one folder per tool, each
-# holding its own `api`, `web` and `core`. A new tool is added by creating
+# `packages/*` is what every tool shares; `tools/*` is one folder per tool,
+# holding its `api` and its `core`. A new tool is added by creating
 # `tools/<name>/` — the glob picks it up with no edit here.
+#
+# `apps/*` is what gets deployed to a person. There is one: the console, which
+# reads a site with every tool and lands them on a single verdict. A tool has no
+# front end of its own; its surface is a folder under the console's `src/tools/`.
 packages:
+  - "apps/*"
   - "packages/*"
   - "tools/*/api"
-  - "tools/*/web"
   - "tools/*/core"

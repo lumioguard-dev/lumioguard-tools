@@ -29,9 +29,12 @@ function allocations() {
   for (const [label, port] of Object.entries(config.reserved)) {
     if (typeof port === 'number') rows.push({ label, port });
   }
+  for (const [app, port] of Object.entries(config.apps)) {
+    if (typeof port === 'number') rows.push({ label: `${app}:web`, port });
+  }
   for (const [tool, slots] of Object.entries(config.tools)) {
-    rows.push({ label: `${tool}:web`, port: slots.web });
     rows.push({ label: `${tool}:api`, port: slots.api });
+    rows.push({ label: `${tool}:inspector`, port: slots.inspector });
   }
   return rows;
 }
@@ -51,7 +54,24 @@ export function assertNoCollisions() {
   return allocations();
 }
 
-/** A tool's `{ web, api }` ports, or a listing of what does exist. */
+/** Every tool's api port, keyed by tool. The console proxies one row per tool. */
+export function apiPorts() {
+  assertNoCollisions();
+  return Object.fromEntries(Object.entries(config.tools).map(([tool, s]) => [tool, s.api]));
+}
+
+/** An app's own port. The console is the only one; a tool no longer serves a page. */
+export function appPort(app) {
+  assertNoCollisions();
+  const port = config.apps[app];
+  if (typeof port !== 'number') {
+    const known = Object.keys(config.apps).join(', ') || '(none)';
+    throw new Error(`No port slot for app "${app}" in ports.json. Allocated apps: ${known}.`);
+  }
+  return port;
+}
+
+/** A tool's `{ api }` port, or a listing of what does exist. */
 export function portsFor(tool) {
   assertNoCollisions();
   const slots = config.tools[tool];

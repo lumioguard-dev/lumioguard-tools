@@ -2,13 +2,18 @@
 
 **How much of what visitors see is still the template a generator shipped?**
 
-Paste an address. Slopmeter crawls a few pages and scores how closely the site's
-visual and verbal choices match the defaults every generated site ships with.
+Slopmeter crawls a few pages and scores how closely the site's visual and verbal
+choices match the defaults every generated site ships with.
 
-![The Slopmeter report: a Lightly Templated verdict on the demo app, with a
-screenshot and the weighted tells that produced the score](../../assets/slopmeter.jpg)
+It is one of the readings in [Readout](../../apps/console), which runs every tool
+you pick against one address and lands them on a single verdict. This is
+Slopmeter's own section of that report:
 
-*Reading [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/).*
+![Slopmeter's section of the report: a Lightly Templated score of 74, and the
+weighted tells that produced it](../../assets/slopmeter.png)
+
+*Reading [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/). Every
+point comes with the reason it was scored, so the number can be argued with.*
 
 ## Who it is for
 
@@ -18,14 +23,15 @@ within seconds, then trusting it enough to pass it on.
 
 ## The verdict
 
-Score is **0–100 and HIGHER IS WORSE**.
+Score is **0–100 and HIGHER IS BETTER**, matching every other score in the
+suite and the app it hands off to.
 
 | Tier | Score | Meaning |
 |---|---|---|
-| Hand-Crafted | 0–19 | Somebody made decisions here |
-| Lightly Templated | 20–39 | Mostly deliberate, leaning on a few defaults |
-| Heavily Templated | 40–59 | The template is doing most of the talking |
-| Pure Slop | 60+ | Stock everything |
+| Hand-Crafted | 81–100 | Somebody made decisions here |
+| Lightly Templated | 61–80 | Mostly deliberate, leaning on a few defaults |
+| Heavily Templated | 41–60 | The template is doing most of the talking |
+| Pure Slop | 0–40 | Stock everything |
 
 ## What it judges, and what it refuses to
 
@@ -68,11 +74,19 @@ object onto a response.
 
 ```bash
 pnpm install
-pnpm --filter @lumioguard/slopmeter-web dev    # http://127.0.0.1:5210
-pnpm --filter @lumioguard/slopmeter-api dev    # http://127.0.0.1:8810
+pnpm dev            # every tool, plus the console on http://127.0.0.1:5200
 ```
 
-Or `pnpm dev` from the repo root for every tool at once.
+The console is the only page, so running this tool on its own means running its
+Worker and pointing the console at it:
+
+```bash
+pnpm --filter @lumioguard/slopmeter-api dev   # http://127.0.0.1:8810
+pnpm --filter @lumioguard/console dev        # http://127.0.0.1:5200
+```
+
+Turn the other readings off in the picker, or put `?tools=slopmeter` in the
+address. The console proxies `/slopmeter/api` to the Worker above.
 
 ```
 POST /api/crawl  { "url": "example.com", "maxPages": 15, "depth": 2 }
@@ -89,15 +103,20 @@ core/   the engine. Isomorphic, no I/O, no network, so the suite runs offline
   scoring/     tells → score, tier, headline
   crawl/       breadth and depth across a site
 api/    Cloudflare Worker (Hono). Owns fetching, screenshots and the clock
-web/    React + Vite client
 ```
 
-`core` never imports from `api`, and `web` never imports `core`, which would ship
-the whole rule pack to the browser where anyone could read it. Anything both need
-lives in `@lumioguard/shared`.
+Its surface lives with the other tools' in the console, at
+`apps/console/src/tools/slopmeter/`: a client, the report panels, its ink, and the
+descriptor that puts it in the picker and the consolidated score.
 
-The surface, transport and browser-side plumbing are shared with the other tools
-via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
+`core` never imports from `api`, and the console never imports `core`, which
+would ship the whole rule pack to the browser where anyone could read it.
+Anything both need lives in `@lumioguard/shared`, and a number the surface needs
+from the scorer, such as what a finding cost, is put on the wire by the mapper
+rather than recomputed from a second copy of the table.
+
+The drawn surface, transport and browser-side plumbing are shared with the other
+tools via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
 
 ### The parity suite
 
@@ -117,11 +136,11 @@ fixtures to make it pass.
 | `ALLOWED_ORIGINS` | api | `*` in development |
 | `SLOPMETER_INGEST_SECRET` | api | unset (nothing is sent anywhere) |
 | `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
-| `VITE_API_BASE_URL` | web | empty (Vite proxies `/api`) |
-| `VITE_LUMIOGUARD_APP_URL` | web | unset (no button, no offer, no wordmark) |
+| `VITE_SLOPMETER_API_URL` | console | empty (the console proxies `/slopmeter/api`) |
+| `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
 | `SLOPMETER_PARITY_ROOT` | tests | unset (the parity suite skips) |
 
-All optional; see `api/.dev.vars.example` and `web/.env.example`. Slopmeter is a
+All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Slopmeter is a
 complete tool with none of them set. With `VITE_LUMIOGUARD_APP_URL` unset, which
 is the default, the word LumioGuard does not appear on the page at all.
 

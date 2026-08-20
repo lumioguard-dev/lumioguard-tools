@@ -1,0 +1,23 @@
+{
+  "name": "@lumioguard/citecheck-core",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Citecheck engine: crawler access, structured claims, document and answerability analysis, crawl and scoring. Isomorphic, no I/O.",
+  "main": "./src/index.ts",
+  "types": "./src/index.ts",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@lumioguard/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vitest": "^3.2.4"
+  }
+}

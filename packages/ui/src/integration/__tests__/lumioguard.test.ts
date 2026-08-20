@@ -61,6 +61,37 @@ describe.skipIf(AUDIT_ORIGIN === null)('fullAuditUrl, with an app configured', (
   it('takes the key it is given rather than deriving one from an address', () => {
     expect(fullAuditUrl('AAAAAA')).not.toBe(fullAuditUrl('BBBBBB'));
   });
+
+  /**
+   * Every key, in ONE parameter, from a reading that ran several tools.
+   *
+   * A repeated parameter was tried. The app parses its search with zod, where
+   * `sitekey` is a `string`, so `?sitekey=A&sitekey=B` arrived as an array,
+   * threw a SearchParamError before any route matched, and rendered a blank
+   * page. Joining keeps the value a string on every surface that reads it, and
+   * the separator is outside the key alphabet so it can only split one way.
+   */
+  it('carries every key of a multi-tool reading in one parameter', () => {
+    const url = new URL(fullAuditUrl(['AAAAAA', 'BBBBBB', 'CCCCCC']) ?? '');
+    expect(url.searchParams.getAll('sitekey')).toEqual(['AAAAAA_BBBBBB_CCCCCC']);
+  });
+
+  /** The caller orders them, so the reading that set the verdict leads. */
+  it('puts the caller’s worst reading first', () => {
+    const url = new URL(fullAuditUrl(['WORST1', 'BBBBBB']) ?? '');
+    expect(url.searchParams.get('sitekey')).toBe('WORST1_BBBBBB');
+  });
+
+  /** A tool whose recording failed contributes nothing rather than an empty slot. */
+  it('skips the tools that could not be recorded', () => {
+    const url = new URL(fullAuditUrl([null, 'BBBBBB', null]) ?? '');
+    expect(url.searchParams.getAll('sitekey')).toEqual(['BBBBBB']);
+  });
+
+  it('omits the parameter when no tool could be recorded', () => {
+    expect(new URL(fullAuditUrl([null, null]) ?? '').search).toBe('');
+    expect(new URL(fullAuditUrl([]) ?? '').search).toBe('');
+  });
 });
 
 describe('fullAuditUrl, with no app configured', () => {
