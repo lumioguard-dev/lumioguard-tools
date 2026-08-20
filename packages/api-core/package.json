@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/api-core",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "Transport, error handling and target resolution every tool's Worker shares.",

@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/shared",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "private": true,
   "type": "module",
   "description": "Wire contracts (zod) and the domain vocabulary every tool speaks.",
