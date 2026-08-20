@@ -14,8 +14,11 @@ name = "lumioguard-citecheck-api"
 # the Free plan's `*.lumioguard.dev` wildcard cert.
 
 [env.production.vars]
-# The client is served from Pages, a different origin, so CORS is load-bearing.
-ALLOWED_ORIGINS = "https://lumioguard-citecheck-web.pages.dev"
+# The CONSOLE is served from Pages, a different origin, so CORS is load-bearing.
+# Each tool used to serve its own page and allow only that; the console replaced
+# all three, so a stale per-tool origin here fails every reading with a CORS
+# error and nothing useful on screen. Comma-separated to add a custom domain.
+ALLOWED_ORIGINS = "https://lumioguard-readout.pages.dev"
 # Only this deployment records. Absent from [vars] so a fork's plain
 # `wrangler deploy` posts nowhere; recording also needs CITECHECK_INGEST_SECRET.
 LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"
