@@ -59,7 +59,44 @@ function columnsOf(rows: readonly unknown[]): string[] {
 }
 
 /** Fields whose mere presence raises the stakes: a readable table of these is worse. */
-const SENSITIVE = /email|phone|password|token|secret|stripe|card|ssn|address|dob|api_?key/i;
+const SENSITIVE_WORDS: readonly string[] = [
+  'email',
+  'phone',
+  'password',
+  'token',
+  'secret',
+  'stripe',
+  'card',
+  'ssn',
+  'dob',
+  'address',
+];
+
+/** The same, where the tell is two or more adjacent segments rather than one. */
+const SENSITIVE_PHRASES: readonly string[] = ['api_key', 'date_of_birth'];
+
+/**
+ * Matched per NAME SEGMENT, never as a bare substring.
+ *
+ * As one alternation over the whole column name it called `discard_count`,
+ * `wildcard_rules`, `cardinality`, `scorecard_id` and `adobe_id` personal:
+ * `card` and `dob` sit inside all of them. The finding fires either way, since
+ * rows came back to an anonymous request, but the sentence claimed the table
+ * holds personal data when it holds a counter.
+ *
+ * Phrases are matched against the normalised name because `api_key` and
+ * `apiKey` are two segments, and a per-segment test alone would miss both.
+ */
+function looksSensitive(column: string): boolean {
+  const segments = column
+    .replace(/([a-z0-9])([A-Z])/g, '$1_$2')
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((part) => part !== '');
+  if (segments.some((segment) => SENSITIVE_WORDS.includes(segment))) return true;
+  const normalised = `_${segments.join('_')}_`;
+  return SENSITIVE_PHRASES.some((phrase) => normalised.includes(`_${phrase}_`));
+}
 
 /**
  * What one table read means. `status` is the HTTP status; `rows` is the parsed
@@ -78,7 +115,7 @@ export function interpretTableRead(
   if (status !== 200 || rows === null || rows.length === 0) return null;
 
   const columns = columnsOf(rows);
-  const hasSensitive = columns.some((column) => SENSITIVE.test(column));
+  const hasSensitive = columns.some(looksSensitive);
   const columnList = columns.length > 0 ? `; columns: ${columns.slice(0, 12).join(', ')}` : '';
 
   return {
