@@ -36,14 +36,14 @@
     "deploy": "turbo run deploy"
   },
   "devDependencies": {
-    "@biomejs/biome": "1.9.4",
-    "@types/node": "^22.10.2",
+    "@biomejs/biome": "2.5.9",
+    "@types/node": "^26.2.0",
     "turbo": "^2.10.11",
-    "typescript": "^5.7.2"
+    "typescript": "^7.0.2"
   },
   "pnpm": {
     "overrides": {
-      "@biomejs/biome": "1.9.4"
+      "@biomejs/biome": "2.5.9"
     }
   }
 }
