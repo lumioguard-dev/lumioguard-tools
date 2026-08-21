@@ -1,4 +1,5 @@
 import { apiBase } from '../apiBase.js';
+import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
 import { ScanClient } from './ScanClient.js';
 import { AgentSlip } from './report/AgentSlip.js';
@@ -8,9 +9,7 @@ import { tierInk } from './theme.js';
 const client = new ScanClient(apiBase('citecheck'));
 
 export const citecheck: ToolDescriptor = {
-  id: 'citecheck',
-  label: 'SEO & AI visibility',
-  summary: 'Reports what stops an answer engine reading the site and quoting it.',
+  ...toolCopy('citecheck'),
   async run(address, signal) {
     const result = await client.crawl(address, signal);
     return {
