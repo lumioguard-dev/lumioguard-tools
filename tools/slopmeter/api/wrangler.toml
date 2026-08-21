@@ -28,5 +28,5 @@ name = "lumioguard-slopmeter-api"
 # The client is served from Pages, a different origin to this Worker, so CORS is
 # load-bearing. Comma-separated: add the origin, not a wildcard, if it ever gets
 # a domain of its own.
-ALLOWED_ORIGINS = "https://lumioguard-readout.pages.dev"
+ALLOWED_ORIGINS = "https://lumioguard.dev,https://lumioguard-readout.pages.dev"
 LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"
