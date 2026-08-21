@@ -4,6 +4,7 @@ import { CONTENT_PAGES } from '../pages/content.js';
 import { renderPage } from '../pages/render.js';
 
 const ORIGIN = 'https://example.test';
+const ROOT = { base: ORIGIN, path: '' };
 
 /**
  * The explainers exist to be findable, so what is asserted here is the things
@@ -41,7 +42,7 @@ describe('the page register', () => {
 describe('a rendered page', () => {
   for (const page of CONTENT_PAGES) {
     describe(page.meta.path, () => {
-      const html = renderPage(page, ORIGIN, true);
+      const html = renderPage(page, ROOT, true);
 
       it('has exactly one h1, and it is the title', () => {
         // `document.many-h1` and `document.no-h1` both sit on this.
@@ -102,5 +103,27 @@ describe('the published ladders', () => {
   it('names a range that ends at the top of the scale', () => {
     const table = (scores?.sections ?? []).flatMap((s) => (s.table ? [s.table] : []))[0];
     expect(table?.rows[0]?.[1]).toMatch(/-100$/);
+  });
+});
+
+describe('mounted under a path', () => {
+  const MOUNTED = { base: `${ORIGIN}/tools`, path: '/tools' };
+  const page = CONTENT_PAGES[0];
+  if (page === undefined) throw new Error('no content pages');
+  const html = renderPage(page, MOUNTED, true);
+
+  it('canonicalises to the mounted URL, not the host root', () => {
+    expect(html).toContain(`<link rel="canonical" href="${ORIGIN}/tools${page.meta.path}" />`);
+  });
+
+  it('carries the mount point on every in-site link', () => {
+    // A link to `/` from a page mounted at /tools lands on the HOST's home
+    // page, not the app's, which is a dead end the canonical then denies.
+    expect(html).toContain('href="/tools/"');
+    for (const sibling of PAGES) {
+      if (sibling.path === page.meta.path) continue;
+      expect(html, `no mounted link to ${sibling.path}`).toContain(`href="/tools${sibling.path}"`);
+    }
+    expect(html).not.toMatch(/href="\/(?!tools)/);
   });
 });

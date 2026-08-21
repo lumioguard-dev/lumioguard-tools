@@ -10,7 +10,7 @@ import { staticShell } from '../shell.js';
  */
 
 describe('staticShell', () => {
-  const shell = staticShell();
+  const shell = staticShell('');
 
   it('leaves the mount point holding a document rather than nothing', () => {
     // `<div id="root"></div>`, closed and empty, is what `access.shell` matches,
@@ -69,5 +69,15 @@ describe('staticShell', () => {
   it('escapes markup rather than emitting it', () => {
     expect(shell).toContain('SEO &amp; AI visibility');
     expect(shell).not.toMatch(/&(?![a-z]+;|#\d+;)/i);
+  });
+});
+
+describe('staticShell mounted under a path', () => {
+  const shell = staticShell('/tools');
+
+  it('carries the mount point on every link it writes', () => {
+    expect(shell).toContain('href="/tools/?site=');
+    expect(shell).toContain('href="/tools/can-ai-cite-your-site"');
+    expect(shell).not.toMatch(/href="\/(?!tools)/);
   });
 });

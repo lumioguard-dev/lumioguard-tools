@@ -4,6 +4,7 @@ import { CATALOGUE } from '../../src/tools/catalogue.js';
 import { llmsTxt, robotsTxt, sitemapXml } from '../wellKnown.js';
 
 const ORIGIN = 'https://example.test';
+const ROOT = { base: ORIGIN, path: '' };
 
 /**
  * Every field a robots.txt may carry, as the major crawlers document them.
@@ -27,7 +28,7 @@ const KNOWN_FIELDS = new Set([
 
 describe('robots.txt', () => {
   it('uses only fields a crawler recognises', () => {
-    for (const raw of robotsTxt(ORIGIN).split('\n')) {
+    for (const raw of robotsTxt(ROOT).split('\n')) {
       const line = raw.replace(/#.*$/, '').trim();
       if (line === '') continue;
       const field = line.slice(0, line.indexOf(':')).toLowerCase();
@@ -39,7 +40,7 @@ describe('robots.txt', () => {
   it('turns nobody away', () => {
     // `Disallow:` with no value is RFC 9309 for "all of it is yours"; blocking
     // machines here would be the `access.llms-contradiction` pair.
-    const text = robotsTxt(ORIGIN);
+    const text = robotsTxt(ROOT);
     expect(text).toContain('User-agent: *');
     expect(text).toMatch(/^Disallow:\s*$/m);
     expect(text).not.toMatch(/^Disallow:\s*\//m);
@@ -48,7 +49,7 @@ describe('robots.txt', () => {
   it('names the sitemap, so a crawler that reads this first still finds it', () => {
     // `access.sitemap-unlisted`: crawlers guessing at /sitemap.xml find it, the
     // ones that read robots.txt first do not look.
-    expect(robotsTxt(ORIGIN)).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
+    expect(robotsTxt(ROOT)).toContain(`Sitemap: ${ORIGIN}/sitemap.xml`);
   });
 
   it('omits the sitemap line rather than writing a relative one', () => {
@@ -60,7 +61,7 @@ describe('robots.txt', () => {
 });
 
 describe('sitemap.xml', () => {
-  const xml = sitemapXml(ORIGIN);
+  const xml = sitemapXml(ROOT);
 
   it('lists the app and every explainer, and nothing else', () => {
     // Readings are absent on purpose: they live at `?site=…` on the app and
@@ -85,7 +86,7 @@ describe('sitemap.xml', () => {
 });
 
 describe('llms.txt', () => {
-  const text = llmsTxt(ORIGIN);
+  const text = llmsTxt(ROOT);
 
   it('opens the way the format requires: one H1, then a blockquote summary', () => {
     const lines = text.split('\n').filter((line) => line.trim() !== '');

@@ -4,6 +4,8 @@ import { CATALOGUE } from '../../src/tools/catalogue.js';
 import { HOME, headTags } from '../head.js';
 
 const ORIGIN = 'https://example.test';
+const ROOT = { base: ORIGIN, path: '' };
+const MOUNTED = { base: `${ORIGIN}/tools`, path: '/tools' };
 
 describe('headTags', () => {
   it('writes nothing absolute without an origin', () => {
@@ -23,11 +25,19 @@ describe('headTags', () => {
   });
 
   it('points the canonical at the home document, not at whatever ?site= is set', () => {
-    expect(headTags(HOME, ORIGIN, true)).toContain(`<link rel="canonical" href="${ORIGIN}/" />`);
+    expect(headTags(HOME, ROOT, true)).toContain(`<link rel="canonical" href="${ORIGIN}/" />`);
+  });
+
+  it('canonicalises to the mount point when the app is served under one', () => {
+    // The whole app can sit at /tools on another host. A canonical written to
+    // the host root would hand every page to a document that is not this one.
+    const tags = headTags(HOME, MOUNTED, true);
+    expect(tags).toContain(`<link rel="canonical" href="${ORIGIN}/tools/" />`);
+    expect(tags).toContain(`<meta property="og:image" content="${ORIGIN}/tools/og.jpg" />`);
   });
 
   it('drops every image tag together when there is no image', () => {
-    const tags = headTags(HOME, ORIGIN, false);
+    const tags = headTags(HOME, ROOT, false);
     expect(tags).not.toContain('og:image');
     expect(tags).not.toContain('twitter:image');
     // Claiming the large card with no picture renders an empty box.
@@ -37,7 +47,7 @@ describe('headTags', () => {
 
 describe('the structured data', () => {
   const block = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/.exec(
-    headTags(HOME, ORIGIN, true),
+    headTags(HOME, ROOT, true),
   );
   const graph = JSON.parse((block?.[1] ?? '{}').replace(/\\u003c/g, '<')) as {
     readonly '@graph': readonly { readonly '@type': string; readonly featureList?: string[] }[];
