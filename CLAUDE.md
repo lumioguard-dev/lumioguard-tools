@@ -20,9 +20,9 @@ same change when behaviour moves.
   readable claims, nothing an answer can be lifted from. See
   `tools/citecheck/README.md`.
 
-## The five that must not break
+## The six that must not break
 
-Everything else in this file is guidance. These five are the ones where breaking
+Everything else in this file is guidance. These six are the ones where breaking
 them looks like nothing is wrong.
 
 1. **The console never imports `core`.** That ships a whole detection engine to
@@ -45,11 +45,23 @@ them looks like nothing is wrong.
 5. **A report must not become the leak.** Evidence is redacted where it is
    produced: row counts and column names, never values; keys masked. Reports
    render on sites the reader does not own.
+6. **The console serves a real document.** `#root` is filled at build time with
+   the home page's own words, taken from `src/copy.ts` and the tool catalogue.
+   Served empty it is `access.shell`, the blocker Citecheck ships in this repo,
+   and the app looks perfect to every human who visits while scoring 40 on
+   itself. Never hand-write that copy into `index.html`, and never hide the
+   static document from anything that runs JavaScript: serving one thing to a
+   browser and another to a crawler is the cloaking these tools report.
 
 ## Layout
 
 ```
 apps/console                    the one front end
+  build/                        what a crawler is served, written at build time
+  build/pages/                  the prerendered explainers, one document each
+  src/copy.ts                   the app's own words, read by the app and the build
+  src/pages.ts                  the explainers, registered for the app and the build
+  src/tools/catalogue.ts        each tool's id, label and summary as plain data
   src/tools/registry.ts         what a tool must provide to appear
   src/tools/<tool>/             its client, report panels, ink and descriptor
 packages/shared                 wire contracts (zod) and shared domain vocabulary
@@ -215,7 +227,7 @@ no-script render must already be correct.
 
 ## Security
 
-Beyond the five invariants above:
+Beyond the six invariants above:
 
 - Errors from internals are answered generically. Their messages carry file paths
   and rule source.
