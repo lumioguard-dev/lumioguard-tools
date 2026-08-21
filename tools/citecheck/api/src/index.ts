@@ -1,4 +1,11 @@
-import { NOT_FOUND, endpoint, jsonBody, queryParams, toHttpFailure } from '@lumioguard/api-core';
+import {
+  NOT_FOUND,
+  endpoint,
+  jsonBody,
+  queryParams,
+  standardHeaders,
+  toHttpFailure,
+} from '@lumioguard/api-core';
 import {
   type CitationRequest,
   type CrawlRequest,
@@ -21,11 +28,7 @@ app.use('*', async (context, next) => {
   return cors({ origin, allowMethods: ['GET', 'POST', 'OPTIONS'] })(context, next);
 });
 
-app.use('*', async (context, next) => {
-  await next();
-  context.header('x-content-type-options', 'nosniff');
-  context.header('referrer-policy', 'no-referrer');
-});
+app.use('*', standardHeaders());
 
 /**
  * Read a page, then record it so the report can hand the reading on. AWAITED

@@ -1,4 +1,5 @@
 export { endpoint, jsonBody, queryParams } from './http/endpoint.js';
+export { standardHeaders } from './http/headers.js';
 export type { RequestReader } from './http/endpoint.js';
 export { NOT_FOUND, toHttpFailure } from './http/errors.js';
 export type { HttpFailure } from './http/errors.js';

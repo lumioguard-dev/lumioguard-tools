@@ -1,4 +1,4 @@
-import { endpoint, jsonBody, queryParams } from '@lumioguard/api-core';
+import { endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
 import { type ExposureRequest, exposureRequestSchema } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
@@ -17,11 +17,7 @@ app.use('*', async (context, next) => {
   return cors({ origin, allowMethods: ['GET', 'POST', 'OPTIONS'] })(context, next);
 });
 
-app.use('*', async (context, next) => {
-  await next();
-  context.header('x-content-type-options', 'nosniff');
-  context.header('referrer-policy', 'no-referrer');
-});
+app.use('*', standardHeaders());
 
 /**
  * Read a site, then record it so the report can hand the reading on. AWAITED
