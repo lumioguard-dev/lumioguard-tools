@@ -3,11 +3,10 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Readout, what does this site give away?</title>
-    <meta
-      name="description"
-      content="Reads a site with every tool you pick and lands them on one verdict: how much of it came out of a template, what it is exposing to anyone with the URL, and whether an answer engine can quote it."
-    />
+    <!-- Written at build time from `src/copy.ts` and the tool catalogue, so
+         what a crawler is told and what a reader is shown come from one
+         source. Removing the anchor below fails the build. See `build/seo.ts`. -->
+    <!--seo:head-->
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

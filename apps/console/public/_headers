@@ -1,0 +1,35 @@
+# Cloudflare Pages reads this from the build output. `public/` is copied there
+# verbatim, so this file ships as-is.
+
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  # The workers send `no-referrer` because they are handed other people's URLs.
+  # This is a public page and its referrer is only ever its own address, which
+  # is worth sending: it is how a site being read can tell where the visit came
+  # from.
+
+# Hashed at build, so the name changes whenever the bytes do and nothing here
+# ever needs to be revalidated.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The document is NOT hashed, and it is the file carrying the canonical, the
+# OpenGraph tags and the structured data. Cached for a day it would keep serving
+# yesterday's metadata after a deploy that existed to change it.
+/
+  Cache-Control: public, max-age=0, must-revalidate
+
+/index.html
+  Cache-Control: public, max-age=0, must-revalidate
+
+# Read by crawlers rather than browsers, and stale ones are how a sitemap comes
+# to list a page that moved.
+/robots.txt
+  Cache-Control: public, max-age=3600
+
+/sitemap.xml
+  Cache-Control: public, max-age=3600
+
+/llms.txt
+  Cache-Control: public, max-age=3600
