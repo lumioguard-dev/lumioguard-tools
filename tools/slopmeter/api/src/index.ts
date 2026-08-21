@@ -1,4 +1,4 @@
-import { endpoint, jsonBody, queryParams } from '@lumioguard/api-core';
+import { endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
 import {
   type AnalyzeRequest,
@@ -26,11 +26,7 @@ app.use('*', async (context, next) => {
   return cors({ origin, allowMethods: ['GET', 'POST', 'OPTIONS'] })(context, next);
 });
 
-app.use('*', async (context, next) => {
-  await next();
-  context.header('x-content-type-options', 'nosniff');
-  context.header('referrer-policy', 'no-referrer');
-});
+app.use('*', standardHeaders());
 
 const scanPage = (input: ScanRequest): Promise<unknown> =>
   getContainer().scanService.scanUrl(input.url);
