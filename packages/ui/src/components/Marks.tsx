@@ -41,6 +41,38 @@ export function MarkScored({ className }: MarkProps): JSX.Element {
   );
 }
 
+/**
+ * The picker's box, ticked or empty.
+ *
+ * A drawn box rather than the browser's checkbox, which is the one machine-made
+ * control on a page of drawn frames. The real `<input>` is still there and still
+ * does the work; this is what is seen. Both states draw the box, so the chips
+ * hold their width and the tick is the only thing that moves.
+ */
+export function MarkTick({ on }: { readonly on: boolean }): JSX.Element {
+  return (
+    <svg
+      viewBox="0 0 20 20"
+      // NO opacity modifier on the stroke. `stroke-pen-700/60` computed to
+      // `stroke: none` and the empty box vanished: these tokens are `var()`
+      // strings, and an alpha applied to one paints nothing at all rather than
+      // failing. The faint state is a lighter pen, not a faded one.
+      className={`h-[15px] w-[15px] shrink-0 ${on ? 'stroke-pen-300' : 'stroke-pen-700'}`}
+      aria-hidden="true"
+      {...STROKE}
+    >
+      <path d="M3.4 4.2c4.4-.7 9-.8 13.3-.2.5.1.8.5.8 1 .2 3.4.2 6.9 0 10.3 0 .6-.3.9-.9 1-4.3.6-8.8.5-13.2-.1-.5-.1-.8-.4-.8-1-.2-3.4-.2-6.8 0-10.1 0-.5.3-.8.8-.9Z" />
+      {on && (
+        <path
+          d="M5.4 10.3c1.5 1.5 2.9 3 4.3 4.6 1.9-3.6 4.2-7 6.9-10.1"
+          strokeWidth={2.1}
+          className="stroke-pen-300"
+        />
+      )}
+    </svg>
+  );
+}
+
 /** The reel, for the rail. */
 export function MarkReel(): JSX.Element {
   return (

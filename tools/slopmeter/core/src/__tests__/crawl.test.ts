@@ -125,9 +125,10 @@ describe('SiteCrawler', () => {
 describe('site verdict', () => {
   const slop = '<h1>Lorem ipsum dolor sit amet</h1><p>As an AI language model, I cannot.</p>';
 
-  it('is max(homepage, median page), so page count cannot inflate it', async () => {
-    // Nine clean interior pages must not drag a rotten homepage down to clean,
-    // and must not add up to a guilty verdict on their own.
+  it('is the WORSE of homepage and median page, so page count cannot inflate it', async () => {
+    // Nine clean interior pages must not lift a rotten homepage to clean, and
+    // must not add up to a guilty verdict on their own. Worse is LOWER: the
+    // scale runs higher-is-better.
     const pages: Record<string, string> = {
       'https://a.test/': shell(
         `${slop}${Array.from({ length: 9 }, (_, i) => `<a href="/c${i}">c</a>`).join('')}`,
@@ -139,9 +140,9 @@ describe('site verdict', () => {
       depth: 1,
     });
 
-    expect(report.site.homepageScore).toBeGreaterThan(20);
+    expect(report.site.homepageScore).toBeLessThan(80);
     expect(report.site.score).toBe(
-      Math.max(report.site.homepageScore ?? 0, report.site.medianPageScore),
+      Math.min(report.site.homepageScore ?? 100, report.site.medianPageScore),
     );
   });
 
@@ -158,7 +159,7 @@ describe('site verdict', () => {
     expect(report.site.hiddenSignals).toBe(hidden.length);
     // Reported, never charged: the score stays anchored to homepage and median.
     expect(report.site.score).toBe(
-      Math.max(report.site.homepageScore ?? 0, report.site.medianPageScore),
+      Math.min(report.site.homepageScore ?? 100, report.site.medianPageScore),
     );
   });
 

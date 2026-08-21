@@ -23,20 +23,30 @@ if (!tool) {
 }
 
 let port;
+let inspector;
 try {
-  port = portsFor(tool).api;
+  ({ api: port, inspector } = portsFor(tool));
 } catch (error) {
   console.error(error instanceof Error ? error.message : String(error));
   process.exit(1);
 }
 
-console.log(`[ports] ${tool} api → http://${HOST}:${port}`);
+console.log(`[ports] ${tool} api → http://${HOST}:${port} (inspector ${inspector})`);
 
 // `shell: true` so this resolves wrangler from the package's own node_modules
 // bin on Windows, where the bin is a .cmd shim rather than an executable.
-const child = spawn('wrangler', ['dev', '--ip', HOST, '--port', String(port)], {
-  stdio: 'inherit',
-  shell: true,
-});
+// `--inspector-port` is NOT optional here. wrangler defaults every Worker to
+// 9229, so the second one to start fails to bind it and dies, taking the whole
+// `pnpm dev` down with it. Three tools running at once is the normal case in
+// this repo, and the failure reads as "the API is down" with the real reason
+// buried in a runtime stack trace about a socket.
+const child = spawn(
+  'wrangler',
+  ['dev', '--ip', HOST, '--port', String(port), '--inspector-port', String(inspector)],
+  {
+    stdio: 'inherit',
+    shell: true,
+  },
+);
 
 child.on('exit', (code) => process.exit(code ?? 0));

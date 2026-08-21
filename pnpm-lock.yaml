@@ -24,6 +24,61 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  apps/console:
+    dependencies:
+      '@lumioguard/design-tokens':
+        specifier: workspace:*
+        version: link:../../packages/design-tokens
+      '@lumioguard/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
+      '@lumioguard/ui':
+        specifier: workspace:*
+        version: link:../../packages/ui
+      '@lumioguard/web-core':
+        specifier: workspace:*
+        version: link:../../packages/web-core
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@types/react':
+        specifier: ^18.3.12
+        version: 18.3.31
+      '@types/react-dom':
+        specifier: ^18.3.1
+        version: 18.3.7(@types/react@18.3.31)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.4
+        version: 4.7.0(vite@6.4.3(@types/node@22.20.1)(jiti@1.21.7))
+      autoprefixer:
+        specifier: ^10.4.20
+        version: 10.5.4(postcss@8.5.26)
+      postcss:
+        specifier: ^8.4.49
+        version: 8.5.26
+      tailwindcss:
+        specifier: ^3.4.17
+        version: 3.4.19
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vite:
+        specifier: ^6.3.6
+        version: 6.4.3(@types/node@22.20.1)(jiti@1.21.7)
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
+      wrangler:
+        specifier: ^4.42.0
+        version: 4.124.0(@cloudflare/workers-types@5.20260819.1)
+
   packages/api-core:
     dependencies:
       '@lumioguard/shared':
@@ -124,6 +179,50 @@ importers:
         specifier: ^3.23.8
         version: 3.25.76
 
+  tools/citecheck/api:
+    dependencies:
+      '@lumioguard/api-core':
+        specifier: workspace:*
+        version: link:../../../packages/api-core
+      '@lumioguard/citecheck-core':
+        specifier: workspace:*
+        version: link:../core
+      '@lumioguard/shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
+      hono:
+        specifier: ~4.12.27
+        version: 4.12.34
+      zod:
+        specifier: ^3.23.8
+        version: 3.25.76
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^5.20260815.1
+        version: 5.20260819.1
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
+      wrangler:
+        specifier: ^4.42.0
+        version: 4.124.0(@cloudflare/workers-types@5.20260819.1)
+
+  tools/citecheck/core:
+    dependencies:
+      '@lumioguard/shared':
+        specifier: workspace:*
+        version: link:../../../packages/shared
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^3.2.4
+        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
+
   tools/leakpeek/api:
     dependencies:
       '@lumioguard/api-core':
@@ -168,61 +267,6 @@ importers:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
 
-  tools/leakpeek/web:
-    dependencies:
-      '@lumioguard/design-tokens':
-        specifier: workspace:*
-        version: link:../../../packages/design-tokens
-      '@lumioguard/shared':
-        specifier: workspace:*
-        version: link:../../../packages/shared
-      '@lumioguard/ui':
-        specifier: workspace:*
-        version: link:../../../packages/ui
-      '@lumioguard/web-core':
-        specifier: workspace:*
-        version: link:../../../packages/web-core
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
-    devDependencies:
-      '@types/react':
-        specifier: ^18.3.12
-        version: 18.3.31
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.31)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.3(@types/node@22.20.1)(jiti@1.21.7))
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.5.4(postcss@8.5.26)
-      postcss:
-        specifier: ^8.4.49
-        version: 8.5.26
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-      vite:
-        specifier: ^6.3.6
-        version: 6.4.3(@types/node@22.20.1)(jiti@1.21.7)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
-      wrangler:
-        specifier: ^4.42.0
-        version: 4.124.0(@cloudflare/workers-types@5.20260819.1)
-
   tools/slopmeter/api:
     dependencies:
       '@lumioguard/api-core':
@@ -266,61 +310,6 @@ importers:
       vitest:
         specifier: ^3.2.4
         version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
-
-  tools/slopmeter/web:
-    dependencies:
-      '@lumioguard/design-tokens':
-        specifier: workspace:*
-        version: link:../../../packages/design-tokens
-      '@lumioguard/shared':
-        specifier: workspace:*
-        version: link:../../../packages/shared
-      '@lumioguard/ui':
-        specifier: workspace:*
-        version: link:../../../packages/ui
-      '@lumioguard/web-core':
-        specifier: workspace:*
-        version: link:../../../packages/web-core
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      zod:
-        specifier: ^3.23.8
-        version: 3.25.76
-    devDependencies:
-      '@types/react':
-        specifier: ^18.3.12
-        version: 18.3.31
-      '@types/react-dom':
-        specifier: ^18.3.1
-        version: 18.3.7(@types/react@18.3.31)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.4
-        version: 4.7.0(vite@6.4.3(@types/node@22.20.1)(jiti@1.21.7))
-      autoprefixer:
-        specifier: ^10.4.20
-        version: 10.5.4(postcss@8.5.26)
-      postcss:
-        specifier: ^8.4.49
-        version: 8.5.26
-      tailwindcss:
-        specifier: ^3.4.17
-        version: 3.4.19
-      typescript:
-        specifier: ^5.7.2
-        version: 5.9.3
-      vite:
-        specifier: ^6.3.6
-        version: 6.4.3(@types/node@22.20.1)(jiti@1.21.7)
-      vitest:
-        specifier: ^3.2.4
-        version: 3.2.7(@types/node@22.20.1)(jiti@1.21.7)
-      wrangler:
-        specifier: ^4.42.0
-        version: 4.124.0(@cloudflare/workers-types@5.20260819.1)
 
 packages:
 

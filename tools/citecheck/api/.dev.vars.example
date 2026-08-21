@@ -1,0 +1,28 @@
+# Copy to `.dev.vars` (gitignored) for local development.
+#
+# wrangler reads `.dev.vars` automatically in `wrangler dev`. In production these
+# are Worker secrets, `wrangler secret put NAME`, never values in wrangler.toml.
+#
+# EVERY VARIABLE HERE IS OPTIONAL. Citecheck reads, scores and renders its report
+# with none of them set; what they add is the hand-off into LumioGuard.
+
+# Origins allowed to call this API. `*` in development, which is the default.
+# Production sets the deployed web origin.
+# ALLOWED_ORIGINS=https://citecheck.example.com
+
+# Keys the HMAC over each reading posted to LumioGuard, and must match
+# CITECHECK_INGEST_SECRET on that side exactly.
+#
+# 32 bytes as HEX: the recorder hex-decodes it before signing, so a passphrase
+# or a base64 value signs with the wrong key and every ingest is refused:
+#   node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+#
+# Unset switches recording off entirely rather than posting unsigned. The report
+# still renders; it simply carries no site key.
+# CITECHECK_INGEST_SECRET=
+
+# Where a completed reading is posted. Required alongside the secret: unset,
+# recording stays off rather than defaulting to somebody else's API.
+# Point it at your own LumioGuard in development, or a reading records against a
+# database you cannot then look at. 8787 is stack-guard's public-api.
+# LUMIOGUARD_API_BASE_URL=http://127.0.0.1:8787

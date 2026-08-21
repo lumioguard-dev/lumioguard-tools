@@ -25,6 +25,11 @@ coverage/
 # is a copy that goes stale unnoticed.
 PRODUCT.md
 
+# Scratch from reading the code with something other than node: a saved response
+# pasted into a file, the bytecode of a throwaway script. Neither is the code.
+__pycache__/
+*.pyc
+
 .DS_Store
 Thumbs.db
 .idea/

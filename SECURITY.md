@@ -18,10 +18,11 @@ the ones that turn a reader into something else:
 
 - Anything that makes Leakpeek **write** to a target rather than read it
 - Anything that gets a target's data into a report, past the redaction
-- Server-side request forgery: persuading either tool to fetch something it
-  should not reach, such as a cloud metadata endpoint or a private address
+- Server-side request forgery: persuading any tool to fetch something it should
+  not reach, such as a cloud metadata endpoint or a private address. A crawl
+  follows links off a third-party page, so every discovered URL is re-validated
 - Forging an ingest signature, or replaying a captured reading
-- Recovering Slopmeter's rule pack from what crosses the wire
+- Recovering Slopmeter's rule pack, or Citecheck's, from what crosses the wire
 
 ## Scanning other people's sites
 
@@ -44,10 +45,29 @@ So you can judge the above for yourself:
 | | |
 |---|---|
 | **Requests** | `GET` only. No `INSERT`/`UPDATE`/`DELETE`, no mutating RPC, no account creation, no writes to storage |
-| **Volume** | A handful of requests per scan. Slopmeter crawls a bounded number of pages; Leakpeek reads the page, its bundle, and a small set of probes |
-| **Identification** | Both send a User-Agent naming the tool, so a site owner can see what it was |
+| **Volume** | A handful of requests per scan. Slopmeter and Citecheck crawl a bounded number of pages; Leakpeek reads the page, its bundle, and a small set of probes |
+| **Identification** | Every request sends a User-Agent naming the tool, so a site owner can see what it was. **One exception, below** |
 | **Credentials** | Only what the site already published to every visitor, such as a Supabase anon key found in the bundle |
 | **Retention** | Nothing is stored unless you configure the optional LumioGuard integration, which is off by default |
+
+### The one request that does not name the tool
+
+Citecheck exists partly to answer "does this site turn crawlers away without its
+owner realising", and the only way to find out is to ask as one. So exactly one
+request per reading, the second fetch of the entry page, carries a **crawler's
+user agent rather than Citecheck's**. Nothing else about it differs: same `GET`,
+same URL, no credentials, and the response is used only to compare how much text
+came back.
+
+We are naming it here because it is the one place these tools do not identify
+themselves, and a site owner reading their logs deserves to know why. It cannot
+be done honestly and still work: a bot filter that has never heard of
+`LumioGuard-Citecheck` waves it through exactly as it waves a browser through,
+which would report every site as clean.
+
+If you would rather this did not happen to your site, the check is confined to
+`api/src/services/PageFetcher.ts` and a fork can remove it in one edit; the
+reading still runs and reports `agentFetch: false`.
 
 ## Evidence in reports
 

@@ -1,3 +1,5 @@
+export { ResolvingShot } from './components/ResolvingShot.js';
+export { Hint } from './components/Hint.js';
 export { Panel, PanelGrid, PanelHead } from './components/Panel.js';
 export type {
   Hand,
@@ -11,11 +13,12 @@ export { ReadingState } from './components/ReadingState.js';
 export { Subject } from './components/Subject.js';
 export { ThemeToggle } from './components/ThemeToggle.js';
 export { useTheme } from './theme/useTheme.js';
-export { DrawnRule, MarkReel, MarkScored } from './components/Marks.js';
+export { DrawnRule, MarkReel, MarkScored, MarkTick } from './components/Marks.js';
 export { HowItWorks } from './components/HowItWorks.js';
 export type { HowItWorksLabels } from './components/HowItWorks.js';
 export { Band } from './components/verdict/Band.js';
 export { Seal, SEAL_H, SEAL_W } from './components/verdict/Seal.js';
+export { ToolSeal } from './components/verdict/ToolSeal.js';
 export { Verdict } from './components/verdict/Verdict.js';
 export { useVerdictSequence } from './components/verdict/useVerdictSequence.js';
 export type { InkedBand, VerdictScale } from './components/verdict/scale.js';

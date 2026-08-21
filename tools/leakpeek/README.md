@@ -2,15 +2,20 @@
 
 **What is this app exposing to anyone who has the URL?**
 
-Paste an address. Leakpeek reads the page and its scripts, and where the bundle
-points at a backend, it reads that too. Then it reports what a stranger can
-already reach.
+Leakpeek reads the page and its scripts, and where the bundle points at a
+backend, it reads that too. Then it reports what a stranger can already reach.
 
-![The Leakpeek report: a Wide Open verdict on the demo app, with a critical
-finding that a database table is readable without signing in](../../assets/leakpeek.jpg)
+It is one of the readings in [Readout](../../apps/console), which runs every
+tool you pick against one address and lands them on a single verdict. This is
+Leakpeek's own section of that report:
+
+![Leakpeek's section of the report: a Wide Open score of 40, and a critical
+finding that a database table is readable without signing in](../../assets/leakpeek.png)
 
 *Reading [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/), a
-deliberately vulnerable app kept for testing.*
+deliberately vulnerable app kept for testing. "Sets the verdict above" means
+this was the worst of the readings that ran, so the site's overall score is
+this one.*
 
 ## Who it is for
 
@@ -25,18 +30,20 @@ The answer has to be provable. "You might have a misconfiguration" is worthless;
 
 ## The verdict
 
-Score is **0–100 and HIGHER IS WORSE**. It is an exposure ladder, not a health
-score, and no surface may render it as one.
+Score is **0–100 and HIGHER IS BETTER**, matching every other score in the
+suite and the app it hands off to. It is an exposure ladder, not a health score,
+and no surface may render it as one: a hundred means nothing was found leaking,
+never that the app is secure.
 
 | Tier | Score | Meaning |
 |---|---|---|
-| Sealed | 0–19 | Nothing obvious is leaking from the browser |
-| Exposed | 20–39 | Something is readable that should not be |
-| Cracked | 40–59 | More than one, or one that matters |
-| Wide Open | 60+ | Anyone with the URL can read this app's data right now |
+| Sealed | 81–100 | Nothing obvious is leaking from the browser |
+| Exposed | 61–80 | Something is readable that should not be |
+| Cracked | 41–60 | More than one, or one that matters |
+| Wide Open | 0–40 | Anyone with the URL can read this app's data right now |
 
-**Any critical finding pins the score to at least 60.** A leaked database is Wide
-Open however tidy the rest of the site is.
+**Any critical finding pins the score down to 40 or below.** A leaked database
+is Wide Open however tidy the rest of the site is.
 
 ## What it checks
 
@@ -99,11 +106,19 @@ It names the issue and proves it. It does not hand out the fix.
 
 ```bash
 pnpm install
-pnpm --filter @lumioguard/leakpeek-web dev    # http://127.0.0.1:5220
-pnpm --filter @lumioguard/leakpeek-api dev    # http://127.0.0.1:8820
+pnpm dev            # every tool, plus the console on http://127.0.0.1:5200
 ```
 
-Or `pnpm dev` from the repo root for every tool at once.
+The console is the only page, so running this tool on its own means running its
+Worker and pointing the console at it:
+
+```bash
+pnpm --filter @lumioguard/leakpeek-api dev   # http://127.0.0.1:8820
+pnpm --filter @lumioguard/console dev        # http://127.0.0.1:5200
+```
+
+Turn the other readings off in the picker, or put `?tools=leakpeek` in the
+address. The console proxies `/leakpeek/api` to the Worker above.
 
 ```
 POST /api/scan   { "url": "example.com" }
@@ -120,15 +135,14 @@ core/   the engine. Isomorphic, no I/O, no network, so the suite runs offline
   scoring/   findings → score, tier, headline
   domain/    the finding shape the engine speaks
 api/    Cloudflare Worker (Hono). Owns fetching, timeouts and the clock
-web/    React + Vite client
 ```
 
 `core` never imports from `api`, and `web` never imports `core`, which would ship
 the detection logic to the browser. Anything both need is domain vocabulary and
 lives in `@lumioguard/shared`.
 
-The surface, transport and browser-side plumbing are shared with the other tools
-via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
+The drawn surface, transport and browser-side plumbing are shared with the other
+tools via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
 
 ## Configuration
 
@@ -137,10 +151,10 @@ via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
 | `ALLOWED_ORIGINS` | api | `*` in development |
 | `LEAKPEEK_INGEST_SECRET` | api | unset (nothing is sent anywhere) |
 | `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
-| `VITE_API_BASE_URL` | web | empty (Vite proxies `/api`) |
-| `VITE_LUMIOGUARD_APP_URL` | web | unset (no button, no offer, no wordmark) |
+| `VITE_LEAKPEEK_API_URL` | console | empty (the console proxies `/leakpeek/api`) |
+| `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
 
-All optional; see `api/.dev.vars.example` and `web/.env.example`. Leakpeek is a
+All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Leakpeek is a
 complete tool with none of them set. With `VITE_LUMIOGUARD_APP_URL` unset, which
 is the default, the word LumioGuard does not appear on the page at all.
 

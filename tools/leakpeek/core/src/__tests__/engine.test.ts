@@ -37,6 +37,69 @@ describe('secret scanning', () => {
     const [finding] = scanForSecrets('sk_live_51ABCDEFGHIJKLMNOPQRSTUV');
     expect(finding?.code).toBe('secret:stripe-live');
   });
+
+  // Verbatim from apple.com's carousel bundle. The rule accepted `-` inside a
+  // legacy key's body, so both of these were reported as leaked OpenAI keys on
+  // one of the most scrutinised sites on the web. Masked to `sk-d…ion` the
+  // claim looked entirely credible, which is what made it worth a test.
+  it('does not read a hyphenated CSS custom property as an OpenAI key', () => {
+    const bundle =
+      'el.style.setProperty("--sk-dotnav-timed-duration",`${t}s`);' +
+      'el.style.setProperty("--sk-dotnav-variable-duration",`${d}ms`);';
+    expect(scanForSecrets(bundle)).toEqual([]);
+  });
+
+  // The same flaw as the OpenAI rule, found by auditing the rest of the pack:
+  // `` does not reject a neighbouring hyphen, so every credential shape still
+  // matched when embedded in a longer identifier. One case per rule.
+  it.each([
+    ['openai', '--sk-dotnav-timed-duration'],
+    ['stripe', `--sk_live_${'a'.repeat(25)}-tail`],
+    ['aws', `prefix-AKIA${'A'.repeat(16)}-suffix`],
+    ['google', `--AIza${'b'.repeat(34)}-more-identifier-text`],
+    ['github', `--ghp_${'a'.repeat(36)}-tail`],
+    ['jwt', '--eyJhbGciOiJIUzI1.eyJzdWIiOiIxMjM0.SflKxwRJSMeKKF2QT4-x'],
+  ])('does not read a hyphenated identifier as a %s credential', (_label, decoy) => {
+    expect(scanForSecrets(decoy)).toEqual([]);
+  });
+
+  it('still finds every real credential shape', () => {
+    const real = [
+      'sk_live_51ABCDEFGHIJKLMNOPQRSTUV',
+      'AKIAIOSFODNN7EXAMPLE',
+      `AIza${'b'.repeat(35)}`,
+      `ghp_${'a'.repeat(36)}`,
+    ];
+    for (const secret of real) {
+      expect(scanForSecrets(`const k = "${secret}"`).length, secret.slice(0, 10)).toBe(1);
+    }
+  });
+
+  it('still finds both shapes of real OpenAI key', () => {
+    const legacy = 'sk-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789012345678';
+    const project = 'sk-proj-ABCDEFGHIJKLMNOPQRSTUVWXYZ0123';
+    expect(scanForSecrets(`const k = "${legacy}"`)[0]?.code).toBe('secret:openai');
+    expect(scanForSecrets(`const k = "${project}"`)[0]?.code).toBe('secret:openai');
+  });
+});
+
+describe('what a readable table is said to hold', () => {
+  const read = (columns: Record<string, unknown>) => interpretTableRead('waitlist', 200, [columns]);
+
+  // The finding fires either way: rows came back to an anonymous request. What
+  // moves is the SENTENCE, and a substring match called ordinary counters
+  // personal — `card` sits inside `discard_count` and `dob` inside `adobe_id`.
+  it('does not call ordinary columns personal', () => {
+    const finding = read({ discard_count: 1, cardinality: 2, adobe_id: 3, scorecard_id: 4 });
+    expect(finding?.severity).toBe('critical');
+    expect(finding?.detail).not.toContain('look personal');
+  });
+
+  it('still calls genuinely personal columns personal', () => {
+    for (const column of ['user_email', 'passwordHash', 'api_key', 'apiKey', 'date_of_birth']) {
+      expect(read({ [column]: 'x' })?.detail, column).toContain('look personal');
+    }
+  });
 });
 
 describe('security headers', () => {
@@ -150,13 +213,14 @@ describe('scoring', () => {
         fix: null,
       },
     ]);
-    expect(result.score).toBeGreaterThanOrEqual(60);
+    expect(result.score).toBeLessThanOrEqual(40);
     expect(result.tier).toBe('Wide Open');
   });
 
-  it('a clean site is Sealed at zero', () => {
+  // Higher is better: a site leaking nothing is the top of the scale.
+  it('a clean site is Sealed at a hundred', () => {
     const result = scoreExposure([]);
-    expect(result.score).toBe(0);
+    expect(result.score).toBe(100);
     expect(result.tier).toBe('Sealed');
   });
 });
