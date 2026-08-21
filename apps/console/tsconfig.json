@@ -14,5 +14,11 @@
       "@lumioguard/design-tokens/tailwind": ["../../packages/design-tokens/src/tailwind/plugin.ts"]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "tailwind.config.ts"]
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    "build/**/*.ts",
+    "vite.config.ts",
+    "tailwind.config.ts"
+  ]
 }
