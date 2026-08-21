@@ -4,6 +4,7 @@ import {
   headlineFor,
   orderFindings,
   scoreExposure,
+  weightOf,
 } from '@lumioguard/leakpeek-core';
 import type { DetectedStackDto, ExposureFindingDto, ExposureResponse } from '@lumioguard/shared';
 
@@ -34,6 +35,7 @@ export function toExposureResponse(inputs: ScanInputs): ExposureResponse {
   const findings: ExposureFindingDto[] = ordered.map((finding, index) => ({
     id: `f${index}`,
     severity: finding.severity,
+    weight: weightOf(finding.severity),
     category: finding.category,
     title: finding.title,
     detail: finding.detail,

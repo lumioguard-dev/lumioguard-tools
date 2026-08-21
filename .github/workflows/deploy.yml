@@ -1,6 +1,11 @@
 name: Deploy
 
-# Deploys one tool from a released tag, api first (see CONTRIBUTING.md).
+# Deploys from a released tag, api first (see CONTRIBUTING.md).
+#
+# The two halves are no longer symmetrical. There are three apis, one per tool,
+# and ONE web app: the console, which reads a site with every tool and lands
+# them on a single verdict. So `tool` selects an api and `target` decides
+# whether the console goes out with it.
 on:
   workflow_dispatch:
     inputs:
@@ -15,6 +20,7 @@ on:
         options:
           - slopmeter
           - leakpeek
+          - citecheck
       target:
         description: "Which half of it"
         required: true
@@ -23,7 +29,7 @@ on:
         options:
           - both
           - api
-          - web
+          - console
 
 # Never let two deploys of the same tool overlap; let an in-flight one finish.
 concurrency:
@@ -72,11 +78,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
 
-  deploy-web:
-    name: deploy ${{ inputs.tool }} web
+  deploy-console:
+    name: deploy console
     needs: [verify, deploy-api]
-    # `always()` so a web-only deploy is not blocked by the api job being skipped.
-    if: always() && needs.verify.result == 'success' && (inputs.target == 'both' || inputs.target == 'web') && needs.deploy-api.result != 'failure'
+    # `always()` so a console-only deploy is not blocked by the api job being skipped.
+    if: always() && needs.verify.result == 'success' && (inputs.target == 'both' || inputs.target == 'console') && needs.deploy-api.result != 'failure'
     runs-on: ubuntu-latest
     environment: production
     steps:
@@ -91,21 +97,22 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # Baked into the bundle: Pages and the Worker are different origins, and
-      # the origin is fixed at BUILD time, so it is selected per tool here rather
-      # than read at runtime. Picking the wrong one fails every scan with a CORS
-      # error and nothing useful in the console.
+      # Baked into the bundle: Pages and the Workers are different origins, and
+      # an origin is fixed at BUILD time. The console talks to all three, so all
+      # three are set here. A missing one fails that tool's reading with a CORS
+      # error and nothing useful in the console, while the other tools carry on,
+      # which is exactly the failure that is easy to miss.
       #
       # VITE_LUMIOGUARD_APP_URL is THE switch for the optional integration. Left
-      # unset - which is what a fork gets - the report ships with no hand-off
+      # unset - which is what a fork gets - the console ships with no hand-off
       # button, no offer and no LumioGuard wordmark anywhere on the page.
-      - name: build web
+      - name: build console
         env:
-          VITE_API_BASE_URL: >-
-            ${{ inputs.tool == 'slopmeter'
-                && vars.VITE_API_BASE_URL_SLOPMETER
-                || vars.VITE_API_BASE_URL_LEAKPEEK }}
+          VITE_SLOPMETER_API_URL: ${{ vars.VITE_API_BASE_URL_SLOPMETER }}
+          VITE_LEAKPEEK_API_URL: ${{ vars.VITE_API_BASE_URL_LEAKPEEK }}
+          VITE_CITECHECK_API_URL: ${{ vars.VITE_API_BASE_URL_CITECHECK }}
           VITE_LUMIOGUARD_APP_URL: ${{ vars.VITE_LUMIOGUARD_APP_URL }}
-        run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run build
+          VITE_LUMIOGUARD_SITE_URL: ${{ vars.VITE_LUMIOGUARD_SITE_URL }}
+        run: pnpm --filter @lumioguard/console run build
 
-      - run: pnpm --filter @lumioguard/${{ inputs.tool }}-web run deploy
+      - run: pnpm --filter @lumioguard/console run deploy

@@ -49,7 +49,10 @@ describe('the wire never carries rule identity', () => {
       provenance: Array<{ label: string }>;
     };
 
-    expect(response.score).toBeGreaterThan(0);
+    // Higher is better, so a Pure Slop page scores LOW. The penalty total is
+    // unchanged: it is still what the rules charged, and only the score it is
+    // subtracted from knows about the direction.
+    expect(response.score).toBeLessThanOrEqual(40);
     expect(response.tier).toBe('Pure Slop');
     expect(response.breakdown.penalties).toBeGreaterThan(0);
 

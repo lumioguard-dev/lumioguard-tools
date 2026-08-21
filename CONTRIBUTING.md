@@ -33,6 +33,10 @@ scoped to the package, and the body says *why*. One logical change per commit.
 ## How the code is arranged
 
 ```
+apps/
+  console/           the one front end. React + Vite
+    src/tools/<tool>/  that tool's client, report panels, ink and descriptor
+    src/tools/registry.ts  what a tool must provide to appear in the console
 packages/            what every tool shares
   shared/            wire contracts (zod) and domain vocabulary
   design-tokens/     colour, type, spacing, radii → a Tailwind plugin
@@ -42,15 +46,21 @@ packages/            what every tool shares
 tools/<tool>/
   core/              the detection engine. Isomorphic, no I/O
   api/               Cloudflare Worker (Hono)
-  web/               React + Vite client
 ```
 
-Dependencies point one way. `web` and `api` depend on `shared`; `api` also
+**A tool has no front end of its own.** There is one app, and every tool's
+surface is a folder inside it. Three meters on one page ask the reader which
+number is the answer, so the console draws a single verdict, the worst of the
+readings that ran, and each tool's own score sits with its own section.
+
+Dependencies point one way. The console and `api` depend on `shared`; `api` also
 depends on `core`; `core` depends only on `shared`.
 
-**`web` must never import `core`.** That would ship the whole rule pack to the
-browser, where anyone can read it. Anything both the engine and the surface need
-is domain vocabulary and belongs in `shared`.
+**The console must never import `core`.** That would ship the whole rule pack to
+the browser, where anyone can read it. Anything both the engine and the surface
+need is domain vocabulary and belongs in `shared`. A weight the surface has to
+rank findings by is put on the WIRE by the mapper rather than recomputed in the
+client, so there is never a second copy of a scorer's table.
 
 **`core` does no I/O.** Fetching, screenshots and the clock live in `api`
 services. That is what lets the engines be tested against fixtures with no
@@ -69,17 +79,33 @@ rather than from whatever Vite finds free.
 | Range | Owner |
 |---|---|
 | `5173`, `8787` | Reserved for the LumioGuard app and its API. Never take these. |
-| `52xx` | tool web apps |
+| `9229` | wrangler's default inspector port. Reserved, and the reason for the third column. |
+| `52xx` | apps |
 | `88xx` | tool Workers |
+| `98xx` | tool Worker inspectors |
 
-| Tool | Web | Worker |
+| Service | Port | Inspector |
 |---|---|---|
-| slopmeter | `5210` | `8810` |
-| leakpeek | `5220` | `8820` |
+| console | `5200` | |
+| slopmeter api | `8810` | `9810` |
+| leakpeek api | `8820` | `9820` |
+| citecheck api | `8830` | `9830` |
 
-`ports.json` is the single source of truth. `vite.config.ts` and
-`scripts/dev-worker.mjs` both read it, so a tool's two numbers cannot drift
-apart, and `scripts/ports.mjs` fails loudly if two owners claim one port.
+**Every Worker needs its own inspector port.** `wrangler dev` defaults all of
+them to `9229`, so the second to start fails to bind it and exits, taking the
+whole `pnpm dev` down. Three tools running at once is the normal case here, and
+the symptom is the one hardest to read: the console loads, one tool answers, the
+others return `502`, and the real cause is a socket error in a runtime stack
+trace nobody scrolls to. `scripts/dev-worker.mjs` passes `--inspector-port` from
+the same row as `--port`.
+
+A tool no longer serves a page of its own. There is one app, the console, and
+it proxies `/<tool>/api` to that tool's Worker.
+
+`ports.json` is the single source of truth. The console's `vite.config.ts` and
+`scripts/dev-worker.mjs` both read it, so a tool's number cannot drift apart
+from the proxy pointed at it, and `scripts/ports.mjs` fails loudly if two owners
+claim one port.
 
 Vite's fallback behaviour is why this is a table: it takes the next free port and
 prints it, so a collision surfaces as a proxy pointing at whatever answered
@@ -138,39 +164,44 @@ fixtures to make it pass.
 ## Adding a tool
 
 1. Create `tools/<name>/{core,api,web}`. The workspace globs pick it up with no
-   config edit.
-2. Claim the next free slot in `ports.json`.
-3. Add the tool to the `tool` choice list in `.github/workflows/deploy.yml`.
-4. Add `VITE_API_BASE_URL_<TOOL>` as a repository variable and reference it in
-   the web build step.
-5. Create its Pages project (below).
+   config edit. Its `web` is a surface library, not an app: a client, a report
+   component and its ink, exported from `src/index.ts`.
+2. Claim the next free api slot in `ports.json`. The console proxies
+   `/<name>/api` to it with no edit anywhere.
+3. Add a descriptor in `apps/console/src/tools/` and a line in that folder's
+   `index.ts`. That is the whole surface change: the picker, the consolidated
+   score, the hand-off and the report all read that array.
+4. Add the tool to the `tool` choice list in `.github/workflows/deploy.yml`.
+5. Add `VITE_API_BASE_URL_<TOOL>` as a repository variable and map it to the
+   console's `VITE_<NAME>_API_URL` in the console build step.
 
 ## Deploying
 
-Each tool owns its own Worker and Pages project and ships on its own, so
-releasing one never touches a sibling. That independence is why the repo is laid out by
-tool rather than by layer.
+Each tool owns its own Worker and ships on its own, so releasing one never
+touches a sibling. That independence is why the repo is laid out by tool rather
+than by layer. There is **one** Pages project, because there is one app.
 
 | Part | Cloudflare resource | Name |
 |---|---|---|
 | `tools/<tool>/api` | Worker | `lumioguard-<tool>-api` |
-| `tools/<tool>/web` | Pages | `lumioguard-<tool>-web` |
+| `apps/console` | Pages | `lumioguard-readout` |
 
 **One-time.** Workers are created by `wrangler deploy` on first run; Pages
 projects are not:
 
 ```bash
-pnpm dlx wrangler pages project create lumioguard-<tool>-web --production-branch main
+pnpm dlx wrangler pages project create lumioguard-readout --production-branch main
 ```
 
 Then set two repository secrets, `CLOUDFLARE_API_TOKEN` (with *Workers Scripts:
 Edit* and *Pages: Edit*) and `CLOUDFLARE_ACCOUNT_ID`, plus one variable per tool,
-`VITE_API_BASE_URL_<TOOL>`, holding the deployed Worker's origin.
+`VITE_API_BASE_URL_<TOOL>`, holding that tool's deployed Worker origin.
 
-That last one matters. In development Vite proxies `/api` to the local Worker, so
-the client uses a relative path. In production the Pages site and the Worker are
-**different origins**, and the origin is baked into the bundle at build time. Set
-it wrong and every scan fails CORS with no useful error. Point each Worker's
+Those matter. In development the console proxies `/<tool>/api` to the local
+Worker, so the client uses a relative path. In production the Pages site and the
+Workers are **different origins**, and each is baked into the bundle at build
+time. Set one wrong and that tool's reading fails CORS with no useful error
+**while the other tools carry on**, which is easy to miss. Point each Worker's
 `ALLOWED_ORIGINS` at its Pages URL rather than leaving `*` in production.
 
 **Shipping.** GitHub → Actions → **Deploy** → Run workflow; pick the tool and
@@ -191,9 +222,9 @@ it to production.
 
 ## Local environment files
 
-Copy `api/.dev.vars.example` → `.dev.vars` and `web/.env.example` →
-`.env.development.local`. Both are gitignored, and every variable in them is
-optional.
+Copy each tool's `api/.dev.vars.example` → `.dev.vars`, and
+`apps/console/.env.example` → `apps/console/.env.development.local`. Both are
+gitignored, and every variable in them is optional.
 
 Use `.env.development.local`, **not** `.env.local`: Vite reads `.env.local` in
 every mode including `vite build`, so local values in it would ship in a laptop

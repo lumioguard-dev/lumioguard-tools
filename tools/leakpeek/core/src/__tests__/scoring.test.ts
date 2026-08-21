@@ -1,6 +1,6 @@
 import {
   EXPOSURE_BANDS,
-  EXPOSURE_CRITICAL_FLOOR,
+  EXPOSURE_CRITICAL_CEILING,
   EXPOSURE_MAX,
   EXPOSURE_MIN,
   ExposureTier,
@@ -31,9 +31,9 @@ function finding(severity: ExposureFinding['severity'], code = 'x'): ExposureFin
 }
 
 describe('scoreExposure', () => {
-  it('scores nothing found as the bottom of the ladder, not as a pass mark', () => {
+  it('scores nothing found as the top of the ladder, which is what Sealed means', () => {
     const result = scoreExposure([]);
-    expect(result.score).toBe(EXPOSURE_MIN);
+    expect(result.score).toBe(EXPOSURE_MAX);
     expect(result.tier).toBe(ExposureTier.Sealed);
   });
 
@@ -44,30 +44,30 @@ describe('scoreExposure', () => {
   // readable right now".
   it('pins any single critical into Wide Open, alone on an otherwise clean site', () => {
     const result = scoreExposure([finding('critical')]);
-    expect(result.score).toBeGreaterThanOrEqual(EXPOSURE_CRITICAL_FLOOR);
+    expect(result.score).toBeGreaterThanOrEqual(EXPOSURE_CRITICAL_CEILING);
     expect(result.tier).toBe(ExposureTier.WideOpen);
   });
 
-  // The floor and the band it names must be ONE number. As two literals they
+  // The ceiling and the band it names must be ONE number. As two literals they
   // could not fail together: retuning the ladder would move the band and leave
-  // the floor behind, and a critical would quietly land a tier lower than the
-  // README promises.
-  it('takes its floor from the top band rather than repeating the number', () => {
-    const top = EXPOSURE_BANDS[EXPOSURE_BANDS.length - 1];
-    expect(EXPOSURE_CRITICAL_FLOOR).toBe(top?.from);
-    expect(scoreExposure([finding('critical')]).tier).toBe(top?.tier);
+  // the ceiling behind, and a critical would quietly land a tier above the one
+  // the README promises.
+  it('takes its ceiling from the worst band rather than repeating the number', () => {
+    const worst = EXPOSURE_BANDS[0];
+    expect(EXPOSURE_CRITICAL_CEILING).toBe(worst?.to);
+    expect(scoreExposure([finding('critical')]).tier).toBe(worst?.tier);
   });
 
   it('never lets a pile of lesser findings outrank a critical', () => {
     const critical = scoreExposure([finding('critical')]);
     const manyLow = scoreExposure(Array.from({ length: 12 }, (_, i) => finding('low', `l${i}`)));
-    expect(critical.score).toBeGreaterThan(manyLow.score);
+    expect(critical.score).toBeLessThan(manyLow.score);
     expect(manyLow.tier).not.toBe(ExposureTier.WideOpen);
   });
 
   // Higher is worse, the opposite of every health score. A regression that
   // inverted this would still produce a plausible-looking number.
-  it('runs higher as more is exposed', () => {
+  it('runs LOWER as more is exposed', () => {
     const scores = [
       scoreExposure([]).score,
       scoreExposure([finding('low')]).score,
@@ -75,15 +75,15 @@ describe('scoreExposure', () => {
       scoreExposure([finding('high')]).score,
       scoreExposure([finding('critical')]).score,
     ];
-    expect(scores).toEqual([...scores].sort((a, b) => a - b));
+    expect(scores).toEqual([...scores].sort((a, b) => b - a));
     expect(new Set(scores).size).toBe(scores.length);
   });
 
-  it('clamps to the top of the scale rather than running past it', () => {
+  it('clamps to the bottom of the scale rather than running past it', () => {
     const result = scoreExposure(
       Array.from({ length: 40 }, (_, i) => finding('critical', `c${i}`)),
     );
-    expect(result.score).toBe(EXPOSURE_MAX);
+    expect(result.score).toBe(EXPOSURE_MIN);
     expect(result.tier).toBe(ExposureTier.WideOpen);
   });
 

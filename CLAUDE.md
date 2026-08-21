@@ -15,15 +15,22 @@ same change when behaviour moves.
 - **Leakpeek** reports what an app is exposing: keys in the bundle, a database
   with no row-level security, files served from the web root. See
   `tools/leakpeek/README.md`.
+- **Citecheck** reports what stops a page being quoted by an answer engine: a
+  body that is empty without JavaScript, crawlers turned away, no machine
+  readable claims, nothing an answer can be lifted from. See
+  `tools/citecheck/README.md`.
 
 ## The five that must not break
 
 Everything else in this file is guidance. These five are the ones where breaking
 them looks like nothing is wrong.
 
-1. **`web` never imports `core`.** That ships a whole detection engine to the
-   browser, where anyone can read it. Anything both the engine and the surface
-   need is domain vocabulary and belongs in `shared`.
+1. **The console never imports `core`.** That ships a whole detection engine to
+   the browser, where anyone can read it. Anything both the engine and the
+   surface need is domain vocabulary and belongs in `shared`. Where the surface
+   needs a number the scorer owns, such as what a finding cost, the mapper puts
+   it on the WIRE rather than the client recomputing it from a second copy of
+   the table.
 2. **`core` does no I/O.** No `fetch`, no filesystem, no clock. Fetching,
    screenshots and time belong to `api` services. This is what lets the suite run
    offline in seconds.
@@ -42,22 +49,35 @@ them looks like nothing is wrong.
 ## Layout
 
 ```
-packages/shared          wire contracts (zod) and shared domain vocabulary
-packages/design-tokens   colour, type, radii, elevation, as a Tailwind plugin
-packages/ui              the drawn surface: components, theme, stylesheet
-packages/api-core        transport, target resolution, reading hand-off
-packages/web-core        browser-side transport and scan state
-tools/<tool>/core        detection engine. No I/O
-tools/<tool>/api         Cloudflare Worker over hono
-tools/<tool>/web         React + Vite client
+apps/console                    the one front end
+  src/tools/registry.ts         what a tool must provide to appear
+  src/tools/<tool>/             its client, report panels, ink and descriptor
+packages/shared                 wire contracts (zod) and shared domain vocabulary
+packages/design-tokens          colour, type, radii, elevation, as a Tailwind plugin
+packages/ui                     the drawn surface: components, theme, stylesheet
+packages/api-core               transport, target resolution, reading hand-off
+packages/web-core               browser-side transport and scan state
+tools/<tool>/core               detection engine. No I/O
+tools/<tool>/api                Cloudflare Worker over hono
 ```
 
-Both tools take the same three-package shape and draw on the shared packages.
-They do not depend on each other: a type both engines need belongs in `shared`,
-never imported across tools.
+Every tool is an engine and a Worker, and draws on the shared packages. They do
+not depend on each other: a type both engines need belongs in `shared`, never
+imported across tools.
 
-Dependencies point one way. `web` and `api` depend on `shared`; `api` also
+Dependencies point one way. The console and `api` depend on `shared`; `api` also
 depends on `core`; `core` depends only on `shared`.
+
+**There is one front end, and a tool has none of its own.** Three meters on one
+page ask the reader which number is the answer. The console draws one verdict,
+the **worst** of the readings that ran, and each tool's own score sits with its
+own section in that tool's own words.
+
+A tool is added to the surface by a folder under `apps/console/src/tools/` and a
+line in that folder's `index.ts`. Nothing else in the console names a tool, so
+the picker, the consolidated score, the hand-off and the report all learn about
+it at once. A tool that crawls also hands back its pages, and every crawl is
+merged into ONE page list rather than a door each.
 
 Adding a third tool should be a folder, not a rewrite. When something is written
 twice, once per tool, that is the signal it belongs in a shared package. The
@@ -246,12 +266,21 @@ a change as a fraction rather than in pixels.
 
 ## This repo is open source
 
-Two consequences that bite:
+The consequences that bite:
 
 - **The LumioGuard integration is optional and off by default.** No ingest
   secret, no app URL, no hand-off button, and no mention of the name anywhere on
   the page. A fork must never advertise something it does not have, so nothing
   here may hard-code a LumioGuard address.
+- **The hand-off carries every key in ONE parameter, joined by `_`.** A reading
+  runs several tools and each API mints its own key. Repeating the parameter was
+  tried: the app parses its search with zod, where `sitekey` is a string, so
+  `?sitekey=A&sitekey=B` arrived as an ARRAY and threw before any route matched.
+  The whole app rendered a blank page, which is not the graceful degrade it was
+  assumed to be. `_` is safe because the key alphabet excludes it, so a joined
+  value can only split one way. ORDER IS MEANING: the worst reading goes first,
+  and the far side lands the visitor on that tool's area while importing the
+  rest beside it.
 - **Nothing may depend on a path outside the repo.** The parity corpus lives
   elsewhere and its suite skips itself unless `SLOPMETER_PARITY_ROOT` is set.
 

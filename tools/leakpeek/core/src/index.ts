@@ -22,6 +22,7 @@ export {
 } from './probes/exposedFiles.js';
 
 export { headlineFor } from './scoring/headline.js';
+export { weightOf } from './scoring/ExposureScore.js';
 export { scoreExposure, type ScoredExposure } from './scoring/ExposureScore.js';
 
 export {

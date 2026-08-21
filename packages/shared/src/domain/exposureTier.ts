@@ -1,3 +1,5 @@
+import { BAND_EDGES, type ScoreBand, type TrackSegment, bandOf, trackOf } from './band.js';
+
 /** The one exposure ladder for Leakpeek. */
 export const ExposureTier = {
   Sealed: 'Sealed',
@@ -11,12 +13,8 @@ export type ExposureTier = (typeof ExposureTier)[keyof typeof ExposureTier];
 export const EXPOSURE_MIN = 0;
 export const EXPOSURE_MAX = 100;
 
-export interface ExposureBand {
+export interface ExposureBand extends ScoreBand {
   readonly tier: ExposureTier;
-  readonly from: number;
-  /** Inclusive. Unbounded on the last band so any score resolves. */
-  readonly to: number;
-  readonly description: string;
 }
 
 /**
@@ -28,63 +26,56 @@ export interface ExposureBand {
  */
 export const EXPOSURE_BANDS: readonly [ExposureBand, ...ExposureBand[]] = Object.freeze([
   {
-    tier: ExposureTier.Sealed,
-    from: 0,
-    to: 19,
-    description: 'Nothing obvious is leaking from the browser.',
-  },
-  {
-    tier: ExposureTier.Exposed,
-    from: 20,
-    to: 39,
-    description: 'A secret or a misconfiguration is visible in what the site ships.',
+    tier: ExposureTier.WideOpen,
+    ...BAND_EDGES[0],
+    description: "Anyone with the URL can read this app's data right now.",
   },
   {
     tier: ExposureTier.Cracked,
-    from: 40,
-    to: 59,
+    ...BAND_EDGES[1],
     description: 'Readable data or a live key. Fixable today, dangerous until it is.',
   },
   {
-    tier: ExposureTier.WideOpen,
-    from: 60,
-    to: Number.POSITIVE_INFINITY,
-    description: "Anyone with the URL can read this app's data right now.",
+    tier: ExposureTier.Exposed,
+    ...BAND_EDGES[2],
+    description: 'A secret or a misconfiguration is visible in what the site ships.',
+  },
+  {
+    tier: ExposureTier.Sealed,
+    ...BAND_EDGES[3],
+    description: 'Nothing obvious is leaking from the browser.',
   },
 ]);
 
-/** Defined because the list above is typed non-empty, not because it is asserted. */
-const FIRST_EXPOSURE_BAND: ExposureBand = EXPOSURE_BANDS[0];
-
-/** `reduce` with no seed over a non-empty list: the last band, no assertion. */
-const TOP_EXPOSURE_BAND: ExposureBand = EXPOSURE_BANDS.reduce((_, band) => band);
+/** `bands[0]` over a non-empty list: the worst band, no assertion. */
+const WORST_EXPOSURE_BAND: ExposureBand = EXPOSURE_BANDS[0];
 
 /**
- * The floor of the top band, and the score any critical finding is pinned to.
+ * The ceiling of the worst band, and the score any critical finding is pinned DOWN to.
  *
- * Derived rather than written down twice. The scorer used to carry its own `60`
- * beside this band's `from: 60`, so retuning the ladder moved the band and left
- * the floor behind: a critical would have landed one band below the tier the
- * README promises it pins, and nothing would have failed.
+ * A ceiling rather than a floor, because the scale runs higher-is-better: the
+ * worst band is the bottom of the ladder now, and a critical pins a score down
+ * into it rather than up.
+ *
+ * Derived from the band rather than written down beside it. This was once a
+ * separate literal, so retuning the ladder moved the band and left the number
+ * behind: the finding landed one band away from the tier the README promises it
+ * pins, and nothing failed.
  */
-export const EXPOSURE_CRITICAL_FLOOR: number = TOP_EXPOSURE_BAND.from;
+export const EXPOSURE_CRITICAL_CEILING: number = WORST_EXPOSURE_BAND.to;
 
 export const EXPOSURE_TIER_NAMES: readonly ExposureTier[] = Object.freeze(
   EXPOSURE_BANDS.map((band) => band.tier),
 );
 
-export interface ExposureTrackSegment {
-  readonly left: number;
-  readonly width: number;
-}
+export type ExposureTrackSegment = TrackSegment;
 
 /**
  * A band's place on the 0–100 track, as percentages. The top band is unbounded
  * but the track is not, so its width is clipped to what is left.
  */
 export function exposureBandTrack(band: ExposureBand): ExposureTrackSegment {
-  const width = Math.min(band.to + 1 - band.from, EXPOSURE_MAX - band.from);
-  return { left: band.from, width };
+  return trackOf(band, EXPOSURE_MAX);
 }
 
 /**
@@ -97,11 +88,5 @@ export function exposureBandTrack(band: ExposureBand): ExposureTrackSegment {
  * Carrying the last band seen needs no such claim.
  */
 export function exposureBandFor(score: number): ExposureBand {
-  const clamped = Math.max(EXPOSURE_MIN, Math.min(EXPOSURE_MAX, score));
-  let match = FIRST_EXPOSURE_BAND;
-  for (const band of EXPOSURE_BANDS) {
-    match = band;
-    if (clamped <= band.to) break;
-  }
-  return match;
+  return bandOf(EXPOSURE_BANDS, score, { min: EXPOSURE_MIN, max: EXPOSURE_MAX });
 }

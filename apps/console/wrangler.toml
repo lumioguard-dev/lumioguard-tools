@@ -1,0 +1,6 @@
+# Cloudflare Pages. The Pages project is created out of band; this file encodes
+# the static build target. Each tool's Worker is reached by its own origin, set
+# per tool at build time (see .env.example), so nothing is proxied through here.
+name = "lumioguard-readout"
+compatibility_date = "2024-12-18"
+pages_build_output_dir = "dist"
