@@ -80,7 +80,17 @@ export function seo(): Plugin {
      * must agree: a page would link somewhere its own canonical denies.
      */
     config(userConfig: UserConfig, { mode }): UserConfig {
-      return { base: assetBase(loadEnv(mode, userConfig.root ?? '.', 'VITE_')) };
+      const base = assetBase(loadEnv(mode, userConfig.root ?? '.', 'VITE_'));
+      // An explicit `--base` that disagrees is REFUSED rather than quietly
+      // overruled. Vite would take this hook's value and the flag would do
+      // nothing, so the assets ship under one path while the canonical and
+      // every link claim another, and the build says it succeeded.
+      if (userConfig.base !== undefined && userConfig.base !== base) {
+        throw new Error(
+          `[seo] --base=${userConfig.base} disagrees with ${SITE_URL_VAR} (${base}). The mount point is written once, in the URL; drop the flag.`,
+        );
+      }
+      return { base };
     },
 
     async configResolved(config: ResolvedConfig) {
