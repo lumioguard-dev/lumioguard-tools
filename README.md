@@ -145,7 +145,7 @@ Everything here is MIT-licensed and runs on your own machine. Node 22+ and
 pnpm 9+:
 
 ```bash
-git clone https://github.com/lumiostack/lumioguard-tools.git
+git clone https://github.com/lumioguard-dev/lumioguard-tools.git
 cd lumioguard-tools
 pnpm install
 pnpm dev

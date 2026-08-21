@@ -123,5 +123,5 @@ First release of both tools together, and the first with a public history.
 - Slopmeter's rule pack does not cross the wire, and a test exists for it
   because nothing on screen looks wrong when it leaks.
 
-[Unreleased]: https://github.com/lumiostack/lumioguard-tools/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/lumiostack/lumioguard-tools/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lumioguard-dev/lumioguard-tools/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lumioguard-dev/lumioguard-tools/releases/tag/v0.1.0
