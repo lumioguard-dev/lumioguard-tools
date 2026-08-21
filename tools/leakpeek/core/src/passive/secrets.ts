@@ -22,13 +22,31 @@ interface SecretRule {
 }
 
 /** A JWT: three base64url segments. Supabase keys are JWTs; the role is inside. */
-const JWT = /\beyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\b/g;
+const JWT = /(?<![\w-])eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}(?![\w-])/g;
 
+// Every pattern here is fenced by `(?<![\w-])` … `(?![\w-])` rather than `\b`.
+// A word boundary does not reject a neighbouring hyphen, so a credential shape
+// embedded in a longer identifier still matched: `--AIza…-more-identifier` and
+// `--sk-dotnav-timed-duration` both read as leaked keys. Apple's carousel CSS
+// variables were reported as two OpenAI keys on that basis. The fence requires
+// the match to stand alone, which is what a real credential does: it follows a
+// quote, an equals or whitespace.
 const RULES: readonly SecretRule[] = [
   {
     code: 'secret:openai',
     label: 'OpenAI API key',
-    pattern: /\bsk-(?:proj-)?[A-Za-z0-9_-]{20,}\b/g,
+    // A legacy key's body is base62 with NO separators, so the class must not
+    // accept `-` or `_`. `[A-Za-z0-9_-]{20,}` matched any hyphenated `sk-`
+    // identifier, and reported apple.com as shipping two OpenAI keys: they
+    // were the CSS custom properties `--sk-dotnav-timed-duration` and
+    // `--sk-dotnav-variable-duration`, which mask to `sk-d…ion` and read
+    // exactly like a key. Project keys DO carry separators, so they keep the
+    // wider class behind the `sk-proj-` prefix that identifies them.
+    //
+    // The lookbehind rejects a match glued to a preceding word character or
+    // hyphen, which is what `--sk-…` is; a real key follows a quote, an
+    // equals or whitespace.
+    pattern: /(?<![\w-])sk-(?:proj-[A-Za-z0-9_-]{20,}|[A-Za-z0-9]{20,})(?![\w-])/g,
     detail:
       'An OpenAI key is in the client bundle. Anyone can read it and spend against your account.',
     fix: 'Move the key server-side (an API route or Edge Function) and revoke this one.',
@@ -36,28 +54,28 @@ const RULES: readonly SecretRule[] = [
   {
     code: 'secret:stripe-live',
     label: 'Stripe live secret key',
-    pattern: /\bsk_live_[A-Za-z0-9]{20,}\b/g,
+    pattern: /(?<![\w-])sk_live_[A-Za-z0-9]{20,}(?![\w-])/g,
     detail: 'A Stripe LIVE secret key is in the bundle. It can move real money.',
     fix: 'Roll the key in the Stripe dashboard now, and keep secret keys server-side only.',
   },
   {
     code: 'secret:aws',
     label: 'AWS access key id',
-    pattern: /\bAKIA[0-9A-Z]{16}\b/g,
+    pattern: /(?<![\w-])AKIA[0-9A-Z]{16}(?![\w-])/g,
     detail: 'An AWS access key id is in the bundle, usually paired with a secret nearby.',
     fix: 'Deactivate the key in IAM and issue credentials the browser never sees.',
   },
   {
     code: 'secret:google',
     label: 'Google API key',
-    pattern: /\bAIza[0-9A-Za-z_-]{35}\b/g,
+    pattern: /(?<![\w-])AIza[0-9A-Za-z_-]{35}(?![\w-])/g,
     detail: 'A Google API key is in the bundle. Restrict it, or anyone can bill against it.',
     fix: 'Add HTTP-referrer and API restrictions in the Google console, or move it server-side.',
   },
   {
     code: 'secret:github-pat',
     label: 'GitHub token',
-    pattern: /\bgh[pousr]_[A-Za-z0-9]{36}\b/g,
+    pattern: /(?<![\w-])gh[pousr]_[A-Za-z0-9]{36}(?![\w-])/g,
     detail: 'A GitHub token is in the bundle. It can read or write your repositories.',
     fix: 'Revoke the token in GitHub settings and never ship one to the client.',
   },
