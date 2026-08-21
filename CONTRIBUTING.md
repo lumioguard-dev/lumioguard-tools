@@ -79,25 +79,15 @@ rather than from whatever Vite finds free.
 | Range | Owner |
 |---|---|
 | `5173`, `8787` | Reserved for the LumioGuard app and its API. Never take these. |
-| `9229` | wrangler's default inspector port. Reserved, and the reason for the third column. |
 | `52xx` | apps |
 | `88xx` | tool Workers |
-| `98xx` | tool Worker inspectors |
 
-| Service | Port | Inspector |
-|---|---|---|
-| console | `5200` | |
-| slopmeter api | `8810` | `9810` |
-| leakpeek api | `8820` | `9820` |
-| citecheck api | `8830` | `9830` |
-
-**Every Worker needs its own inspector port.** `wrangler dev` defaults all of
-them to `9229`, so the second to start fails to bind it and exits, taking the
-whole `pnpm dev` down. Three tools running at once is the normal case here, and
-the symptom is the one hardest to read: the console loads, one tool answers, the
-others return `502`, and the real cause is a socket error in a runtime stack
-trace nobody scrolls to. `scripts/dev-worker.mjs` passes `--inspector-port` from
-the same row as `--port`.
+| Service | Port |
+|---|---|
+| console | `5200` |
+| slopmeter api | `8810` |
+| leakpeek api | `8820` |
+| citecheck api | `8830` |
 
 A tool no longer serves a page of its own. There is one app, the console, and
 it proxies `/<tool>/api` to that tool's Worker.
