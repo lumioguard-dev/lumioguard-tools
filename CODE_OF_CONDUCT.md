@@ -39,7 +39,7 @@ elsewhere.
 
 ## Reporting
 
-Report anything that troubles you to **conduct@lumiostack.com**. Reports are
+Report anything that troubles you to **hello@lumioguard.dev**. Reports are
 read by the maintainers and kept confidential. You will get a reply within three
 working days.
 

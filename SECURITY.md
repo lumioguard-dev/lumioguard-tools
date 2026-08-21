@@ -4,7 +4,7 @@
 
 **Do not open a public issue.** Use GitHub's private reporting on this
 repository (Security, then Report a vulnerability), or email
-**security@lumiostack.com**.
+**hello@lumioguard.dev**.
 
 Please include what you did, what happened, and what you expected. A proof of
 concept helps enormously; a URL that reproduces it helps more.
