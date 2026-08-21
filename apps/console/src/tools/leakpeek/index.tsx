@@ -1,4 +1,5 @@
 import { apiBase } from '../apiBase.js';
+import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
 import { ScanClient } from './ScanClient.js';
 import { FindingList } from './report/FindingList.js';
@@ -7,9 +8,7 @@ import { tierInk } from './theme.js';
 const client = new ScanClient(apiBase('leakpeek'));
 
 export const leakpeek: ToolDescriptor = {
-  id: 'leakpeek',
-  label: 'Security',
-  summary: 'Reports what the site is exposing to anyone with the URL.',
+  ...toolCopy('leakpeek'),
   async run(address, signal) {
     const result = await client.scan(address, signal);
     return {

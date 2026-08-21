@@ -10,36 +10,13 @@ import {
   ThemeToggle,
   useTheme,
 } from '@lumioguard/ui';
+import { EXAMPLES, HEADLINE, HOW_IT_WORKS, NAME, PUBLISHER } from './copy.js';
 import { ConsoleReport } from './features/report/ConsoleReport.js';
 import { useConsoleRoute } from './features/scan/useConsoleRoute.js';
 import { ToolPicker } from './features/select/ToolPicker.js';
+import { PAGES } from './pages.js';
 import { TOOLS } from './tools/index.js';
 import { toolsById } from './tools/registry.js';
-
-/** The app's own name. The parent's is optional and may be absent entirely. */
-const NAME = 'Readout';
-
-/**
- * Sites everyone knows, chosen because their readings disagree with each other.
- *
- * apple.com comes out clean on Citecheck and is the most templated of the three
- * on nothing; nytimes.com answers a crawler with 403 while serving a browser
- * normally. A consolidated verdict is only worth drawing when the parts can
- * differ, and these show that in one click.
- */
-const EXAMPLES = ['apple.com', 'figma.com', 'nytimes.com'];
-
-/**
- * The three beats, in this app's own words.
- *
- * No tool count: the registry decides how many there are, and a number typed
- * here would describe whatever was true the day it was written.
- */
-const HOW_IT_WORKS = {
-  paste: 'Paste a URL',
-  read: 'Every reading you picked runs at once, each against its own engine',
-  result: 'One verdict, the worst of them, with each reading underneath',
-};
 
 function Masthead({ onHome, atHome }: { readonly onHome: () => void; readonly atHome: boolean }) {
   const { theme, toggle } = useTheme();
@@ -96,7 +73,7 @@ function AskView({
         <div className="grid gap-x-[46px] lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">
           <div className="flex flex-col lg:self-center">
             <h1 className="m-0 max-w-[20ch] text-balance font-hand text-36 leading-[1.12] text-hand lg:text-48">
-              What does this site <span className="whitespace-nowrap">give away?</span>
+              {HEADLINE.lead} <span className="whitespace-nowrap">{HEADLINE.tail}</span>
             </h1>
 
             <ScanBar examples={EXAMPLES} onScan={onScan} />
@@ -123,6 +100,22 @@ function Colophon(): JSX.Element {
         <ParentCredit />
       </p>
 
+      {/* Real documents at real paths, not app routes. They are here rather
+          than only in the prerendered shell because a crawler that runs
+          JavaScript sees what React rendered, and a link only the shell carried
+          is one it never follows. */}
+      <nav className="flex flex-wrap gap-x-5 gap-y-1">
+        {PAGES.map((page) => (
+          <a
+            key={page.path}
+            href={page.path}
+            className="text-13 leading-[1.5] text-ink-3 underline-offset-2 transition-colors hover:text-hand"
+          >
+            {page.title}
+          </a>
+        ))}
+      </nav>
+
       {/* Printed, not written, and not lowercased: a legal notice is the one
           string here that is neither the product's voice nor its wordmark.
 
@@ -130,7 +123,7 @@ function Colophon(): JSX.Element {
           goes stale every January is exactly the kind of unattended default
           these tools exist to find on other people's sites. */}
       <p className="m-0 text-13 font-normal leading-[1.5] text-ink-3">
-        © {new Date().getFullYear()} Lumio Software FZ LLC. All rights reserved.
+        © {new Date().getFullYear()} {PUBLISHER}. All rights reserved.
       </p>
     </footer>
   );
