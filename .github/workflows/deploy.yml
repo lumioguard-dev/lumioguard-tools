@@ -110,6 +110,11 @@ jobs:
           VITE_CITECHECK_API_URL: ${{ vars.VITE_API_BASE_URL_CITECHECK }}
           VITE_LUMIOGUARD_APP_URL: ${{ vars.VITE_LUMIOGUARD_APP_URL }}
           VITE_LUMIOGUARD_SITE_URL: ${{ vars.VITE_LUMIOGUARD_SITE_URL }}
+          # Where this deployment answers. Unset, the build still succeeds and
+          # ships with no canonical, no OpenGraph URL and no sitemap, saying so
+          # on stderr. That is right for a fork and wrong for us, so the
+          # variable is set on this repo.
+          VITE_PUBLIC_SITE_URL: ${{ vars.VITE_PUBLIC_SITE_URL }}
         run: pnpm --filter @lumioguard/console run build
 
       - run: pnpm --filter @lumioguard/console run deploy
