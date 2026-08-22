@@ -25,12 +25,7 @@ function record(responder: (url: string) => { status: number; body?: string }): 
     vi.fn(async (url: string, init?: RequestInit) => {
       sent.push({ url: String(url), method: init?.method, body: init?.body });
       const { status, body = '' } = responder(String(url));
-      return {
-        status,
-        ok: status >= 200 && status < 300,
-        text: async () => body,
-        json: async () => JSON.parse(body || 'null'),
-      };
+      return new Response(body, { status });
     }),
   );
   return sent;

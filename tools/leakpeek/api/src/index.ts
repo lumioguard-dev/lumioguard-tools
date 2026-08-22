@@ -1,4 +1,10 @@
-import { corsFor, endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
+import {
+  allowedByRateLimit,
+  corsFor,
+  endpoint,
+  jsonBody,
+  standardHeaders,
+} from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
 import { type ExposureRequest, exposureRequestSchema } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
@@ -13,6 +19,15 @@ const app = new Hono<Bindings>();
 app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
 app.use('*', standardHeaders());
+app.use('/api/scan', async (context, next) => {
+  if (!(await allowedByRateLimit(context.env.SCAN_RATE_LIMITER, context.req.raw))) {
+    return context.json(
+      { error: { code: 'rate_limited', message: 'Too many scans. Try again shortly.' } },
+      429,
+    );
+  }
+  await next();
+});
 
 /**
  * Read a site, then record it so the report can hand the reading on. AWAITED
@@ -34,7 +49,6 @@ const scan = async (input: ExposureRequest, context: Context<Bindings>): Promise
 
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
 
-app.get('/api/scan', endpoint(exposureRequestSchema, queryParams('url'), scan));
 app.post('/api/scan', endpoint(exposureRequestSchema, jsonBody, scan));
 
 app.onError((error, context) => {

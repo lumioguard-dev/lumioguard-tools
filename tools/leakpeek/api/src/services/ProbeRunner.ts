@@ -1,3 +1,4 @@
+import { SafeFetcher, readText } from '@lumioguard/api-core';
 import {
   COMMON_TABLES,
   EXPOSED_FILE_CHECKS,
@@ -24,8 +25,10 @@ import {
 const MAX_RLS_FINDINGS = 5;
 const PROBE_TIMEOUT_MS = 6_000;
 const MAX_SOURCE_MAP_CHECKS = 4;
+const MAX_PROBE_BYTES = 1_000_000;
 
 export class ProbeRunner {
+  private readonly safeFetcher = new SafeFetcher();
   public async probeSupabase(target: SupabaseTarget): Promise<ExposureFinding[]> {
     const headers = supabaseProbeHeaders(target);
     const findings: ExposureFinding[] = [];
@@ -54,7 +57,7 @@ export class ProbeRunner {
     for (const check of EXPOSED_FILE_CHECKS) {
       try {
         const response = await this.get(new URL(check.path, origin).toString(), {});
-        const body = response.status === 200 ? (await response.text()).slice(0, 4000) : '';
+        const body = response.status === 200 ? (await readText(response, 4000)).text : '';
         const finding = interpretExposedFile(check, response.status, body);
         if (finding !== null) findings.push(finding);
       } catch {
@@ -72,7 +75,8 @@ export class ProbeRunner {
     try {
       const response = await this.get(url, headers);
       if (response.status !== 200) return { status: response.status, rows: null };
-      const body: unknown = await response.json().catch(() => null);
+      const text = (await readText(response, MAX_PROBE_BYTES)).text;
+      const body: unknown = parseJson(text);
       return { status: 200, rows: Array.isArray(body) ? body : null };
     } catch {
       return null;
@@ -84,7 +88,7 @@ export class ProbeRunner {
       const response = await this.get(url, {});
       if (response.status !== 200) return false;
       // Confirm it is actually a map, not an SPA's HTML 200 for an unknown path.
-      const head = (await response.text()).slice(0, 200);
+      const head = (await readText(response, 200)).text;
       return head.includes('"version"') && head.includes('"sources"');
     } catch {
       return false;
@@ -96,14 +100,23 @@ export class ProbeRunner {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), PROBE_TIMEOUT_MS);
     try {
-      return await fetch(url, {
-        method: 'GET',
-        headers,
-        redirect: 'follow',
-        signal: controller.signal,
-      });
+      return (
+        await this.safeFetcher.fetch(url, {
+          method: 'GET',
+          headers,
+          signal: controller.signal,
+        })
+      ).response;
     } finally {
       clearTimeout(timer);
     }
+  }
+}
+
+function parseJson(value: string): unknown {
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
   }
 }

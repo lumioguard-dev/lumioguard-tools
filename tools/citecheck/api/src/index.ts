@@ -1,9 +1,9 @@
 import {
   NOT_FOUND,
+  allowedByRateLimit,
   corsFor,
   endpoint,
   jsonBody,
-  queryParams,
   standardHeaders,
   toHttpFailure,
 } from '@lumioguard/api-core';
@@ -25,6 +25,18 @@ const app = new Hono<Bindings>();
 app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
 app.use('*', standardHeaders());
+app.use('/api/*', async (context, next) => {
+  if (
+    context.req.path !== '/api/health' &&
+    !(await allowedByRateLimit(context.env.SCAN_RATE_LIMITER, context.req.raw))
+  ) {
+    return context.json(
+      { error: { code: 'rate_limited', message: 'Too many scans. Try again shortly.' } },
+      429,
+    );
+  }
+  await next();
+});
 
 /**
  * Read a page, then record it so the report can hand the reading on. AWAITED
@@ -63,10 +75,8 @@ const crawl = async (
 
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
 
-app.get('/api/scan', endpoint(citationRequestSchema, queryParams('url'), scan));
 app.post('/api/scan', endpoint(citationRequestSchema, jsonBody, scan));
 
-app.get('/api/crawl', endpoint(crawlRequestSchema, queryParams('url', 'depth', 'maxPages'), crawl));
 app.post('/api/crawl', endpoint(crawlRequestSchema, jsonBody, crawl));
 
 app.onError((error, context) => {

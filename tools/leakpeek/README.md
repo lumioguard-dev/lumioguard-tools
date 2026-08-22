@@ -122,7 +122,6 @@ address. The console proxies `/leakpeek/api` to the Worker above.
 
 ```
 POST /api/scan   { "url": "example.com" }
-GET  /api/scan?url=example.com
 GET  /api/health
 ```
 

@@ -1,4 +1,4 @@
-import { PageFetchError } from '@lumioguard/api-core';
+import { PageFetchError, SafeFetcher, readText } from '@lumioguard/api-core';
 import { PageSnapshot } from '@lumioguard/slopmeter-core';
 
 const USER_AGENT =
@@ -14,6 +14,7 @@ const KEEP_HEADERS = [
 
 const MAX_STYLESHEETS = 6;
 const MAX_CSS_BYTES = 400_000;
+const MAX_HTML_BYTES = 2_000_000;
 
 interface PageFetcherOptions {
   readonly timeoutMs?: number;
@@ -25,15 +26,17 @@ interface PageFetcherOptions {
  */
 export class PageFetcher {
   private readonly timeoutMs: number;
+  private readonly safeFetcher = new SafeFetcher();
 
   public constructor(options: PageFetcherOptions = {}) {
     this.timeoutMs = options.timeoutMs ?? 12_000;
   }
 
   public async fetchSnapshot(target: URL): Promise<PageSnapshot> {
-    const response = await this.request(target.toString(), {
+    const fetched = await this.request(target.toString(), {
       accept: 'text/html,*/*',
     });
+    const response = fetched.response;
 
     if (!response.ok) {
       throw new PageFetchError('upstream_error', `Upstream responded ${response.status}`);
@@ -47,7 +50,7 @@ export class PageFetcher {
       );
     }
 
-    const html = await response.text();
+    const html = (await readText(response, MAX_HTML_BYTES)).text;
     const headers: Record<string, string> = {};
     for (const name of KEEP_HEADERS) {
       const value = response.headers.get(name);
@@ -55,9 +58,9 @@ export class PageFetcher {
     }
 
     return PageSnapshot.create({
-      url: response.url === '' ? target.toString() : response.url,
+      url: fetched.url.toString(),
       html,
-      stylesheets: await this.fetchStylesheets(html, response.url || target.toString()),
+      stylesheets: await this.fetchStylesheets(html, fetched.url.toString()),
       headers,
     });
   }
@@ -72,9 +75,9 @@ export class PageFetcher {
       hrefs.map(async (href) => {
         try {
           const absolute = new URL(href, baseUrl);
-          const response = await this.request(absolute.toString(), {}, 8_000);
+          const response = (await this.request(absolute.toString(), {}, 8_000)).response;
           if (!response.ok) return null;
-          return (await response.text()).slice(0, MAX_CSS_BYTES);
+          return (await readText(response, MAX_CSS_BYTES)).text;
         } catch {
           // A stylesheet that will not load is not a scan failure.
           return null;
@@ -89,13 +92,12 @@ export class PageFetcher {
     url: string,
     extraHeaders: Record<string, string>,
     timeoutMs = this.timeoutMs,
-  ): Promise<Response> {
+  ) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetch(url, {
+      return await this.safeFetcher.fetch(url, {
         headers: { 'user-agent': USER_AGENT, ...extraHeaders },
-        redirect: 'follow',
         signal: controller.signal,
       });
     } catch (error) {
