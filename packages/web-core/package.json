@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/web-core",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "private": true,
   "type": "module",
   "description": "Browser-side transport and scan state every tool's client shares.",
