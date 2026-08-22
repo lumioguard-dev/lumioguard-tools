@@ -6,7 +6,6 @@ import {
   NAME,
   PUBLISHER,
 } from '../src/copy.js';
-import { PAGES } from '../src/pages.js';
 import { CATALOGUE } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
 
@@ -51,10 +50,6 @@ export function staticShell(mount: string): string {
     (site) => `<a href="${mount}/?site=${encodeURIComponent(site)}">Read ${escapeHtml(site)}</a>`,
   ).join('\n          ');
 
-  const reading = PAGES.map(
-    (page) => `<li><a href="${mount}${page.path}">${escapeHtml(page.title)}</a></li>`,
-  ).join('\n          ');
-
   return `
       <div class="shell">
         <style>${STYLE}</style>
@@ -75,11 +70,6 @@ export function staticShell(mount: string): string {
         <nav>
           ${examples}
         </nav>
-
-        <h2>How it is measured</h2>
-        <ul>
-          ${reading}
-        </ul>
 
         <footer>${escapeHtml(NAME)} by ${escapeHtml(PUBLISHER)}</footer>
       </div>`;
