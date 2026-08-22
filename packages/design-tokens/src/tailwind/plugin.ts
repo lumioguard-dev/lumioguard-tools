@@ -92,6 +92,7 @@ export const designTokensPlugin = plugin(
         fontFamily: {
           hand: [...fontFamily.hand],
           display: [...fontFamily.display],
+          headline: [...fontFamily.headline],
           sans: [...fontFamily.sans],
           mono: [...fontFamily.mono],
         },

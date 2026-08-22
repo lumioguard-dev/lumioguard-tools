@@ -223,6 +223,9 @@ per-corner radii cycled across four "hands", so no two neighbouring boxes close
 the same way. A single uniform rounded rectangle everywhere reads as a component
 library, which is the exact thing Slopmeter exists to detect.
 
+**The h1 is the one exception, set in Archivo.** It is the first thing read and
+the hand was hard to read at 48px. Everything else keeps the hand.
+
 **The drawn frame is a settled decision.** Both alternatives were built, looked
 at, and reverted on 2026-08-17: one even radius on every frame, and true right
 angles. Treat a proposal to regularise it as already answered.

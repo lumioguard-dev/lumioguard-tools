@@ -13,7 +13,7 @@ import { escapeHtml } from './html.js';
 /** Scoped to the shell, and thrown away with it. */
 const STYLE = [
   '.shell{max-width:64rem;margin:0 auto;padding:3rem 1.5rem;color:var(--ink-1,#151b28);font-family:Archivo,system-ui,sans-serif;line-height:1.55}',
-  '.shell h1{font-family:"Architects Daughter",cursive;font-size:2.25rem;line-height:1.12;color:var(--hand,#2f4fb5);margin:0 0 1rem;max-width:20ch}',
+  '.shell h1{font-family:Archivo,system-ui,sans-serif;font-size:2.25rem;line-height:1.12;color:var(--hand,#2f4fb5);margin:0 0 1rem;max-width:20ch}',
   '.shell h2{font-family:"Architects Daughter",cursive;font-size:1.25rem;font-weight:400;color:var(--ink-3,#545f78);margin:2rem 0 .5rem}',
   '.shell p{margin:0 0 1rem;max-width:62ch}',
   '.shell ul,.shell ol{margin:0;padding-left:1.25rem;max-width:62ch}',

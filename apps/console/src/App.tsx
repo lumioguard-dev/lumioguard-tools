@@ -75,7 +75,7 @@ function AskView({
       <Panel hand="a" span={12}>
         <div className="grid gap-x-[46px] lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">
           <div className="flex flex-col lg:self-center">
-            <h1 className="m-0 max-w-[20ch] text-balance font-hand text-36 leading-[1.12] text-hand lg:text-48">
+            <h1 className="m-0 max-w-[20ch] text-balance font-headline text-36 leading-[1.12] text-hand lg:text-48">
               {HEADLINE.lead} <span className="whitespace-nowrap">{HEADLINE.tail}</span>
             </h1>
 
