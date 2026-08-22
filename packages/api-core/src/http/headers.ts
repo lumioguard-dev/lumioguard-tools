@@ -2,7 +2,7 @@ import type { Context, MiddlewareHandler } from 'hono';
 
 /**
  * What every Worker response carries, written once because three copies drift.
- * `x-robots-tag` is the load-bearing one: `/api/scan?url=…` returns JSON about
+ * `x-robots-tag` is the load-bearing one: scan routes return JSON about
  * somebody else's site, and there is no document to put a meta tag in.
  */
 export function standardHeaders(): MiddlewareHandler {

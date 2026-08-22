@@ -163,6 +163,10 @@ That starts every tool:
 Nothing else is required. No API keys, no accounts, no services to sign up for.
 A fresh clone scans, scores and renders a full report out of the box.
 
+The workspace packages are intentionally marked `private`: releases publish
+source and deployable Workers, not npm packages. Consume them from a clone or a
+Git dependency rather than expecting them on the npm registry.
+
 ## What is in here
 
 ```

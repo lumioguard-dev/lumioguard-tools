@@ -1,4 +1,10 @@
-import { corsFor, endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
+import {
+  allowedByRateLimit,
+  corsFor,
+  endpoint,
+  jsonBody,
+  standardHeaders,
+} from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
 import {
   type AnalyzeRequest,
@@ -22,6 +28,18 @@ const app = new Hono<Bindings>();
 app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
 app.use('*', standardHeaders());
+app.use('/api/*', async (context, next) => {
+  if (
+    context.req.path !== '/api/health' &&
+    !(await allowedByRateLimit(context.env.SCAN_RATE_LIMITER, context.req.raw))
+  ) {
+    return context.json(
+      { error: { code: 'rate_limited', message: 'Too many scans. Try again shortly.' } },
+      429,
+    );
+  }
+  await next();
+});
 
 const scanPage = (input: ScanRequest): Promise<unknown> =>
   getContainer().scanService.scanUrl(input.url);
@@ -51,13 +69,8 @@ const analyze = (input: AnalyzeRequest): unknown =>
 /** Liveness only. */
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
 
-app.get('/api/scan', endpoint(scanRequestSchema, queryParams('url'), scanPage));
 app.post('/api/scan', endpoint(scanRequestSchema, jsonBody, scanPage));
 
-app.get(
-  '/api/crawl',
-  endpoint(crawlRequestSchema, queryParams('url', 'depth', 'maxPages'), crawlSite),
-);
 app.post('/api/crawl', endpoint(crawlRequestSchema, jsonBody, crawlSite));
 
 app.post('/api/analyze', endpoint(analyzeRequestSchema, jsonBody, analyze));

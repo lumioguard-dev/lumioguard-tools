@@ -327,6 +327,10 @@ deploy. The `.development` infix keeps them out of a production build.
 Secrets never enter git. In production they are Worker secrets
 (`wrangler secret put NAME`), never values in `wrangler.toml`.
 
+Each Worker also declares a `SCAN_RATE_LIMITER` binding in `wrangler.toml`.
+Keep it enabled on public deployments: CORS controls which browsers can read a
+response, but it is not an authentication or abuse-control boundary.
+
 ## A few house rules
 
 - **No casts to escape a type.** `as unknown as X` is always a defect, and so is
