@@ -15,6 +15,9 @@ import { ConsoleReport } from './features/report/ConsoleReport.js';
 import { useConsoleRoute } from './features/scan/useConsoleRoute.js';
 import { ToolPicker } from './features/select/ToolPicker.js';
 import { PAGES } from './pages.js';
+
+/** Vite's asset base, without its trailing slash. `''` when served at a root. */
+const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 import { TOOLS } from './tools/index.js';
 import { toolsById } from './tools/registry.js';
 
@@ -103,12 +106,16 @@ function Colophon(): JSX.Element {
       {/* Real documents at real paths, not app routes. They are here rather
           than only in the prerendered shell because a crawler that runs
           JavaScript sees what React rendered, and a link only the shell carried
-          is one it never follows. */}
+          is one it never follows.
+
+          BASE_URL, not the bare path: the app is served from a host root in
+          development and from `/tools` on lumioguard.dev, and a root-absolute
+          link from there lands on the host's own home page. */}
       <nav className="flex flex-wrap gap-x-5 gap-y-1">
         {PAGES.map((page) => (
           <a
             key={page.path}
-            href={page.path}
+            href={`${BASE}${page.path}`}
             className="text-13 leading-[1.5] text-ink-3 underline-offset-2 transition-colors hover:text-hand"
           >
             {page.title}

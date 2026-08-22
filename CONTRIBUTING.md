@@ -259,6 +259,17 @@ app's `index.html` for any unknown path:
 pnpm --filter @lumioguard/console exec wrangler pages dev dist
 ```
 
+**The app can be mounted under a path.** `VITE_PUBLIC_SITE_URL` may carry one:
+`https://lumioguard.dev/tools` serves the whole thing from `/tools`, and that
+single string is then the only place the mount point is written. Vite's asset
+base, every internal link, the canonical and the sitemap all read it. Passing it
+twice, once as `--base` and once in the URL, is two literals that must agree,
+and a page would link somewhere its own canonical denies.
+
+Mounted, no `robots.txt` is emitted. It is only read at the root of a host, so
+one under `/tools` is a file nothing fetches; the host's own robots.txt governs
+and should name this sitemap with a second `Sitemap:` line.
+
 **Every published number is read from `shared`.** The band tables on
 `/how-the-scores-work` come from `CITATION_BANDS`, `EXPOSURE_BANDS` and
 `TIER_BANDS`, so retuning a ladder moves the published table the same day it

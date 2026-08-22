@@ -2,17 +2,12 @@ import { NAME, PUBLISHER } from '../../src/copy.js';
 import type { PageLink } from '../../src/pages.js';
 import { headTags } from '../head.js';
 import { escapeHtml } from '../html.js';
+import type { Site } from '../site.js';
 import { CONTENT_PAGES, type ContentPage, type Section, type Table } from './content.js';
 
 /**
- * An explainer as a complete document, with no React in it.
- *
- * A real file at a real path rather than a route: the app reaches its readings
- * through `?site=`, deliberately, so a static host never has to rewrite unknown
- * paths. These pages keep that property by existing on disk.
- *
- * No meter appears on any of them. The consolidated verdict stays on the one
- * surface, which is the whole reason the app has a single screen.
+ * An explainer as a complete document, no React. A real file at a real path
+ * rather than a route, so a static host never rewrites an unknown path.
  */
 
 const STYLE = [
@@ -68,22 +63,23 @@ function sectionHtml(section: Section): string {
 }
 
 /** Every other explainer, so each page is reachable from every other one. */
-function siblings(current: PageLink): string {
+function siblings(current: PageLink, mount: string): string {
   return CONTENT_PAGES.filter((page) => page.meta.path !== current.path)
-    .map((page) => `<a href="${page.meta.path}">${escapeHtml(page.meta.title)}</a>`)
+    .map((page) => `<a href="${mount}${page.meta.path}">${escapeHtml(page.meta.title)}</a>`)
     .join('\n            ');
 }
 
-export function renderPage(page: ContentPage, origin: string | null, hasImage: boolean): string {
+export function renderPage(page: ContentPage, where: Site | null, hasImage: boolean): string {
   const sections = page.sections.map(sectionHtml).join('\n\n        ');
+  const mount = where?.path ?? '';
 
   return `<!doctype html>
 <html lang="en">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    ${headTags(page.meta, origin, hasImage)}
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    ${headTags(page.meta, where, hasImage)}
+    <link rel="icon" href="${mount}/favicon.svg" type="image/svg+xml" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <meta name="color-scheme" content="light dark" />
@@ -95,19 +91,19 @@ export function renderPage(page: ContentPage, origin: string | null, hasImage: b
   </head>
   <body>
     <main class="doc">
-      <nav class="top"><a href="/">${escapeHtml(NAME.toLowerCase())}</a></nav>
+      <nav class="top"><a href="${mount}/">${escapeHtml(NAME.toLowerCase())}</a></nav>
 
       <h1>${escapeHtml(page.meta.title)}</h1>
       <p class="lead">${escapeHtml(page.lead)}</p>
 
       ${sections}
 
-      <a class="cta" href="/">Read a site with ${escapeHtml(NAME)}</a>
+      <a class="cta" href="${mount}/">Read a site with ${escapeHtml(NAME)}</a>
 
       <footer>
         <nav>
-          <a href="/">${escapeHtml(NAME)}</a>
-          ${siblings(page.meta)}
+          <a href="${mount}/">${escapeHtml(NAME)}</a>
+          ${siblings(page.meta, mount)}
         </nav>
         ${escapeHtml(NAME)} by ${escapeHtml(PUBLISHER)}
       </footer>

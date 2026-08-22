@@ -74,7 +74,11 @@ jobs:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
+      - name: deploy ${{ inputs.tool }} api
+        env:
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          LUMIOGUARD_API_BASE_URL: ${{ vars.LUMIOGUARD_API_BASE_URL }}
+        run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
 
   deploy-console:
     name: deploy console

@@ -1,15 +1,7 @@
 /**
- * Posting a finished reading to an ingest that verifies an HMAC.
- *
- * Shared because it was written twice, once per tool, and the two copies were
- * the SIGNING code: a correction to one could silently miss the other. What
- * genuinely differs between tools is four strings and the payload shape, so
- * those are arguments and everything else lives here once.
- *
- * **The far side mints the key, not this Worker.** A key has to be unique across
- * readings, and only the side holding the uniqueness constraint can hand out one
- * that is certainly free; a key minted here could collide on arrival, by which
- * time the response naming it has already gone out.
+ * Posting a reading to an ingest that verifies an HMAC. Shared because the two
+ * copies were the SIGNING code. THE FAR SIDE MINTS THE KEY: only the side
+ * holding the uniqueness constraint can hand out one that is certainly free.
  */
 
 /** A reading is a few kilobytes; the recorder should not hang on a slow API. */

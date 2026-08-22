@@ -28,15 +28,15 @@ const STYLE = [
 ].join('');
 
 /**
- * The document a reader gets before any JavaScript runs, and the only one most
- * crawlers that feed answer engines ever get.
- *
- * Served empty, `#root` is `access.shell`, a blocker that pins the page into
- * the bottom band on its own. Every word is imported, because served text that
- * differs from what a reader sees is `access.agent-thin`. React clears the
- * container on first commit, so the style block sits inside it.
+ * The document served before any JavaScript runs. Empty, `#root` is
+ * `access.shell`, a blocker. Every word is imported, because served text that
+ * differs from the rendered page is `access.agent-thin`.
  */
-export function staticShell(): string {
+/**
+ * `mount` is where the app is served from, empty at a host root. Every link
+ * here is written with it, so the same build works at `/` and at `/tools`.
+ */
+export function staticShell(mount: string): string {
   const tools = CATALOGUE.map(
     (tool) => `<li><b>${escapeHtml(tool.label)}.</b> ${escapeHtml(tool.summary)}</li>`,
   ).join('\n          ');
@@ -48,11 +48,11 @@ export function staticShell(): string {
   // The addresses the app itself reads on load, so each works whether or not
   // the script arrives, and they are the only way out of this page.
   const examples = EXAMPLES.map(
-    (site) => `<a href="/?site=${encodeURIComponent(site)}">Read ${escapeHtml(site)}</a>`,
+    (site) => `<a href="${mount}/?site=${encodeURIComponent(site)}">Read ${escapeHtml(site)}</a>`,
   ).join('\n          ');
 
   const reading = PAGES.map(
-    (page) => `<li><a href="${page.path}">${escapeHtml(page.title)}</a></li>`,
+    (page) => `<li><a href="${mount}${page.path}">${escapeHtml(page.title)}</a></li>`,
   ).join('\n          ');
 
   return `

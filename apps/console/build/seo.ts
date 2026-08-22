@@ -1,11 +1,11 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
-import type { Plugin, ResolvedConfig } from 'vite';
+import { type Plugin, type ResolvedConfig, type UserConfig, loadEnv } from 'vite';
 import { HOME, OG_IMAGE, headTags } from './head.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { renderPage } from './pages/render.js';
 import { staticShell } from './shell.js';
-import { SITE_URL_VAR, siteOrigin } from './site.js';
+import { SITE_URL_VAR, type Site, assetBase, site } from './site.js';
 import { llmsTxt, robotsTxt, sitemapXml } from './wellKnown.js';
 
 /**
@@ -30,18 +30,21 @@ interface WellKnownFile {
   readonly body: string;
 }
 
-function wellKnown(origin: string | null): readonly WellKnownFile[] {
+function wellKnown(where: Site | null): readonly WellKnownFile[] {
   const text = 'text/plain; charset=utf-8';
+  const mounted = where !== null && where.path !== '';
+
   return [
-    { name: 'robots.txt', type: text, body: robotsTxt(origin) },
-    { name: 'llms.txt', type: text, body: llmsTxt(origin) },
+    // robots.txt is only read at the root of a host. Mounted under a path it is
+    // a file nothing fetches, and shipping one there would claim this app
+    // directs crawlers when the host's own robots.txt is what governs.
+    ...(mounted ? [] : [{ name: 'robots.txt', type: text, body: robotsTxt(where) }]),
+    { name: 'llms.txt', type: text, body: llmsTxt(where) },
     // A sitemap is absolute URLs or it is nothing: `<loc>` has no relative
-    // form, so with no origin there is no honest file to write.
-    ...(origin === null
+    // form, so with no site configured there is no honest file to write.
+    ...(where === null
       ? []
-      : [
-          { name: 'sitemap.xml', type: 'application/xml; charset=utf-8', body: sitemapXml(origin) },
-        ]),
+      : [{ name: 'sitemap.xml', type: 'application/xml; charset=utf-8', body: sitemapXml(where) }]),
   ];
 }
 
@@ -60,7 +63,7 @@ function replaceOnce(html: string, anchor: string, into: string): string {
  * three times, and the shell names the readings the JSON-LD lists.
  */
 export function seo(): Plugin {
-  let origin: string | null = null;
+  let where: Site | null = null;
   let card: Uint8Array | null = null;
   let files: readonly WellKnownFile[] = [];
 
@@ -68,12 +71,34 @@ export function seo(): Plugin {
     name: 'lumioguard:seo',
     enforce: 'post',
 
+    /**
+     * Vite's asset base comes from the SAME variable as the canonical.
+     *
+     * It is decided here, before the config resolves, so `loadEnv` reads the
+     * .env files itself rather than waiting for `config.env`. Writing the mount
+     * point twice, once as `--base` and once in the URL, is two literals that
+     * must agree: a page would link somewhere its own canonical denies.
+     */
+    config(userConfig: UserConfig, { mode }): UserConfig {
+      const base = assetBase(loadEnv(mode, userConfig.root ?? '.', 'VITE_'));
+      // An explicit `--base` that disagrees is REFUSED rather than quietly
+      // overruled. Vite would take this hook's value and the flag would do
+      // nothing, so the assets ship under one path while the canonical and
+      // every link claim another, and the build says it succeeded.
+      if (userConfig.base !== undefined && userConfig.base !== base) {
+        throw new Error(
+          `[seo] --base=${userConfig.base} disagrees with ${SITE_URL_VAR} (${base}). The mount point is written once, in the URL; drop the flag.`,
+        );
+      }
+      return { base };
+    },
+
     async configResolved(config: ResolvedConfig) {
       // `config.env` is what Vite already loaded from the .env files, so this
       // reads the same value the app would and needs no access to the process.
-      origin = siteOrigin(config.env);
-      files = wellKnown(origin);
-      if (origin === null) {
+      where = site(config.env);
+      files = wellKnown(where);
+      if (where === null) {
         config.logger.warn(
           `[seo] ${SITE_URL_VAR} is not set: no canonical, no OpenGraph URL, no sitemap and no Sitemap: line in robots.txt. Set it to this deployment's origin before publishing.`,
         );
@@ -92,8 +117,12 @@ export function seo(): Plugin {
     transformIndexHtml: {
       order: 'post',
       handler(html: string) {
-        const withHead = replaceOnce(html, HEAD_ANCHOR, headTags(HOME, origin, card !== null));
-        return replaceOnce(withHead, MOUNT_ANCHOR, `<div id="root">${staticShell()}\n    </div>`);
+        const withHead = replaceOnce(html, HEAD_ANCHOR, headTags(HOME, where, card !== null));
+        return replaceOnce(
+          withHead,
+          MOUNT_ANCHOR,
+          `<div id="root">${staticShell(where?.path ?? '')}\n    </div>`,
+        );
       },
     },
 
@@ -121,7 +150,7 @@ export function seo(): Plugin {
         this.emitFile({
           type: 'asset',
           fileName: `${page.meta.path.replace(/^\//, '')}.html`,
-          source: renderPage(page, origin, card !== null),
+          source: renderPage(page, where, card !== null),
         });
       }
       if (card !== null) {

@@ -14,15 +14,9 @@ import {
 import { type PageLink, pageLink } from '../../src/pages.js';
 
 /**
- * The explainer pages, as data.
- *
- * They exist because the app is one screen with a URL bar on it, which is
- * nothing for a search engine to rank. These are prerendered documents with no
- * meter on them: the verdict stays on the one surface, and every page here
- * links into it.
- *
- * Everything numeric is read from the ladders in `shared`, never typed. A
- * retuned band moves the published table the same day it moves the score.
+ * The explainer pages, as data. No meter on any of them: the verdict stays on
+ * the one surface. Every number is read from the ladders in `shared`, so a
+ * retuned band moves the published table the day it moves the score.
  */
 
 export interface Table {

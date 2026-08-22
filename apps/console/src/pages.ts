@@ -1,14 +1,7 @@
 /**
- * The explainers that sit beside the app, as plain data.
- *
- * Here rather than in `build/` because BOTH read it: the build writes each page
- * and lists it in the sitemap, and the app links to them from the colophon. A
- * crawler that runs JavaScript sees only what the app renders, so links that
- * existed solely in the prerendered document would be links Google never
- * follows.
- *
- * `build/pages/content.ts` pairs each entry with its prose, the same way the
- * tool descriptors pair with the catalogue.
+ * The explainers, as plain data. Here rather than `build/` because both read
+ * it: the build writes the pages, and the app links them from the colophon,
+ * which is the only copy a JavaScript-running crawler ever sees.
  */
 export interface PageLink {
   /** Always starts with a slash, and is the path the document is written to. */

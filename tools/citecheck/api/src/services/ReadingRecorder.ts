@@ -52,25 +52,13 @@ export interface ReadingPayload {
 }
 
 /**
- * Field by field, not a spread: a spread would carry `scannedAt` and each
- * finding's opaque `id` across a boundary with no use for them, and would
- * forward whatever is added to the wire later.
- *
- * `impact` is sent as `severity` because that is the envelope every tool shares.
- * The ingest sorts readings from three tools into one list, and a field that
- * means the same thing under three names cannot be sorted on.
+ * Field by field, not a spread: a spread forwards whatever is added to the wire
+ * later. `impact` is sent as `severity`, the envelope all three tools share.
  */
 /**
- * Citecheck's impact ladder to the shared severity vocabulary.
- *
- * TRANSLATED, not passed through. The ingest validates against
- * `critical | high | medium | low`, and sending `blocker` rejected the whole
- * reading with a 400. The recorder fails closed, so the visible symptom was a
- * reading that simply never arrived: no site key, no row, nothing in the app,
- * and a report that looked entirely normal.
- *
- * `absent` is a flag rather than a severity here, and lands at `low`: it is
- * worth listing beside the rest, and it costs the score nothing at either end.
+ * TRANSLATED, not passed through. The ingest takes only
+ * `critical | high | medium | low`, and `blocker` 400s the whole reading; the
+ * recorder fails closed, so the symptom is a reading that never arrives.
  */
 const SEVERITY: Record<Impact, 'critical' | 'high' | 'medium' | 'low'> = {
   blocker: 'critical',

@@ -10,18 +10,9 @@ interface Route {
 }
 
 /**
- * The reading lives at its own address, so it can be shared, reloaded and backed
- * out of. A query parameter rather than a path segment: a path needs the host to
- * rewrite unknown routes to the app shell, and getting that wrong turns every
- * shared link into a 404. This works on any static host.
- *
- * The SELECTION is in the address too, so a link carries which readings it was.
- * Sending someone a report and having it run different tools on their machine
- * would be sending them a different report.
- *
- * Unknown ids are dropped rather than trusted: the parameter is typed by hand
- * and by strangers, and a retired tool's id left in an old bookmark must not
- * reach the registry lookup as a name nothing answers to.
+ * The reading lives at its own address. A query parameter, not a path: a path
+ * needs the host to rewrite unknown routes and works on no static host by
+ * default. The SELECTION rides along, or a shared link runs different tools.
  */
 export function useConsoleRoute(): {
   readonly address: string | null;

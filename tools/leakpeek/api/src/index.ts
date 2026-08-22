@@ -1,8 +1,7 @@
-import { endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
+import { corsFor, endpoint, jsonBody, queryParams, standardHeaders } from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
 import { type ExposureRequest, exposureRequestSchema } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { getContainer } from './container.js';
 import type { Bindings } from './http/env.js';
 import { readingFrom, recorderConfigFrom } from './services/ReadingRecorder.js';
@@ -11,11 +10,7 @@ export type { Env } from './http/env.js';
 
 const app = new Hono<Bindings>();
 
-app.use('*', async (context, next) => {
-  const configured = context.env.ALLOWED_ORIGINS ?? '*';
-  const origin = configured === '*' ? '*' : configured.split(',').map((value) => value.trim());
-  return cors({ origin, allowMethods: ['GET', 'POST', 'OPTIONS'] })(context, next);
-});
+app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
 app.use('*', standardHeaders());
 

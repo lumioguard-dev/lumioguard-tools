@@ -5,18 +5,9 @@ import { enumOf } from './zod.js';
 export const citationTierSchema = enumOf(CITATION_TIER_NAMES);
 
 /**
- * Ordered worst-first, which is also the order a report lists findings in.
- *
- * `blocker` rather than `blocking`, so the word matches the band it produces:
- * one blocker finding is what puts a page in Blocked.
- *
- * `absent` is NOT a fourth severity. It is the flag on a signal the page simply
- * does not publish, and it weighs nothing. The three severities say how much
- * something costs; this one says the thing is not there and leaves the reader
- * to decide whether they wanted it. Reporting a missing meta description as
- * "minor" priced an absence that the reference pages answer engines quote every
- * day share: five of six ship no JSON-LD, four carry no meta description.
- * Absence is a choice, and only a BROKEN one is a defect.
+ * Ordered worst-first, the order a report lists findings in. `absent` is NOT a
+ * fourth severity: it flags a signal the page does not publish and weighs
+ * nothing. Absence is a choice, and only a BROKEN one is a defect.
  */
 export const IMPACTS = ['blocker', 'major', 'minor', 'absent'] as const;
 export const impactSchema = enumOf(IMPACTS);

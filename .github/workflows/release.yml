@@ -8,10 +8,10 @@ on:
         description: "After tagging, bump the version to prepare the next release"
         type: choice
         options:
-          - patch
           - minor
+          - patch
           - major
-        default: patch
+        default: minor
 
 permissions:
   contents: write # create the tag + Release, and push the version bump

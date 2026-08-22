@@ -14,11 +14,7 @@ name = "lumioguard-leakpeek-api"
 # the Free plan's `*.lumioguard.dev` wildcard cert.
 
 [env.production.vars]
-# The CONSOLE is served from Pages, a different origin, so CORS is load-bearing.
-# Each tool used to serve its own page and allow only that; the console replaced
-# all three, so a stale per-tool origin here fails every reading with a CORS
-# error and nothing useful on screen. Comma-separated to add a custom domain.
-ALLOWED_ORIGINS = "https://lumioguard-readout.pages.dev"
-# Only this deployment records. Absent from [vars] so a fork's plain
-# `wrangler deploy` posts nowhere; recording also needs LEAKPEEK_INGEST_SECRET.
-LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"
+# Set by the deploy, never here: this repo is public and both values name
+# hosts only this deployment owns. Empty blocks every browser origin, so a
+# deploy that forgets them fails closed.
+ALLOWED_ORIGINS = ""

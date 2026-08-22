@@ -2,7 +2,7 @@ import { DESCRIPTION, NAME, PUBLISHER, TITLE } from '../src/copy.js';
 import type { PageLink } from '../src/pages.js';
 import { CATALOGUE } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
-import { absolute } from './site.js';
+import { type Site, absolute } from './site.js';
 
 /**
  * Where the card image is emitted, and what it is a picture of. The path is
@@ -28,7 +28,7 @@ export const HOME: PageLink = { path: '/', title: TITLE, description: DESCRIPTIO
  * Everything in `<head>` that says what this page is, split by whether it needs
  * the origin. `site.ts` says why the absent case writes nothing.
  */
-export function headTags(page: PageLink, origin: string | null, hasImage: boolean): string {
+export function headTags(page: PageLink, where: Site | null, hasImage: boolean): string {
   const originless: string[] = [
     `<title>${escapeHtml(page.title)}</title>`,
     `<meta name="description" content="${escapeHtml(page.description)}" />`,
@@ -42,9 +42,9 @@ export function headTags(page: PageLink, origin: string | null, hasImage: boolea
     `<meta name="twitter:description" content="${escapeHtml(page.description)}" />`,
   ];
 
-  if (origin === null) return originless.join('\n    ');
+  if (where === null) return originless.join('\n    ');
 
-  const self = absolute(origin, page.path);
+  const self = absolute(where.base, page.path);
   return [
     ...originless,
     // On the app, every reading lives at `?site=…` on this one document, so the
@@ -52,8 +52,8 @@ export function headTags(page: PageLink, origin: string | null, hasImage: boolea
     // site anybody has ever read.
     `<link rel="canonical" href="${escapeHtml(self)}" />`,
     `<meta property="og:url" content="${escapeHtml(self)}" />`,
-    ...(hasImage ? imageTags(absolute(origin, OG_IMAGE.path)) : []),
-    `<script type="application/ld+json">${jsonLd(page, origin, hasImage)}</script>`,
+    ...(hasImage ? imageTags(absolute(where.base, OG_IMAGE.path)) : []),
+    `<script type="application/ld+json">${jsonLd(page, where, hasImage)}</script>`,
   ].join('\n    ');
 }
 
@@ -77,11 +77,11 @@ function imageTags(card: string): string[] {
  * not `Article` on purpose: the Article types carry a date because being dated
  * is part of the type, and an evergreen page has no honest one to give.
  */
-function jsonLd(page: PageLink, origin: string, hasImage: boolean): string {
-  const home = absolute(origin, '/');
-  const self = absolute(origin, page.path);
+function jsonLd(page: PageLink, where: Site, hasImage: boolean): string {
+  const home = absolute(where.base, '/');
+  const self = absolute(where.base, page.path);
 
-  const site = [
+  const nodes = [
     { '@type': 'Organization', '@id': `${home}#publisher`, name: PUBLISHER },
     {
       '@type': 'WebSite',
@@ -96,8 +96,8 @@ function jsonLd(page: PageLink, origin: string, hasImage: boolean): string {
 
   const graph =
     page.path === HOME.path
-      ? [...site, application(home, hasImage ? absolute(origin, OG_IMAGE.path) : null)]
-      : [...site, explainer(page, self, home), breadcrumb(page, self, home)];
+      ? [...nodes, application(home, hasImage ? absolute(where.base, OG_IMAGE.path) : null)]
+      : [...nodes, explainer(page, self, home), breadcrumb(page, self, home)];
 
   // A raw `<` cannot appear inside a script element, whatever it is a script of.
   return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph }).replace(

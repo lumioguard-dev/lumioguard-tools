@@ -1,23 +1,9 @@
 import { BAND_EDGES, type ScoreBand, type TrackSegment, bandOf, trackOf } from './band.js';
 
 /**
- * The one citation ladder for Citecheck.
- *
- * Band names describe what a machine can do with the PAGE, never how hard
- * anyone worked on it, and never whether it deserves to be quoted.
- *
- * The bands name HOW MUCH OF THE PAGE A MACHINE ENDS UP WITH, which is the one
- * thing this tool can actually observe. Two earlier sets were retired for
- * claiming more than that:
- *
- * `Quotable / Thin / Guesswork / Invisible` promised the page would be quoted,
- * when nothing here can tell whether it says anything worth quoting. `Thin`
- * also named content volume and landed on Wikipedia, which reaches that band on
- * a missing meta description alone.
- *
- * `Clear / Passable / Obstructed / Blocked` described the path rather than the
- * page, and `Passable` reads as a verdict on quality, the way a passable meal
- * is a mediocre one. Beside `Clear` its direction was not even obvious.
+ * The one citation ladder. Bands name HOW MUCH OF THE PAGE A MACHINE GETS, the
+ * only thing observable here, never quality and never effort. Two earlier sets
+ * were retired for claiming more; the README records them.
  */
 export const CitationTier = {
   Legible: 'Legible',

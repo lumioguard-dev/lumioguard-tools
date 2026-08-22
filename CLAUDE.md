@@ -176,6 +176,13 @@ A long comment is a summarise-and-cut job, not a keep-everything job: preserve
 the invariant, delete the story around it. Prose explaining a design decision
 belongs in a `README.md`.
 
+**THREE LINES IS THE CEILING, not a target.** A block longer than that is a
+defect, whatever it says. The rule is mechanical on purpose: the alternative,
+"as long as it needs to be", is how a file ends up carrying more prose than
+code and how the one load-bearing sentence gets lost in the retelling around
+it. If three lines cannot hold it, the rest belongs in a `README.md` and the
+comment points there.
+
 ## Writing
 
 This applies to every word that ships: documentation, comments, commit messages,
@@ -301,6 +308,25 @@ happen to have is a comment that needs writing or a name that needs changing.
 
 ## Commits
 
-Conventional prefixes (`feat`, `fix`, `refactor`, `chore`, `docs`) scoped to the
-package. The body says *why*, and names the failure the change prevents where
-there is one. One logical change per commit.
+**One line. No body.** `type(scope): summary`, conventional prefix (`feat`,
+`fix`, `refactor`, `chore`, `docs`), imperative, lower case, no trailing full
+stop. The subject IS the message; the diff and the pull request carry the
+detail. Trailers are the only exception.
+
+**One commit per branch.** Squash before merging. A branch is one change, and
+its history of false starts is not something master needs to carry.
+
+## Versions
+
+The repo ships as ONE version across every package, in semantic versioning.
+
+**A release bumps the MINOR.** `0.1.5` to `0.2.0`, never `0.1.6`. Patch is
+reserved for a fix shipped on its own against an already-released version, and
+major waits for a deliberate break. Picking minor by default keeps the number
+honest: almost every release here carries a behaviour change somewhere, and a
+patch bump would understate it.
+
+The Release workflow tags the current version, then bumps for the next cycle.
+The version is never edited by hand: `scripts/set-monorepo-version.mjs` writes
+every workspace package at once, because a version that lives in twelve files
+is a version that disagrees with itself.
