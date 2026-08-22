@@ -1,4 +1,5 @@
 import { apiBase } from '../apiBase.js';
+import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
 import { ScanClient } from './ScanClient.js';
 import { SiteReport } from './report/SiteReport.js';
@@ -7,9 +8,7 @@ import { tierInk } from './theme.js';
 const client = new ScanClient(apiBase('slopmeter'));
 
 export const slopmeter: ToolDescriptor = {
-  id: 'slopmeter',
-  label: 'AI slop',
-  summary: 'Scores how much of the site came out of a template rather than a decision.',
+  ...toolCopy('slopmeter'),
   async run(address, signal) {
     const result = await client.crawl(address, {}, signal);
     return {

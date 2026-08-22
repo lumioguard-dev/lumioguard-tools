@@ -1,4 +1,12 @@
-import { NOT_FOUND, endpoint, jsonBody, queryParams, toHttpFailure } from '@lumioguard/api-core';
+import {
+  NOT_FOUND,
+  allowedByRateLimit,
+  corsFor,
+  endpoint,
+  jsonBody,
+  standardHeaders,
+  toHttpFailure,
+} from '@lumioguard/api-core';
 import {
   type CitationRequest,
   type CrawlRequest,
@@ -6,7 +14,6 @@ import {
   crawlRequestSchema,
 } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
-import { cors } from 'hono/cors';
 import { getContainer } from './container.js';
 import type { Bindings } from './http/env.js';
 import { readingFrom, readingFromCrawl, recorderConfigFrom } from './services/ReadingRecorder.js';
@@ -15,16 +22,20 @@ export type { Env } from './http/env.js';
 
 const app = new Hono<Bindings>();
 
-app.use('*', async (context, next) => {
-  const configured = context.env.ALLOWED_ORIGINS ?? '*';
-  const origin = configured === '*' ? '*' : configured.split(',').map((value) => value.trim());
-  return cors({ origin, allowMethods: ['GET', 'POST', 'OPTIONS'] })(context, next);
-});
+app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
-app.use('*', async (context, next) => {
+app.use('*', standardHeaders());
+app.use('/api/*', async (context, next) => {
+  if (
+    context.req.path !== '/api/health' &&
+    !(await allowedByRateLimit(context.env.SCAN_RATE_LIMITER, context.req.raw))
+  ) {
+    return context.json(
+      { error: { code: 'rate_limited', message: 'Too many scans. Try again shortly.' } },
+      429,
+    );
+  }
   await next();
-  context.header('x-content-type-options', 'nosniff');
-  context.header('referrer-policy', 'no-referrer');
 });
 
 /**
@@ -64,10 +75,8 @@ const crawl = async (
 
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
 
-app.get('/api/scan', endpoint(citationRequestSchema, queryParams('url'), scan));
 app.post('/api/scan', endpoint(citationRequestSchema, jsonBody, scan));
 
-app.get('/api/crawl', endpoint(crawlRequestSchema, queryParams('url', 'depth', 'maxPages'), crawl));
 app.post('/api/crawl', endpoint(crawlRequestSchema, jsonBody, crawl));
 
 app.onError((error, context) => {

@@ -17,6 +17,7 @@ body:
       options:
         - slopmeter (a tell that a page is still the template)
         - leakpeek (something a site is exposing)
+        - citecheck (something that prevents a site being cited)
     validations:
       required: true
 

@@ -1,10 +1,12 @@
 /**
  * Two faces, two registers, and which one a string gets is a decision about
- * what made it: not about emphasis.
+ * what made it: not about emphasis. `headline` is the h1 alone, which is
+ * printed rather than written because the hand is hard to read at 48px.
  */
 export const fontFamily = {
   hand: ['Architects Daughter', 'ui-rounded', 'cursive'],
   display: ['Architects Daughter', 'ui-rounded', 'cursive'],
+  headline: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
   sans: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
   mono: ['Archivo', 'system-ui', '-apple-system', 'Segoe UI', 'sans-serif'],
 } as const;

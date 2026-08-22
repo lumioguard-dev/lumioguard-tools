@@ -1,4 +1,4 @@
-import { PageFetchError } from '@lumioguard/api-core';
+import { PageFetchError, SafeFetcher, readText } from '@lumioguard/api-core';
 import type { FetchedScript } from '@lumioguard/leakpeek-core';
 
 const USER_AGENT =
@@ -24,6 +24,7 @@ const KEEP_HEADERS = [
 
 const MAX_SCRIPTS = 8;
 const MAX_SCRIPT_BYTES = 1_500_000;
+const MAX_HTML_BYTES = 2_000_000;
 
 interface FetchedPage {
   readonly url: string;
@@ -41,19 +42,21 @@ interface FetchedPage {
  */
 export class PageFetcher {
   private readonly timeoutMs: number;
+  private readonly safeFetcher = new SafeFetcher();
 
   public constructor(options: { timeoutMs?: number } = {}) {
     this.timeoutMs = options.timeoutMs ?? 12_000;
   }
 
   public async fetchPage(target: URL): Promise<FetchedPage> {
-    const response = await this.request(target.toString(), { accept: 'text/html,*/*' });
+    const fetched = await this.request(target.toString(), { accept: 'text/html,*/*' });
+    const response = fetched.response;
     if (!response.ok) {
       throw new PageFetchError('upstream_error', `Upstream responded ${response.status}`);
     }
 
-    const html = await response.text();
-    const finalUrl = response.url === '' ? target.toString() : response.url;
+    const html = (await readText(response, MAX_HTML_BYTES)).text;
+    const finalUrl = fetched.url.toString();
 
     const headers: Record<string, string> = {};
     for (const name of KEEP_HEADERS) {
@@ -81,9 +84,9 @@ export class PageFetcher {
       srcs.map(async (src) => {
         try {
           const absolute = new URL(src, baseUrl);
-          const response = await this.request(absolute.toString(), {}, 8_000);
+          const response = (await this.request(absolute.toString(), {}, 8_000)).response;
           if (!response.ok) return null;
-          const body = (await response.text()).slice(0, MAX_SCRIPT_BYTES);
+          const body = (await readText(response, MAX_SCRIPT_BYTES)).text;
           return { url: absolute.toString(), body } satisfies FetchedScript;
         } catch {
           // A script that will not load is not a scan failure.
@@ -99,13 +102,12 @@ export class PageFetcher {
     url: string,
     extraHeaders: Record<string, string>,
     timeoutMs = this.timeoutMs,
-  ): Promise<Response> {
+  ) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetch(url, {
+      return await this.safeFetcher.fetch(url, {
         headers: { 'user-agent': USER_AGENT, ...extraHeaders },
-        redirect: 'follow',
         signal: controller.signal,
       });
     } catch (error) {

@@ -1,3 +1,5 @@
+import type { RateLimiter } from '@lumioguard/api-core';
+
 export interface Env {
   /** Comma-separated origins allowed to call the API. `*` in development. */
   ALLOWED_ORIGINS?: string;
@@ -11,6 +13,7 @@ export interface Env {
 
   /** Unset falls back to production; point it at 127.0.0.1:8787 in dev. */
   LUMIOGUARD_API_BASE_URL?: string;
+  SCAN_RATE_LIMITER?: RateLimiter;
 }
 
 export type Bindings = { Bindings: Env };

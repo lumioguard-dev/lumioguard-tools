@@ -1,4 +1,4 @@
-import { PageFetchError } from '@lumioguard/api-core';
+import { PageFetchError, SafeFetcher, readText } from '@lumioguard/api-core';
 import type { PageInput } from '@lumioguard/citecheck-core';
 
 const USER_AGENT =
@@ -54,6 +54,7 @@ export interface AgentProbe {
  */
 export class PageFetcher {
   private readonly timeoutMs: number;
+  private readonly safeFetcher = new SafeFetcher();
 
   public constructor(options: { timeoutMs?: number } = {}) {
     this.timeoutMs = options.timeoutMs ?? 12_000;
@@ -68,31 +69,8 @@ export class PageFetcher {
    * audit asks and neither survives a followed redirect.
    */
   public async fetchPage(target: URL): Promise<FetchedPage> {
-    let current = target.toString();
-    let redirects = 0;
-    let temporary = false;
-    let response = await this.request(
-      current,
-      USER_AGENT,
-      { accept: 'text/html,*/*' },
-      undefined,
-      'manual',
-    );
-
-    while (isRedirect(response.status) && redirects < MAX_HOPS) {
-      const location = response.headers.get('location');
-      if (location === null) break;
-      temporary = temporary || response.status === 302 || response.status === 307;
-      redirects += 1;
-      current = new URL(location, current).toString();
-      response = await this.request(
-        current,
-        USER_AGENT,
-        { accept: 'text/html,*/*' },
-        undefined,
-        'manual',
-      );
-    }
+    const fetched = await this.request(target.toString(), USER_AGENT, { accept: 'text/html,*/*' });
+    const response = fetched.response;
 
     if (!response.ok) {
       throw new PageFetchError(
@@ -116,17 +94,17 @@ export class PageFetcher {
       if (value !== null) headers[name] = value;
     }
 
-    const url = response.url === '' ? current : response.url;
+    const url = fetched.url.toString();
     return {
       url,
-      html: (await response.text()).slice(0, MAX_HTML_BYTES),
+      html: (await readText(response, MAX_HTML_BYTES)).text,
       headers,
       status: response.status,
       delivery: {
         status: response.status,
-        redirects,
-        requestedUrl: redirects > 0 ? target.toString() : null,
-        temporary,
+        redirects: fetched.redirects,
+        requestedUrl: fetched.redirects > 0 ? target.toString() : null,
+        temporary: fetched.temporaryRedirect,
       },
     };
   }
@@ -141,15 +119,17 @@ export class PageFetcher {
    */
   public async probeAsAgent(target: URL): Promise<AgentProbe | null> {
     try {
-      const response = await this.request(
-        target.toString(),
-        CRAWLER_USER_AGENT,
-        { accept: 'text/html,*/*' },
-        8_000,
-      );
+      const response = (
+        await this.request(
+          target.toString(),
+          CRAWLER_USER_AGENT,
+          { accept: 'text/html,*/*' },
+          8_000,
+        )
+      ).response;
       return {
         status: response.status,
-        html: response.ok ? (await response.text()).slice(0, MAX_HTML_BYTES) : '',
+        html: response.ok ? (await readText(response, MAX_HTML_BYTES)).text : '',
         userAgent: 'GPTBot/1.1',
       };
     } catch {
@@ -160,9 +140,10 @@ export class PageFetcher {
   /** A well-known file at the site root. Absent is an answer, not an error. */
   public async fetchText(url: string): Promise<string | null> {
     try {
-      const response = await this.request(url, USER_AGENT, { accept: 'text/plain,text/*,*/*' });
+      const response = (await this.request(url, USER_AGENT, { accept: 'text/plain,text/*,*/*' }))
+        .response;
       if (!response.ok) return null;
-      return (await response.text()).slice(0, MAX_HTML_BYTES);
+      return (await readText(response, MAX_HTML_BYTES)).text;
     } catch {
       return null;
     }
@@ -173,16 +154,18 @@ export class PageFetcher {
     userAgent: string,
     extraHeaders: Record<string, string>,
     timeoutMs = this.timeoutMs,
-    redirect: 'follow' | 'manual' = 'follow',
-  ): Promise<Response> {
+  ) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetch(url, {
-        headers: { 'user-agent': userAgent, ...extraHeaders },
-        redirect,
-        signal: controller.signal,
-      });
+      return await this.safeFetcher.fetch(
+        url,
+        {
+          headers: { 'user-agent': userAgent, ...extraHeaders },
+          signal: controller.signal,
+        },
+        MAX_HOPS,
+      );
     } catch (error) {
       if (error instanceof Error && error.name === 'AbortError') {
         throw new PageFetchError('timeout', `Timed out after ${timeoutMs}ms`);
@@ -195,8 +178,4 @@ export class PageFetcher {
       clearTimeout(timer);
     }
   }
-}
-
-function isRedirect(status: number): boolean {
-  return status === 301 || status === 302 || status === 303 || status === 307 || status === 308;
 }

@@ -45,12 +45,11 @@ jobs:
     name: verify
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: v${{ inputs.version }}
-      - uses: pnpm/action-setup@v4
-        with: { version: 9.12.3 }
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
@@ -66,17 +65,20 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: v${{ inputs.version }}
-      - uses: pnpm/action-setup@v4
-        with: { version: 9.12.3 }
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
+      - name: deploy ${{ inputs.tool }} api
+        env:
+          ALLOWED_ORIGINS: ${{ vars.ALLOWED_ORIGINS }}
+          LUMIOGUARD_API_BASE_URL: ${{ vars.LUMIOGUARD_API_BASE_URL }}
+        run: pnpm --filter @lumioguard/${{ inputs.tool }}-api run deploy
 
   deploy-console:
     name: deploy console
@@ -86,12 +88,11 @@ jobs:
     runs-on: ubuntu-latest
     environment: production
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           ref: v${{ inputs.version }}
-      - uses: pnpm/action-setup@v4
-        with: { version: 9.12.3 }
-      - uses: actions/setup-node@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
@@ -113,6 +114,11 @@ jobs:
           VITE_CITECHECK_API_URL: ${{ vars.VITE_API_BASE_URL_CITECHECK }}
           VITE_LUMIOGUARD_APP_URL: ${{ vars.VITE_LUMIOGUARD_APP_URL }}
           VITE_LUMIOGUARD_SITE_URL: ${{ vars.VITE_LUMIOGUARD_SITE_URL }}
+          # Where this deployment answers. Unset, the build still succeeds and
+          # ships with no canonical, no OpenGraph URL and no sitemap, saying so
+          # on stderr. That is right for a fork and wrong for us, so the
+          # variable is set on this repo.
+          VITE_PUBLIC_SITE_URL: ${{ vars.VITE_PUBLIC_SITE_URL }}
         run: pnpm --filter @lumioguard/console run build
 
       - run: pnpm --filter @lumioguard/console run deploy

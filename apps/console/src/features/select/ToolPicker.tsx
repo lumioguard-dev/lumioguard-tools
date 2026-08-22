@@ -3,17 +3,9 @@ import { Hint, MarkTick } from '@lumioguard/ui';
 import type { ToolRegistry } from '../../tools/registry.js';
 
 /**
- * Which readings to run. Everything is on until a visitor turns something off.
- *
- * Checkboxes rather than a drawn control of our own: this is a set of choices,
- * a screen reader should hear it as one, and the keyboard should reach it
- * without anything here re-implementing what a checkbox already does. The box
- * itself is hidden and the label is the target, so the drawn chip is what is
- * seen and the real control is what is used.
- *
- * The last one on cannot be turned off. A reading of nothing is a page with no
- * verdict on it, and a disabled control that explains itself beats a report
- * that silently empties.
+ * Which readings to run, all on until turned off. Real checkboxes, hidden with
+ * the label as the target, so a screen reader and the keyboard get the control
+ * they expect. The last one on cannot be turned off.
  */
 export function ToolPicker({
   registry,

@@ -347,9 +347,7 @@ address. The console proxies `/citecheck/api` to the Worker above.
 
 ```
 POST /api/crawl  { "url": "example.com" }      what the client calls
-GET  /api/crawl?url=example.com&depth=2&maxPages=15
 POST /api/scan   { "url": "example.com" }      one page only
-GET  /api/scan?url=example.com
 GET  /api/health
 ```
 

@@ -67,18 +67,9 @@ export function readingBandFor(score: number): ReadingBand {
 }
 
 /**
- * The consolidated score: the WORST of the readings that ran.
- *
- * The MINIMUM, because higher is better. Not a mean: a site whose exposure is
- * Wide Open and whose markup is tidy is not two thirds fine, and an average
- * would let a clean reading pay down a critical one, so adding a tool the site
- * happens to pass would raise the score with nothing fixed. The worst-of also
- * keeps the number comparable whether one tool ran or four, which a mean does
- * not.
- *
- * The BOTTOM of the scale when nothing ran, so a reading with no tools selected
- * cannot read as a clean site. Callers draw no verdict at all in that case; the
- * value only has to be the one that claims least.
+ * The consolidated score: the WORST of the readings, never a mean. An average
+ * lets a clean reading pay down a critical one, and adding a tool the site
+ * passes would raise the score with nothing fixed. Bottom of scale when empty.
  */
 export function consolidatedScore(scores: readonly number[]): number {
   return scores.reduce((worst, score) => Math.min(worst, score), READING_MAX);

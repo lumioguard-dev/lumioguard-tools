@@ -5,6 +5,7 @@ import { type ProxyOptions, type UserConfig, defineConfig } from 'vite';
 // read by the Vite config and by scripts/dev-worker.mjs, neither of which is
 // part of the typechecked app.
 import { HOST, apiPorts, appPort } from '../../scripts/ports.mjs';
+import { seo } from './build/seo.js';
 
 const source = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
@@ -30,7 +31,7 @@ function toolProxies(): NonNullable<UserConfig['server']>['proxy'] {
 }
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), seo()],
   // Explicit, not inherited: a source map would publish this app's readable
   // source alongside the bundle. No detector reaches the client, but the client
   // is still the half an attacker can read.

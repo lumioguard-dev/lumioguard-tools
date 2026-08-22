@@ -28,18 +28,9 @@ const STOCK_TITLES: readonly string[] = [
 ];
 
 /**
- * Where a title certainly stops fitting the places it is shown.
- *
- * Set where the claim is UNARGUABLE rather than where the advice usually
- * starts. The rule of thumb is around 60, but a search result gives a title
- * about 600 pixels and the character filling it varies, so at 62 or 66 the tail
- * may well display: nytimes.com, nike.com and blog.hubspot.com were each told
- * their title was cut off when it may not be. Past 75 there is no width at
- * which it fits.
- *
- * There was a floor here too, and it is gone: it called "iPhone - Apple" too
- * short to say what the page is. A character count says nothing about whether a
- * title is any good, and only the long end of it is checkable at all.
+ * Where a title certainly stops fitting. Set where the claim is UNARGUABLE, not
+ * where the advice starts: at 62 the tail may well display, and nytimes.com and
+ * nike.com were both told they were cut off when they were not.
  */
 const TITLE_MAX = 75;
 

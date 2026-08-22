@@ -1,18 +1,9 @@
 import { useId } from 'react';
 
 /**
- * A drawn tooltip, replacing the browser's own.
- *
- * `title` was doing this job and doing it badly: the browser decides when it
- * appears (about a second), where, and what it looks like, which is a grey OS
- * rectangle on a page drawn in ballpoint. None of that is themeable and none of
- * it responds to focus, so a keyboard user never saw the text at all.
- *
- * CSS-only. There is no open state to hold, which matters because the picker
- * draws one of these per tool and a state hook each would re-render the whole
- * set on every hover. `group-hover` and `group-focus-within` cover pointer and
- * keyboard alike, and `aria-describedby` is what actually carries the text to a
- * screen reader, so the visual layer can stay `aria-hidden`.
+ * A drawn tooltip, replacing `title`, which never responded to focus so a
+ * keyboard user never saw it. CSS-only: a state hook per tool would re-render
+ * the whole picker on hover. `aria-describedby` carries the text.
  */
 export function Hint({
   text,

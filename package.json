@@ -1,7 +1,7 @@
 {
   "name": "lumioguard-tools",
   "private": true,
-  "version": "0.1.4",
+  "version": "0.5.0",
   "description": "A home for URL-only tools that read a public website and report something true about it. Each tool is a detection engine, a Worker and a client; they share the contracts, tokens and surface in packages/.",
   "keywords": [
     "website-audit",
@@ -12,13 +12,13 @@
     "typescript"
   ],
   "license": "MIT",
-  "homepage": "https://github.com/lumiostack/lumioguard-tools#readme",
+  "homepage": "https://github.com/lumioguard-dev/lumioguard-tools#readme",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/lumiostack/lumioguard-tools.git"
+    "url": "git+https://github.com/lumioguard-dev/lumioguard-tools.git"
   },
   "bugs": {
-    "url": "https://github.com/lumiostack/lumioguard-tools/issues"
+    "url": "https://github.com/lumioguard-dev/lumioguard-tools/issues"
   },
   "type": "module",
   "engines": {

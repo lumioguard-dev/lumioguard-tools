@@ -1,3 +1,5 @@
+import type { RateLimiter } from '@lumioguard/api-core';
+
 export interface Env {
   /** Comma-separated origins allowed to call the API. `*` in development. */
   ALLOWED_ORIGINS?: string;
@@ -13,6 +15,7 @@ export interface Env {
    * Recording is a side effect of a reading, never a precondition for one.
    */
   SLOPMETER_INGEST_SECRET?: string;
+  SCAN_RATE_LIMITER?: RateLimiter;
 }
 
 export type Bindings = { Bindings: Env };

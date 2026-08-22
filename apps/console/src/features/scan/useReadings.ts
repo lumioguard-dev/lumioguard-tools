@@ -24,18 +24,10 @@ function messageFor(caught: unknown): string {
 }
 
 /**
- * Every selected tool, read at once, each landing on its own.
- *
- * Independently rather than in a batch: the three Workers are three origins
- * doing different amounts of work, and a crawl takes many times what a single
- * page scan does. Awaiting them together would hold the fastest reading off the
- * screen until the slowest finished, and one tool being down would take the
- * whole page with it. A tool that fails reports its own failure in its own row
- * and the rest of the page is unaffected.
- *
- * One reading at a time overall: changing the address or the selection aborts
- * everything in flight, and an aborted request writes nothing. Without that a
- * slow first reading lands after a fast second one and silently replaces it.
+ * Every selected tool at once, each landing on its own: awaiting them together
+ * holds the fastest behind the slowest, and one dead tool takes the page. A new
+ * address aborts everything in flight, or a slow first reading replaces a fast
+ * second one.
  */
 export function useReadings(address: string, tools: readonly ToolDescriptor[]): ReadingsState {
   const [readings, setReadings] = useState<readonly Reading[]>([]);

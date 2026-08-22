@@ -3,18 +3,9 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { PageDocument } from '../read/PageDocument.js';
 
 /**
- * The mount point a single-page app leaves empty in the served HTML, and fills
- * once its JavaScript runs.
- *
- * Matched as a CLOSED, EMPTY element rather than by the id alone. A server-
- * rendered Next.js page also has `<div id="__next">`, full of content; keying
- * on the id would call every one of them a shell.
- *
- * THE QUOTES ARE REQUIRED, which anchors the id at both ends. Optional quotes
- * let the alternation match a prefix instead: `id="apple-reg-wall-btn-wrapper"`
- * on edition.cnn.com matched `app`, and a fully server-rendered news front page
- * carrying 1,428 words of its own content was reported as a JavaScript shell
- * and scored into the top band.
+ * The mount point an SPA leaves empty. Matched CLOSED AND EMPTY, never by id
+ * alone: a server-rendered Next.js page has one too. THE QUOTES ARE REQUIRED,
+ * or the alternation matches a prefix and cnn.com is called a shell.
  */
 const EMPTY_MOUNT =
   /<div\b[^>]*\bid\s*=\s*["'](?:root|app|__next|__nuxt|___gatsby|svelte)["'][^>]*>\s*<\/div\s*>/i;

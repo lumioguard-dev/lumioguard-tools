@@ -20,9 +20,9 @@ same change when behaviour moves.
   readable claims, nothing an answer can be lifted from. See
   `tools/citecheck/README.md`.
 
-## The five that must not break
+## The six that must not break
 
-Everything else in this file is guidance. These five are the ones where breaking
+Everything else in this file is guidance. These six are the ones where breaking
 them looks like nothing is wrong.
 
 1. **The console never imports `core`.** That ships a whole detection engine to
@@ -45,11 +45,23 @@ them looks like nothing is wrong.
 5. **A report must not become the leak.** Evidence is redacted where it is
    produced: row counts and column names, never values; keys masked. Reports
    render on sites the reader does not own.
+6. **The console serves a real document.** `#root` is filled at build time with
+   the home page's own words, taken from `src/copy.ts` and the tool catalogue.
+   Served empty it is `access.shell`, the blocker Citecheck ships in this repo,
+   and the app looks perfect to every human who visits while scoring 40 on
+   itself. Never hand-write that copy into `index.html`, and never hide the
+   static document from anything that runs JavaScript: serving one thing to a
+   browser and another to a crawler is the cloaking these tools report.
 
 ## Layout
 
 ```
 apps/console                    the one front end
+  build/                        what a crawler is served, written at build time
+  build/pages/                  the prerendered explainers, one document each
+  src/copy.ts                   the app's own words, read by the app and the build
+  src/pages.ts                  the explainers, registered for the app and the build
+  src/tools/catalogue.ts        each tool's id, label and summary as plain data
   src/tools/registry.ts         what a tool must provide to appear
   src/tools/<tool>/             its client, report panels, ink and descriptor
 packages/shared                 wire contracts (zod) and shared domain vocabulary
@@ -164,6 +176,13 @@ A long comment is a summarise-and-cut job, not a keep-everything job: preserve
 the invariant, delete the story around it. Prose explaining a design decision
 belongs in a `README.md`.
 
+**THREE LINES IS THE CEILING, not a target.** A block longer than that is a
+defect, whatever it says. The rule is mechanical on purpose: the alternative,
+"as long as it needs to be", is how a file ends up carrying more prose than
+code and how the one load-bearing sentence gets lost in the retelling around
+it. If three lines cannot hold it, the rest belongs in a `README.md` and the
+comment points there.
+
 ## Writing
 
 This applies to every word that ships: documentation, comments, commit messages,
@@ -204,6 +223,9 @@ per-corner radii cycled across four "hands", so no two neighbouring boxes close
 the same way. A single uniform rounded rectangle everywhere reads as a component
 library, which is the exact thing Slopmeter exists to detect.
 
+**The h1 is the one exception, set in Archivo.** It is the first thing read and
+the hand was hard to read at 48px. Everything else keeps the hand.
+
 **The drawn frame is a settled decision.** Both alternatives were built, looked
 at, and reverted on 2026-08-17: one even radius on every frame, and true right
 angles. Treat a proposal to regularise it as already answered.
@@ -215,7 +237,7 @@ no-script render must already be correct.
 
 ## Security
 
-Beyond the five invariants above:
+Beyond the six invariants above:
 
 - Errors from internals are answered generically. Their messages carry file paths
   and rule source.
@@ -289,6 +311,25 @@ happen to have is a comment that needs writing or a name that needs changing.
 
 ## Commits
 
-Conventional prefixes (`feat`, `fix`, `refactor`, `chore`, `docs`) scoped to the
-package. The body says *why*, and names the failure the change prevents where
-there is one. One logical change per commit.
+**One line. No body.** `type(scope): summary`, conventional prefix (`feat`,
+`fix`, `refactor`, `chore`, `docs`), imperative, lower case, no trailing full
+stop. The subject IS the message; the diff and the pull request carry the
+detail. Trailers are the only exception.
+
+**One commit per branch.** Squash before merging. A branch is one change, and
+its history of false starts is not something master needs to carry.
+
+## Versions
+
+The repo ships as ONE version across every package, in semantic versioning.
+
+**A release bumps the MINOR.** `0.1.5` to `0.2.0`, never `0.1.6`. Patch is
+reserved for a fix shipped on its own against an already-released version, and
+major waits for a deliberate break. Picking minor by default keeps the number
+honest: almost every release here carries a behaviour change somewhere, and a
+patch bump would understate it.
+
+The Release workflow tags the current version, then bumps for the next cycle.
+The version is never edited by hand: `scripts/set-monorepo-version.mjs` writes
+every workspace package at once, because a version that lives in twelve files
+is a version that disagrees with itself.

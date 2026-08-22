@@ -4,7 +4,7 @@
 
 **Do not open a public issue.** Use GitHub's private reporting on this
 repository (Security, then Report a vulnerability), or email
-**security@lumiostack.com**.
+**hello@lumioguard.dev**.
 
 Please include what you did, what happened, and what you expected. A proof of
 concept helps enormously; a URL that reproduces it helps more.
@@ -19,8 +19,8 @@ the ones that turn a reader into something else:
 - Anything that makes Leakpeek **write** to a target rather than read it
 - Anything that gets a target's data into a report, past the redaction
 - Server-side request forgery: persuading any tool to fetch something it should
-  not reach, such as a cloud metadata endpoint or a private address. A crawl
-  follows links off a third-party page, so every discovered URL is re-validated
+  not reach, such as a cloud metadata endpoint or a private address. Every
+  entry URL, redirect hop, page asset, sitemap and probe URL is re-validated
 - Forging an ingest signature, or replaying a captured reading
 - Recovering Slopmeter's rule pack, or Citecheck's, from what crosses the wire
 
@@ -49,6 +49,12 @@ So you can judge the above for yourself:
 | **Identification** | Every request sends a User-Agent naming the tool, so a site owner can see what it was. **One exception, below** |
 | **Credentials** | Only what the site already published to every visitor, such as a Supabase anon key found in the bundle |
 | **Retention** | Nothing is stored unless you configure the optional LumioGuard integration, which is off by default |
+
+Hosted Workers apply a per-client scan limit through Cloudflare's Rate Limiting
+binding. The repository config sets six expensive API calls per minute for each
+tool. Forks may tune that limit in the tool's `wrangler.toml`; do not remove it
+from an internet-facing deployment. Scan and crawl routes accept POST only so a
+cross-origin image or link cannot start work accidentally.
 
 ### The one request that does not name the tool
 

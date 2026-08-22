@@ -16,6 +16,20 @@ the old number down.
 
 ### Added
 
+- **Readout now serves a real document.** The console shipped
+  `<div id="root"></div>` and nothing else, which Citecheck, in this repo,
+  calls `access.shell` and ranks a blocker: measured with its own engine the
+  console scored 40, the bottom band, on itself. `#root` is now filled at build
+  time from the same copy the app renders, and it scores 100. A tool that
+  reports this on other people's sites cannot ship it on its own.
+- Technical SEO for the console: a canonical, OpenGraph and Twitter cards, a
+  JSON-LD graph naming the publisher, `robots.txt`, `sitemap.xml`, `llms.txt`
+  and cache headers. All of it is generated from one source, so the served
+  document, the structured data and the picker cannot disagree.
+- Four prerendered explainer pages beside the app, and a page publishing the
+  three band ladders and what they were calibrated against. The app is one
+  screen with a URL bar on it, which is nothing for a search engine to rank.
+  They carry no meter: the consolidated verdict stays on the one surface.
 - **Citecheck**, a third tool: what stops an answer engine reading a site and
   quoting it. Empty-without-JavaScript pages, crawlers turned away, no
   machine-readable claims, nothing an answer could be lifted from.
@@ -32,6 +46,14 @@ the old number down.
 
 ### Changed
 
+- Every Worker now answers with `X-Robots-Tag: noindex`. Each answers on its own
+  public origin and `/api/scan?url=…` returns JSON about somebody else's site;
+  indexed, those are pages about other people's domains published under ours.
+  The response headers moved to `api-core` at the same time, because they were
+  written out in all three Workers and a header added to two of them is one the
+  third quietly does without.
+- The console's favicon is Readout's own mark. It was still Leakpeek's, with
+  `<title>Leakpeek</title>` inside it.
 - **BREAKING: every score now runs 0-100 where HIGHER IS BETTER.** It ran the
   other way in all three tools, while the app they hand off to has always scored
   higher-is-better; two directions in one product is a reader asking which way
@@ -123,5 +145,5 @@ First release of both tools together, and the first with a public history.
 - Slopmeter's rule pack does not cross the wire, and a test exists for it
   because nothing on screen looks wrong when it leaks.
 
-[Unreleased]: https://github.com/lumiostack/lumioguard-tools/compare/v0.1.0...HEAD
-[0.1.0]: https://github.com/lumiostack/lumioguard-tools/releases/tag/v0.1.0
+[Unreleased]: https://github.com/lumioguard-dev/lumioguard-tools/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/lumioguard-dev/lumioguard-tools/releases/tag/v0.1.0

@@ -8,7 +8,7 @@ welcome.
 Node 22+ and pnpm 9+.
 
 ```bash
-git clone https://github.com/lumiostack/lumioguard-tools.git
+git clone https://github.com/lumioguard-dev/lumioguard-tools.git
 cd lumioguard-tools
 pnpm install
 pnpm dev
@@ -79,25 +79,15 @@ rather than from whatever Vite finds free.
 | Range | Owner |
 |---|---|
 | `5173`, `8787` | Reserved for the LumioGuard app and its API. Never take these. |
-| `9229` | wrangler's default inspector port. Reserved, and the reason for the third column. |
 | `52xx` | apps |
 | `88xx` | tool Workers |
-| `98xx` | tool Worker inspectors |
 
-| Service | Port | Inspector |
-|---|---|---|
-| console | `5200` | |
-| slopmeter api | `8810` | `9810` |
-| leakpeek api | `8820` | `9820` |
-| citecheck api | `8830` | `9830` |
-
-**Every Worker needs its own inspector port.** `wrangler dev` defaults all of
-them to `9229`, so the second to start fails to bind it and exits, taking the
-whole `pnpm dev` down. Three tools running at once is the normal case here, and
-the symptom is the one hardest to read: the console loads, one tool answers, the
-others return `502`, and the real cause is a socket error in a runtime stack
-trace nobody scrolls to. `scripts/dev-worker.mjs` passes `--inspector-port` from
-the same row as `--port`.
+| Service | Port |
+|---|---|
+| console | `5200` |
+| slopmeter api | `8810` |
+| leakpeek api | `8820` |
+| citecheck api | `8830` |
 
 A tool no longer serves a page of its own. There is one app, the console, and
 it proxies `/<tool>/api` to that tool's Worker.
@@ -170,7 +160,11 @@ fixtures to make it pass.
    `/<name>/api` to it with no edit anywhere.
 3. Add a descriptor in `apps/console/src/tools/` and a line in that folder's
    `index.ts`. That is the whole surface change: the picker, the consolidated
-   score, the hand-off and the report all read that array.
+   score, the hand-off and the report all read that array. Its `id`, `label` and
+   `summary` are spread from `catalogue.ts`, which is the same list the served
+   document and the structured data are written from, so a new reading appears
+   to a crawler and to a visitor at once. `catalogue.test.ts` holds the two
+   lists to the same order.
 4. Add the tool to the `tool` choice list in `.github/workflows/deploy.yml`.
 5. Add `VITE_API_BASE_URL_<TOOL>` as a repository variable and map it to the
    console's `VITE_<NAME>_API_URL` in the console build step.
@@ -220,6 +214,106 @@ pnpm dlx wrangler rollback --name lumioguard-<tool>-api
 Pages rollback is done from the dashboard: pick a previous deployment and promote
 it to production.
 
+## What the console serves to a crawler
+
+The console is a single-page app, and for most of its life the document it
+served was `<div id="root"></div>` and nothing else. Citecheck, which ships in
+this repo, calls that `access.shell` and ranks it a **blocker**: one blocker
+pins a page into the bottom band whatever else is true of it. Measured with the
+engine in `tools/citecheck/core`, the console scored **40, Unreadable** on
+itself. It now scores **100, Legible**.
+
+`apps/console/build/` is what changed it, and it runs in `pnpm dev` as well as
+in `pnpm build`, so what you check locally is what ships:
+
+| File | What it writes |
+|---|---|
+| `head.ts` | The `<head>` metadata and the JSON-LD, per page |
+| `shell.ts` | The static document that fills `#root` on the app |
+| `pages/content.ts` | The explainers' prose, and the ladders read from `shared` |
+| `pages/render.ts` | One explainer to a complete standalone document |
+| `wellKnown.ts` | `robots.txt`, `sitemap.xml`, `llms.txt` |
+| `site.ts` | Reads `VITE_PUBLIC_SITE_URL` and refuses a malformed one |
+| `seo.ts` | The Vite plugin wiring them together |
+
+### The explainer pages
+
+The app is one screen with a URL bar on it, which is nothing for a search
+engine to rank: 64 words, one heading, one URL. `src/pages.ts` registers a set
+of explainers that give it something to be found for, and
+`build/pages/content.ts` pairs each entry with its prose the same way the tool
+descriptors pair with the catalogue.
+
+They are **prerendered documents, not app routes**. No React, no meter: the
+consolidated verdict stays on the one surface, and every page links back into
+it. Four things about them are load-bearing.
+
+**They are emitted as `<slug>.html`, never `<slug>/index.html`.** Cloudflare
+Pages answers `/slug` from `/slug.html` with a 200, and answers it from
+`/slug/index.html` with a **308 to `/slug/`**. Under the second shape every
+canonical, sitemap entry and internal link points at a URL that moves. Verify
+with the real thing, because `vite preview` masks it by falling back to the
+app's `index.html` for any unknown path:
+
+```bash
+pnpm --filter @lumioguard/console exec wrangler pages dev dist
+```
+
+**The app can be mounted under a path.** `VITE_PUBLIC_SITE_URL` may carry one:
+`https://lumioguard.dev/tools` serves the whole thing from `/tools`, and that
+single string is then the only place the mount point is written. Vite's asset
+base, every internal link, the canonical and the sitemap all read it. Passing it
+twice, once as `--base` and once in the URL, is two literals that must agree,
+and a page would link somewhere its own canonical denies.
+
+Mounted, no `robots.txt` is emitted. It is only read at the root of a host, so
+one under `/tools` is a file nothing fetches; the host's own robots.txt governs
+and should name this sitemap with a second `Sitemap:` line.
+
+**Every published number is read from `shared`.** The band tables on
+`/how-the-scores-work` come from `CITATION_BANDS`, `EXPOSURE_BANDS` and
+`TIER_BANDS`, so retuning a ladder moves the published table the same day it
+moves the score.
+
+**`content.ts` imports `shared` by a relative path on purpose.** It is reached
+from `vite.config.ts`, which Vite bundles with esbuild before any alias exists.
+A bare `@lumioguard/shared` is left external, Node then loads the package's own
+entry, and that entry is TypeScript source. The build dies with `Unknown file
+extension ".ts"`. The comment on the import says so; do not tidy it back.
+
+**The links live in the React colophon too.** A crawler that runs JavaScript
+sees what React rendered, so a link carried only by the prerendered shell is one
+Google never follows.
+
+Three things about it are load-bearing.
+
+**Every word is imported.** The heading, the description and the three beats
+come from `src/copy.ts`; the readings come from `src/tools/catalogue.ts`, which
+is also what the descriptors spread their `label` and `summary` from. Typed out
+twice, the served document could say something the app does not, and a page
+whose served text differs from what a reader sees is what `access.agent-thin`
+reports. Do not hand-write copy into `index.html`.
+
+**React clears `#root` on its first commit**, so the static document is what the
+page is until the app mounts and never after. It is not a fallback that lingers,
+and it is not hidden by script: hiding it from anything that runs JavaScript
+while serving it to anything that does not is cloaking, and Citecheck has a rule
+for that too.
+
+**The origin is not baked in.** With `VITE_PUBLIC_SITE_URL` unset there is no
+canonical, no OpenGraph URL and no sitemap, and the build says so on stderr. A
+fork must not ship a canonical pointing at our host, which is
+`document.foreign-canonical`, another blocker. Set the variable, or accept that
+what you deploy carries none of it.
+
+To check a change, build and read the engine's own verdict rather than trusting
+the markup:
+
+```bash
+VITE_PUBLIC_SITE_URL=https://example.test pnpm --filter @lumioguard/console run build
+cat apps/console/dist/index.html apps/console/dist/robots.txt
+```
+
 ## Local environment files
 
 Copy each tool's `api/.dev.vars.example` → `.dev.vars`, and
@@ -232,6 +326,10 @@ deploy. The `.development` infix keeps them out of a production build.
 
 Secrets never enter git. In production they are Worker secrets
 (`wrangler secret put NAME`), never values in `wrangler.toml`.
+
+Each Worker also declares a `SCAN_RATE_LIMITER` binding in `wrangler.toml`.
+Keep it enabled on public deployments: CORS controls which browsers can read a
+response, but it is not an authentication or abuse-control boundary.
 
 ## A few house rules
 

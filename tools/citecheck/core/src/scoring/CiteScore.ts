@@ -9,32 +9,9 @@ import {
 import type { CiteFinding } from '../domain/CiteFinding.js';
 
 /**
- * Findings to a citation score (0-100, higher is BETTER) and a tier.
- *
- * CALIBRATED AGAINST PAGES THAT ARE DEMONSTRABLY FOUND AND QUOTED. The corpus
- * is two sets. Six technical references every answer engine quotes daily:
- * Wikipedia, MDN, and the Python, React, nginx and Postgres docs. And twenty
- * popular pages across news, retail, health, recipes, reference, government and
- * SaaS: the BBC, the Guardian, the New York Times, CNN, IKEA, Britannica,
- * Healthline, the NHS, Apple, Nike, GOV.UK, Shopify and the rest.
- *
- * The rule that fixes the numbers is that such a page must come out Legible,
- * because nothing is in fact standing in its way.
- *
- * That corpus overturned most of a first cut made from intuition. Five of the
- * six references ship no JSON-LD at all; four carry no meta description; two
- * have no `h1`; three have no canonical. None of those can be a barrier when
- * the most-cited pages on the web are missing them, so every one is minor. At
- * the previous weights the nginx reference landed in the top band, about a
- * served HTML page that is quoted constantly.
- *
- * `minor` is 2 rather than 4 because minors legitimately co-occur: nginx
- * carries eight and must still be Legible, and at 4 it was not.
- *
- * The floor is definitional rather than measured, which is why no corpus moves
- * it. One blocker pins the score into the top band on its own: a page that says
- * noindex, or serves no text without JavaScript, or answers a crawler with 403,
- * cannot be found or quoted whatever else is true of it.
+ * Findings to a citation score (0-100, higher is BETTER). Calibrated so a page
+ * answer engines demonstrably quote comes out Legible; `minor` is 2 because
+ * minors co-occur and nginx carries eight. See the README for the corpus.
  */
 const WEIGHT: Record<Impact, number> = { blocker: 34, major: 10, minor: 2, absent: 0 };
 

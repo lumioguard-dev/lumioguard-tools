@@ -13,6 +13,11 @@ compatibility_date = "2024-12-18"
 [vars]
 ALLOWED_ORIGINS = "*"
 
+[[ratelimits]]
+name = "SCAN_RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 6, period = 60 }
+
 [env.production]
 name = "lumioguard-slopmeter-api"
 
@@ -25,8 +30,12 @@ name = "lumioguard-slopmeter-api"
 # sits outside that wildcard and would serve a TLS error.
 
 [env.production.vars]
-# The client is served from Pages, a different origin to this Worker, so CORS is
-# load-bearing. Comma-separated: add the origin, not a wildcard, if it ever gets
-# a domain of its own.
-ALLOWED_ORIGINS = "https://lumioguard-readout.pages.dev"
-LUMIOGUARD_API_BASE_URL = "https://api.lumioguard.dev"
+# Set by the deploy, never here: this repo is public and both values name
+# hosts only this deployment owns. Empty blocks every browser origin, so a
+# deploy that forgets them fails closed.
+ALLOWED_ORIGINS = ""
+
+[[env.production.ratelimits]]
+name = "SCAN_RATE_LIMITER"
+namespace_id = "1002"
+simple = { limit = 6, period = 60 }

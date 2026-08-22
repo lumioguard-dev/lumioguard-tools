@@ -22,18 +22,6 @@ export type RequestReader = (req: HonoRequest) => Promise<unknown> | unknown;
 
 export const jsonBody: RequestReader = (req) => req.json().catch(() => ({}));
 
-/** Absent keys are omitted rather than passed as `undefined`. */
-export function queryParams(...keys: readonly string[]): RequestReader {
-  return (req) => {
-    const params: Record<string, string> = {};
-    for (const key of keys) {
-      const value = req.query(key);
-      if (value !== undefined) params[key] = value;
-    }
-    return params;
-  };
-}
-
 /** Every route validates and fails its input the same way. */
 export function endpoint<Schema extends z.ZodTypeAny, Env extends AnyEnv = AnyEnv>(
   schema: Schema,

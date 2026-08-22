@@ -62,23 +62,9 @@ export function bandOf<T extends ScoreBand>(
 }
 
 /**
- * The four edges every ladder uses, and the DIRECTION they run in.
- *
- * **Higher is better.** 100 is a site with nothing found; 0 is one where
- * everything was. The engines still compute a PENALTY, because that is what a
- * rule produces, and each scorer subtracts it from the top exactly once. Only
- * that subtraction knows about the direction.
- *
- * It ran the other way until the tools met the app they hand off to, whose own
- * pillars have always been higher-is-better. Two scales in one product is a
- * reader asking which way this particular number goes, and getting it wrong
- * quietly.
- *
- * Four ladders share these edges, so they live here rather than four times: the
- * consolidated score is the worst of the readings, which means it is always
- * some tool's own score, and an edge that moved in one ladder and not another
- * would put one number in two different bands depending on the panel it was
- * read in.
+ * The four edges every ladder uses. HIGHER IS BETTER: engines compute a
+ * penalty, and each scorer subtracts it from the top once. Shared, because the
+ * consolidated score is always some tool's own and must band identically.
  */
 export const BAND_EDGES = [
   { from: 0, to: 40 },

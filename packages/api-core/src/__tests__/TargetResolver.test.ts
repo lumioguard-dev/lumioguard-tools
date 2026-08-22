@@ -32,8 +32,22 @@ describe('TargetResolver: what it refuses', () => {
     ['172.31.255.254', 'RFC1918 /12 upper bound'],
     ['169.254.169.254', 'link-local, the AWS metadata address'],
     ['127.1.2.3', 'the rest of loopback, not just 127.0.0.1'],
+    ['100.64.0.1', 'carrier-grade NAT'],
+    ['192.0.2.1', 'documentation range'],
+    ['198.51.100.1', 'documentation range'],
+    ['203.0.113.1', 'documentation range'],
+    ['224.0.0.1', 'multicast'],
   ])('refuses the private address %s (%s)', (host) => {
     expect(() => resolver.resolve(`https://${host}/`)).toThrow(InvalidTargetError);
+  });
+
+  it.each(['[fc00::1]', '[fe80::1]', '[ff02::1]', '[::ffff:127.0.0.1]', '[2001:db8::1]'])(
+    'refuses the non-public IPv6 address %s',
+    (host) => expect(() => resolver.resolve(`https://${host}/`)).toThrow(InvalidTargetError),
+  );
+
+  it('refuses a blocked hostname with a trailing root dot', () => {
+    expect(() => resolver.resolve('https://localhost./')).toThrow(InvalidTargetError);
   });
 
   // 172.15 and 172.32 sit OUTSIDE the private /12; refusing them would be a
@@ -66,6 +80,10 @@ describe('TargetResolver: what it refuses', () => {
 
   it('refuses something that is not a URL at all', () => {
     expect(() => resolver.resolve('http://')).toThrow(InvalidTargetError);
+  });
+
+  it('refuses credentials embedded in a URL', () => {
+    expect(() => resolver.resolve('https://user:secret@example.com')).toThrow(InvalidTargetError);
   });
 
   // Case is not a way past the list.

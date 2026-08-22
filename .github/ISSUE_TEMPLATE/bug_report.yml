@@ -16,7 +16,8 @@ body:
       options:
         - leakpeek
         - slopmeter
-        - both
+        - citecheck
+        - multiple tools
         - the shared packages
     validations:
       required: true
