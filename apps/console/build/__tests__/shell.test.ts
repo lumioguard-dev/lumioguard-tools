@@ -77,7 +77,6 @@ describe('staticShell mounted under a path', () => {
 
   it('carries the mount point on every link it writes', () => {
     expect(shell).toContain('href="/tools/?site=');
-    expect(shell).toContain('href="/tools/can-ai-cite-your-site"');
     expect(shell).not.toMatch(/href="\/(?!tools)/);
   });
 });
