@@ -1,13 +1,16 @@
-import { parentHref } from '../integration/lumioguard.js';
-
-// Underlined at rest, not only on hover. It is the one link in the masthead and
-// the colophon, and a link nothing marks as one is a link nobody clicks.
-const LINK =
-  'border-b border-pen-700/60 no-underline transition-colors hover:border-pen-300 hover:text-hand';
+import { PARENT_SITE, parentHref } from '../integration/lumioguard.js';
 
 /**
- * The parent wordmark beside the tool's own, or nothing when the integration is
- * off: in which case the tool stands under its own name alone.
+ * The parent's artwork, served rather than inlined: it is ten kilobytes of
+ * outlines and a fork with the integration off should carry none of it.
+ * BASE_URL, because the app is also mounted under a path.
+ */
+const ASSET = (file: string): string => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${file}`;
+
+/**
+ * The parent wordmark, or nothing when the integration is off: in which case
+ * the tool stands under its own name alone. Drawn at 528 by 103 and set here at
+ * the height the masthead wants.
  */
 export function ParentWordmark({ className }: { readonly className?: string }): JSX.Element | null {
   const href = parentHref();
@@ -18,22 +21,30 @@ export function ParentWordmark({ className }: { readonly className?: string }): 
       href={href}
       target="_blank"
       rel="noreferrer noopener"
-      className={className === undefined ? LINK : `${LINK} ${className}`}
+      className={`inline-flex items-center opacity-90 transition-opacity hover:opacity-100 ${className ?? ''}`}
     >
-      LumioGuard
+      <img src={ASSET('lumioguard-logo.svg')} alt="LumioGuard" width={128} height={25} />
     </a>
   );
 }
 
-/** The colophon's attribution line, or nothing. */
+/** The colophon's legal row, or nothing when there is no parent site to point at. */
 export function ParentCredit(): JSX.Element | null {
   // The same switch the wordmark answers to, read the same way. Two conditions
   // for one integration is how a fork ends up with the word "by" and no name.
-  if (parentHref() === null) return null;
+  const site = parentHref() === null ? null : PARENT_SITE;
+  if (site === null) return null;
+
+  const LINK = 'transition-colors hover:text-hand';
 
   return (
-    <span className="mt-[1px] block text-17 leading-[1.2] text-ink-2">
-      by <ParentWordmark />
-    </span>
+    <nav className="flex flex-wrap items-center gap-x-5 gap-y-1 text-13 leading-[1.5] text-ink-3">
+      <a className={LINK} href={`${site}/terms`} target="_blank" rel="noreferrer noopener">
+        Terms &amp; Conditions
+      </a>
+      <a className={LINK} href={`${site}/privacy`} target="_blank" rel="noreferrer noopener">
+        Privacy
+      </a>
+    </nav>
   );
 }

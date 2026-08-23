@@ -1,5 +1,5 @@
 import { DESCRIPTION, EXAMPLES, NAME } from '../src/copy.js';
-import { CATALOGUE } from '../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG } from '../src/tools/catalogue.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { type Site, absolute } from './site.js';
 
@@ -28,15 +28,17 @@ export function robotsTxt(where: Site | null): string {
 }
 
 /**
- * The app, then every explainer. Readings are not listed: they live at
- * `?site=…` on the app and canonicalise back to it, so each would be the same
- * document under another name.
- *
- * No `lastmod`, which would have to be the build time and so would change when
- * nothing about the page did. No `changefreq` or `priority`; nothing reads them.
+ * The app, then every explainer. Readings are not listed: they live at `?site=…`
+ * and canonicalise back, so each would be one document under another name. No
+ * `lastmod`, which could only be the build time and would change for nothing.
  */
 export function sitemapXml(where: Site): string {
-  const paths = ['/', ...CONTENT_PAGES.map((page) => page.meta.path)];
+  const paths = [
+    '/',
+    `/${SCAN_SLUG}`,
+    ...CATALOGUE.map((tool) => `/${tool.slug}`),
+    ...CONTENT_PAGES.map((page) => page.meta.path),
+  ];
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
@@ -51,12 +53,9 @@ export function sitemapXml(where: Site): string {
 }
 
 /**
- * The same page, written for something that is going to read it rather than
- * render it. Format per llmstxt.org: one H1, a blockquote summary, then
- * sections of links.
- *
- * The readings are listed from the catalogue, so this file cannot describe a
- * set of tools the app does not offer.
+ * The same page for something that will read rather than render it. Format per
+ * llmstxt.org: one H1, a blockquote summary, then sections of links. Readings
+ * come from the catalogue, so this cannot describe tools the app does not offer.
  */
 export function llmsTxt(where: Site | null): string {
   const link = (path: string): string => (where === null ? path : absolute(where.base, path));

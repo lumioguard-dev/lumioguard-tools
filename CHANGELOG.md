@@ -16,6 +16,14 @@ the old number down.
 
 ### Added
 
+- **A page per reading, and a chooser in front of them.** `/` now asks which
+  reading you want and scans nothing; `/scan` runs everything you tick; and
+  `/ai-slop-check`, `/security-check` and `/seo-ai-visibility-check` each run one
+  alone with the picker hidden. Real documents rather than routes: a rewrite
+  would serve one document at five URLs, so all five would carry one title and
+  none of them could rank. The slug, heading and description live in the tool
+  catalogue, so a fourth reading brings its page with it.
+
 - **Readout now serves a real document.** The console shipped
   `<div id="root"></div>` and nothing else, which Citecheck, in this repo,
   calls `access.shell` and ranks a blocker: measured with its own engine the
