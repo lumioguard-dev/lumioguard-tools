@@ -1,17 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { PAGES } from '../../src/pages.js';
-import { CATALOGUE } from '../../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG } from '../../src/tools/catalogue.js';
 import { llmsTxt, robotsTxt, sitemapXml } from '../wellKnown.js';
 
 const ORIGIN = 'https://example.test';
 const ROOT = { base: ORIGIN, path: '' };
 
 /**
- * Every field a robots.txt may carry, as the major crawlers document them.
- *
- * Held here as well as in Citecheck's parser on purpose: this is the list a
- * crawler enforces, and the console may not import an engine to ask it. A field
- * outside it is skipped in silence, so the rule was never in force.
+ * Every field a robots.txt may carry, as the major crawlers document them. Held
+ * here as well as in Citecheck's parser because the console may not import an
+ * engine: a field outside this list is skipped in silence, never in force.
  */
 const KNOWN_FIELDS = new Set([
   'user-agent',
@@ -63,11 +61,14 @@ describe('robots.txt', () => {
 describe('sitemap.xml', () => {
   const xml = sitemapXml(ROOT);
 
-  it('lists the app and every explainer, and nothing else', () => {
-    // Readings are absent on purpose: they live at `?site=…` on the app and
-    // canonicalise back to it, so each would be one document under many names.
+  it('lists the app, every tool page and every explainer, and nothing else', () => {
+    // A site READING is absent on purpose: those live at `?site=…` and
+    // canonicalise back, so each would be one document under many names. A
+    // TOOL page is its own document with its own canonical, so it belongs.
     expect([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual([
       `${ORIGIN}/`,
+      `${ORIGIN}/${SCAN_SLUG}`,
+      ...CATALOGUE.map((tool) => `${ORIGIN}/${tool.slug}`),
       ...PAGES.map((page) => `${ORIGIN}${page.path}`),
     ]);
   });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTION, EXAMPLES, HEADLINE_TEXT } from '../../src/copy.js';
+import { DESCRIPTION, EXAMPLES, HEADLINE_TEXT, SCAN } from '../../src/copy.js';
 import { CATALOGUE } from '../../src/tools/catalogue.js';
 import { staticShell } from '../shell.js';
 
@@ -23,17 +23,32 @@ describe('staticShell', () => {
     expect(shell).toContain(HEADLINE_TEXT);
   });
 
-  it('carries the description the head tags and the structured data use', () => {
-    expect(shell).toContain(DESCRIPTION);
+  it('leaves the description to the head, as the rendered chooser does', () => {
+    // The chooser shows its heading and the choices, and nothing else. The
+    // served document has to agree: prose here that React does not render is
+    // the served-versus-rendered gap `access.agent-thin` reports.
+    expect(shell).not.toContain(DESCRIPTION);
   });
 
-  it('names every reading the picker offers', () => {
+  it('gives a scanning page its own heading and no more', () => {
+    // No page renders a blurb under the heading any more, so no document
+    // carries one: served prose the reader never sees is `access.agent-thin`.
+    const tool = CATALOGUE[0];
+    if (tool === undefined) throw new Error('no tools');
+    expect(staticShell('', { kind: 'scan' })).toContain(SCAN.headline);
+    expect(staticShell('', { kind: 'scan' })).not.toContain(SCAN.description);
+    expect(staticShell('', { kind: 'tool', tool })).toContain(tool.headline);
+    expect(staticShell('', { kind: 'tool', tool })).not.toContain(tool.description);
+  });
+
+  it('names every reading, describes it, and links to each', () => {
     // The text a reader ends up with, not the markup: the ampersand in
     // "SEO & AI visibility" is `&amp;` on the way through.
     const text = shell.replace(/&amp;/g, '&');
     for (const tool of CATALOGUE) {
       expect(text, `${tool.id} is not in the served document`).toContain(tool.label);
-      expect(text, `${tool.id} has no summary in the served document`).toContain(tool.summary);
+      expect(text, `${tool.id} has no summary`).toContain(tool.summary);
+      expect(text, `${tool.id} is not linked`).toContain(`href="/${tool.slug}"`);
     }
   });
 
@@ -61,9 +76,9 @@ describe('staticShell', () => {
       .trim()
       .split(/\s+/);
     // Citecheck's floor for "no readable content at all" is 12 words of the
-    // whole body. Clearing it by an order of magnitude is the point: the shell
-    // is the page, not a placeholder that happens to pass.
-    expect(words.length).toBeGreaterThan(80);
+    // whole body. The chooser is terse now, so what matters is that it clears
+    // the floor with real words rather than a placeholder that happens to pass.
+    expect(words.length).toBeGreaterThan(70);
   });
 
   it('escapes markup rather than emitting it', () => {
