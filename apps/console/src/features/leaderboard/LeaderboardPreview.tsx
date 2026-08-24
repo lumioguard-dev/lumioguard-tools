@@ -1,91 +1,60 @@
-import type { LeaderboardRow } from '@lumioguard/shared';
+import type { LeaderboardSide } from '@lumioguard/shared';
 import { MarkTemplate, Panel, PanelHead } from '@lumioguard/ui';
 import { leaderboardPath } from '../../tools/catalogue.js';
-import { Rank } from './Rank.js';
-import { useBoard } from './useBoard.js';
+import { BoardBody } from './BoardBody.js';
+import { WAITING } from './board.js';
+import { type BoardState, useBoard } from './useBoard.js';
 
-/** A taste, not the board. Five keeps the panel under the fold on a laptop. */
-const SHOWN = 5;
+/** The head of each band, not the board. */
+const SHOWN = 4;
 
 /** Vite's asset base, without its trailing slash. `''` when served at a root. */
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 /**
- * Presentational: the rows are read ONCE by the panel and handed down. Reading
- * them here as well put four requests in flight for two lists, and whichever
- * pair lost the race rendered an empty column.
+ * One band's column. The rule is on the second, so the pair is divided once
+ * however they are stacked: along the top below `lg`, down the side above it.
  */
 function Side({
-  band,
-  rows,
-}: { readonly band: string; readonly rows: readonly LeaderboardRow[] }): JSX.Element {
+  side,
+  board,
+  divided = false,
+}: {
+  readonly side: LeaderboardSide;
+  readonly board: BoardState;
+  readonly divided?: boolean;
+}): JSX.Element {
+  const rule = divided
+    ? 'border-t border-pen-700 pt-6 lg:border-t-0 lg:border-l lg:pl-[38px] lg:pt-0'
+    : 'lg:pr-[38px]';
+
   return (
-    <div className="min-w-0 flex-1">
-      <p className="m-0 font-hand text-16 text-ink-3">{band}</p>
-      <ol className="m-0 mt-2 list-none p-0">
-        {rows.map((row, index) => (
-          <Rank key={row.host} place={index + 1} row={row} />
-        ))}
-      </ol>
+    <div className={`min-w-0 ${rule}`}>
+      <p className="m-0 font-hand text-16 text-ink-3">{board.data?.band ?? WAITING[side]}</p>
+      <BoardBody board={board} limit={SHOWN} />
     </div>
   );
 }
 
+/** A side that has ANSWERED, with nothing in it. Not the same fact as a failure. */
+function empty(board: BoardState): boolean {
+  return board.data !== null && board.data.rows.length === 0;
+}
+
 /**
- * The board in miniature, under the address field. Drawn only once a side has
- * something: an empty board should show nothing here rather than two columns of
- * apology above the fold.
+ * The board in miniature, under the address field. A board nobody has landed in
+ * shows nothing rather than an apology above the fold, but a board that could
+ * not be READ says so and offers the read again.
  */
 export function LeaderboardPreview(): JSX.Element | null {
   const best = useBoard('best', 1);
   const worst = useBoard('worst', 1);
 
-  // The band names come from the API, so this panel and the meter a visitor
-  // just read call the same score the same thing.
-  const sides = [best.data, worst.data].map((page) => ({
-    band: page?.band ?? '',
-    rows: page?.rows.slice(0, SHOWN) ?? [],
-  }));
-  if (sides.every((side) => side.rows.length === 0)) {
-    // Silent when the board is genuinely empty: a young board should not put an
-    // apology above the fold. NOT silent when it could not be read, because the
-    // two looked identical and an outage read as a missing feature.
-    if (!(best.failed && worst.failed)) return null;
+  if (empty(best) && empty(worst)) return null;
 
-    return (
-      <Panel hand="c" span={12} className="mt-6">
-        {/* The heading IS the way through, opened in its own tab: a reader here
-          came to scan a site, and the board should not take the page from them. */}
-        <PanelHead
-          title="Leaderboard"
-          mark={<MarkTemplate />}
-          trailing={
-            <a
-              href={`${BASE}${leaderboardPath()}`}
-              target="_blank"
-              rel="noreferrer noopener"
-              className="shrink-0 font-sans text-14 text-hand underline underline-offset-2 hover:no-underline"
-            >
-              See the whole board
-            </a>
-          }
-        />
-        <p className="mt-4 text-body text-ink-2">
-          The board could not be read.{' '}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-hand"
-            onClick={() => {
-              best.retry();
-              worst.retry();
-            }}
-          >
-            Try again
-          </button>
-        </p>
-      </Panel>
-    );
-  }
+  // Two columns of the same apology read as a broken panel rather than one
+  // outage, so a board that failed on both sides says it once.
+  const lost = best.data === null && worst.data === null && best.failed && worst.failed;
 
   return (
     <Panel hand="c" span={12} className="mt-6">
@@ -105,13 +74,27 @@ export function LeaderboardPreview(): JSX.Element | null {
           </a>
         }
       />
-      <div className="mt-4 flex flex-col gap-6 lg:flex-row lg:gap-[46px]">
-        {sides.map((side) =>
-          side.rows.length === 0 ? null : (
-            <Side key={side.band} band={side.band} rows={side.rows} />
-          ),
-        )}
-      </div>
+
+      {lost ? (
+        <p className="mt-4 text-body text-ink-2">
+          The board could not be read.{' '}
+          <button
+            type="button"
+            className="underline underline-offset-2 hover:text-hand"
+            onClick={() => {
+              best.retry();
+              worst.retry();
+            }}
+          >
+            Try again
+          </button>
+        </p>
+      ) : (
+        <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0">
+          <Side side="best" board={best} />
+          <Side side="worst" board={worst} divided />
+        </div>
+      )}
     </Panel>
   );
 }
