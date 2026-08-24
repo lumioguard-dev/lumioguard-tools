@@ -1,4 +1,4 @@
-import { EXAMPLES, HEADLINE_TEXT, HOW_IT_WORKS, NAME, PUBLISHER, SCAN } from '../src/copy.js';
+import { EXAMPLES, HEADLINE_TEXT, LEADERBOARD, NAME, PUBLISHER, SCAN, beats } from '../src/copy.js';
 import { CATALOGUE, type ConsolePage } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
 
@@ -30,7 +30,9 @@ export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' 
       ? page.tool.headline
       : page.kind === 'scan'
         ? SCAN.headline
-        : HEADLINE_TEXT;
+        : page.kind === 'leaderboard'
+          ? LEADERBOARD.headline
+          : HEADLINE_TEXT;
   // The chooser is the only page that links onward, and it links to every
   // reading: it is the one document a crawler reaches the rest from.
   const choices = CATALOGUE.map(
@@ -38,7 +40,8 @@ export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' 
       `<li><a href="${mount}/${tool.slug}">${escapeHtml(tool.label)}</a>. ${escapeHtml(tool.summary)}</li>`,
   ).join('\n          ');
 
-  const beats = [HOW_IT_WORKS.paste, HOW_IT_WORKS.read, HOW_IT_WORKS.result]
+  const how = beats(page.kind === 'tool' ? page.tool.checks : undefined);
+  const steps = [how.paste, how.read, how.result]
     .map((beat) => `<li>${escapeHtml(beat)}</li>`)
     .join('\n          ');
 
@@ -64,7 +67,7 @@ ${
 }
         <h2>How it works</h2>
         <ol>
-          ${beats}
+          ${steps}
         </ol>
 
         <h2>Try one</h2>

@@ -1,6 +1,6 @@
-import { DESCRIPTION, NAME, PUBLISHER, SCAN, TITLE } from '../src/copy.js';
+import { DESCRIPTION, LEADERBOARD, NAME, PUBLISHER, SCAN, TITLE } from '../src/copy.js';
 import type { PageLink } from '../src/pages.js';
-import { CATALOGUE, SCAN_SLUG, type ToolCopy } from '../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, type ToolCopy, leaderboardPath } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
 import { type Site, absolute } from './site.js';
 
@@ -29,6 +29,13 @@ export const SCAN_PAGE: PageLink = {
   path: `/${SCAN_SLUG}`,
   title: `${SCAN.headline} · ${NAME}`,
   description: SCAN.description,
+};
+
+/** What has been read, ranked. Its own promise, so its own title and canonical. */
+export const LEADERBOARD_PAGE: PageLink = {
+  path: leaderboardPath(),
+  title: `${LEADERBOARD.headline} · ${NAME}`,
+  description: LEADERBOARD.description,
 };
 
 /** One reading's own page, where it runs alone. */

@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
-import { CATALOGUE, SCAN_SLUG } from '../../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, leaderboardPath } from '../../src/tools/catalogue.js';
 
 const ROOT = new URL('../../', import.meta.url);
 
@@ -17,6 +17,12 @@ const ENTRIES = [
 ];
 
 describe('the entry documents', () => {
+  it('keeps the board under the reading it ranks', () => {
+    // Nested on purpose: /ai-slop-check/leaderboard is served from
+    // ai-slop-check/leaderboard.html with a 200, and belongs to that reading.
+    expect(read(`.${leaderboardPath()}.html`)).toBe(read('index.html'));
+  });
+
   it('is one per page, and no more', () => {
     // `vite.config.ts` builds its input map from the catalogue, so a reading
     // added without its document fails deep inside Rollup with a missing path.

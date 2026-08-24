@@ -6,7 +6,7 @@ import { type ProxyOptions, type UserConfig, defineConfig } from 'vite';
 // part of the typechecked app.
 import { HOST, apiPorts, appPort } from '../../scripts/ports.mjs';
 import { seo } from './build/seo.js';
-import { CATALOGUE } from './src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, leaderboardPath } from './src/tools/catalogue.js';
 
 const TOOL_PAGES = CATALOGUE.map((tool) => tool.slug);
 
@@ -42,7 +42,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: source('index.html'),
-        scan: source('scan.html'),
+        [SCAN_SLUG]: source(`${SCAN_SLUG}.html`),
+        // Nested, so it is emitted at ai-slop-check/leaderboard.html and served
+        // at that path with a 200, the way every other document here is.
+        leaderboard: source(`.${leaderboardPath()}.html`),
         ...Object.fromEntries(TOOL_PAGES.map((slug) => [slug, source(`${slug}.html`)])),
       },
     },

@@ -104,7 +104,6 @@ function ArtScore(): JSX.Element {
   );
 }
 
-/** Plain, and in the page's own words. */
 /** The art is shared; the words are each tool's own. */
 export interface HowItWorksLabels {
   readonly paste: string;
