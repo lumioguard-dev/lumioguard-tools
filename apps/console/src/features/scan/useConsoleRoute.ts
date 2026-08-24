@@ -13,6 +13,8 @@ export interface ConsoleRoute {
   readonly pinned: ToolCopy | null;
   /** The chooser scans nothing: it is the page that sends you to one that does. */
   readonly chooser: boolean;
+  /** The board scans nothing either: it ranks what has already been read. */
+  readonly board: boolean;
 }
 
 /** The ways the page changes it, each writing history and re-reading. */
@@ -49,6 +51,7 @@ export function useConsoleRoute(): ConsoleRoute & RouteControls {
     toolIds: route.toolIds,
     pinned: route.pinned,
     chooser: route.chooser,
+    board: route.board,
     open: useCallback((next: string) => go((params) => params.set(SITE, next), true), [go]),
     // No scroll: changing the selection re-reads in place, and yanking the page
     // to the top on a checkbox loses whatever the reader was looking at.
@@ -76,12 +79,15 @@ function read(): ConsoleRoute {
   // would quietly read something the heading never offered.
   const page = pageForPath(window.location.pathname);
   if (page.kind === 'tool') {
-    return { address, toolIds: [page.tool.id], pinned: page.tool, chooser: false };
+    return { address, toolIds: [page.tool.id], pinned: page.tool, chooser: false, board: false };
   }
 
   const chooser = page.kind === 'choose';
+  const board = page.kind === 'leaderboard';
   const raw = params.get(TOOLS_PARAM);
-  if (raw === null) return { address, toolIds: DEFAULT_TOOL_IDS, pinned: null, chooser };
+  if (raw === null) {
+    return { address, toolIds: DEFAULT_TOOL_IDS, pinned: null, chooser, board };
+  }
 
   const wanted = raw.split(',').map((id) => id.trim());
   const known = TOOLS.filter((tool) => wanted.includes(tool.id)).map((tool) => tool.id);
@@ -90,5 +96,6 @@ function read(): ConsoleRoute {
     toolIds: known.length === 0 ? DEFAULT_TOOL_IDS : known,
     pinned: null,
     chooser,
+    board,
   };
 }

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { PAGES } from '../../src/pages.js';
-import { CATALOGUE, SCAN_SLUG } from '../../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, leaderboardPath } from '../../src/tools/catalogue.js';
 import { llmsTxt, robotsTxt, sitemapXml } from '../wellKnown.js';
 
 const ORIGIN = 'https://example.test';
@@ -68,6 +68,7 @@ describe('sitemap.xml', () => {
     expect([...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1])).toEqual([
       `${ORIGIN}/`,
       `${ORIGIN}/${SCAN_SLUG}`,
+      `${ORIGIN}${leaderboardPath()}`,
       ...CATALOGUE.map((tool) => `${ORIGIN}/${tool.slug}`),
       ...PAGES.map((page) => `${ORIGIN}${page.path}`),
     ]);

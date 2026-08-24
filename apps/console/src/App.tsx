@@ -10,12 +10,17 @@ import {
   ThemeToggle,
   useTheme,
 } from '@lumioguard/ui';
-import { EXAMPLES, HEADLINE, HOW_IT_WORKS, PUBLISHER } from './copy.js';
+import type { ReactNode } from 'react';
+import { EXAMPLES, HEADLINE, PUBLISHER, beats } from './copy.js';
+import { LeaderboardPreview } from './features/leaderboard/LeaderboardPreview.js';
+import { LeaderboardView } from './features/leaderboard/LeaderboardView.js';
 import { ConsoleReport } from './features/report/ConsoleReport.js';
 import { useConsoleRoute } from './features/scan/useConsoleRoute.js';
 import { ToolPicker } from './features/select/ToolPicker.js';
-import type { ToolCopy } from './tools/catalogue.js';
+import { LEADERBOARD_TOOL, type ToolCopy } from './tools/catalogue.js';
+import { WhyItMatters } from './tools/citecheck/WhyItMatters.js';
 import { TOOLS } from './tools/index.js';
+import { CommonIssues } from './tools/leakpeek/CommonIssues.js';
 import { type ToolDescriptor, toolsById } from './tools/registry.js';
 
 function Masthead(): JSX.Element {
@@ -36,6 +41,14 @@ function Masthead(): JSX.Element {
 
 /** Vite's asset base, without its trailing slash. `''` when served at a root. */
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
+
+/** What sits under the address field, which is the pinned reading's business. */
+function belowAsk(pinned: string | undefined): ReactNode {
+  if (pinned === LEADERBOARD_TOOL) return <LeaderboardPreview />;
+  if (pinned === 'leakpeek') return <CommonIssues />;
+  if (pinned === 'citecheck') return <WhyItMatters />;
+  return undefined;
+}
 
 /** The h1 is the one place set in Archivo: the hand was hard to read at 48px. */
 const H1 =
@@ -119,11 +132,14 @@ function AskView({
   toolIds,
   onSelect,
   pinned,
+  below,
 }: {
   readonly onScan: (address: string) => void;
   readonly toolIds: readonly string[];
   readonly onSelect: (ids: readonly string[]) => void;
   readonly pinned: ToolCopy | null;
+  /** Drawn under the ask, in the SAME grid: a second grid centres itself apart. */
+  readonly below?: ReactNode;
 }): JSX.Element {
   return (
     <PanelGrid centred>
@@ -145,10 +161,11 @@ function AskView({
           </div>
 
           <aside className="mt-7 flex items-center self-stretch lg:mt-0">
-            <HowItWorks labels={HOW_IT_WORKS} />
+            <HowItWorks labels={beats(pinned?.checks)} />
           </aside>
         </div>
       </Panel>
+      {below}
     </PanelGrid>
   );
 }
@@ -171,16 +188,26 @@ function Colophon(): JSX.Element {
 }
 
 export function App(): JSX.Element {
-  const { address, toolIds, pinned, chooser, open, select, clear } = useConsoleRoute();
+  const { address, toolIds, pinned, chooser, board, open, select, clear } = useConsoleRoute();
   const tools = toolsById(TOOLS, toolIds);
 
   return (
     <div className="flex min-h-screen flex-col">
       <Masthead />
-      {chooser ? (
+      {board ? (
+        <LeaderboardView />
+      ) : chooser ? (
         <ChooseView />
       ) : address === null ? (
-        <AskView onScan={open} toolIds={toolIds} onSelect={select} pinned={pinned} />
+        <AskView
+          onScan={open}
+          toolIds={toolIds}
+          onSelect={select}
+          pinned={pinned}
+          // Each reading's own panel under the ask: the board is Slopmeter's,
+          // the common issues are Leakpeek's, and the third has neither.
+          below={belowAsk(pinned?.id)}
+        />
       ) : (
         // No picker here. What to read is asked once, before the reading; on the
         // report it was a control at the end of a page nobody scrolls to, for a

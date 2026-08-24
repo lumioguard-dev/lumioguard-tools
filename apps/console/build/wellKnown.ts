@@ -1,5 +1,5 @@
 import { DESCRIPTION, EXAMPLES, NAME } from '../src/copy.js';
-import { CATALOGUE, SCAN_SLUG } from '../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, leaderboardPath } from '../src/tools/catalogue.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { type Site, absolute } from './site.js';
 
@@ -36,6 +36,7 @@ export function sitemapXml(where: Site): string {
   const paths = [
     '/',
     `/${SCAN_SLUG}`,
+    leaderboardPath(),
     ...CATALOGUE.map((tool) => `/${tool.slug}`),
     ...CONTENT_PAGES.map((page) => page.meta.path),
   ];

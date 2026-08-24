@@ -35,3 +35,7 @@ Thumbs.db
 .idea/
 .vscode/*
 !.vscode/extensions.json
+
+# Keyword research pulled from DataForSEO. Paid data, and the account
+# response carries a login and a balance: this repo is public.
+seo-data/

@@ -44,15 +44,39 @@ export const EXAMPLES: readonly string[] = ['apple.com', 'figma.com', 'nytimes.c
  */
 export const HOW_IT_WORKS = {
   paste: 'Paste a URL',
+  /** Where every reading runs. A tool's own page says what THAT one looks for. */
   read: 'Every reading you picked runs at once, each against its own engine',
-  result: 'One verdict, the worst of them, with each reading underneath',
+  result: 'You get the verdict with the reasons',
 } as const;
+
+/**
+ * The three beats, with the middle line this reading's own where there is one.
+ * Written once: the app and the prerendered shell both read it, and typed into
+ * each they could tell a visitor two different things about the same page.
+ */
+export function beats(checks?: string): {
+  readonly paste: string;
+  readonly read: string;
+  readonly result: string;
+} {
+  return { ...HOW_IT_WORKS, read: checks ?? HOW_IT_WORKS.read };
+}
 
 /** The all-readings page, which is a different promise from the chooser's. */
 export const SCAN = {
   headline: 'Read a site with every check at once',
   description:
     'Run all three readings on one URL and land on a single verdict: the worst of them, with each reading underneath it.',
+} as const;
+
+/**
+ * The board of what has been read. Its own promise, so its own title: a visitor
+ * arriving here wants the ranking, not a scanner.
+ */
+export const LEADERBOARD = {
+  headline: 'Which sites look least like every other AI site?',
+  description:
+    'Every site read so far, ranked both ways: the most original, and the ones still wearing the template. One row per site, its latest reading.',
 } as const;
 
 /** Who the colophon credits, and who the structured data names as publisher. */

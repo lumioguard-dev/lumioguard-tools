@@ -144,3 +144,11 @@ export {
 } from './domain/readingTier.js';
 // `TrackSegment` is already re-exported by tier.js; one name, one export.
 export { bandOf, trackOf, type ScoreBand } from './domain/band.js';
+export {
+  leaderboardResponseSchema,
+  leaderboardRowSchema,
+  leaderboardSideSchema,
+  type LeaderboardResponse,
+  type LeaderboardRow,
+  type LeaderboardSide,
+} from './contracts/leaderboard.js';

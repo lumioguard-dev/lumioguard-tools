@@ -2,7 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { type Plugin, type ResolvedConfig, type UserConfig, loadEnv } from 'vite';
 import { pageForPath } from '../src/tools/catalogue.js';
-import { HOME, OG_IMAGE, SCAN_PAGE, headTags, toolPage } from './head.js';
+import { HOME, LEADERBOARD_PAGE, OG_IMAGE, SCAN_PAGE, headTags, toolPage } from './head.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { renderPage } from './pages/render.js';
 import { staticShell } from './shell.js';
@@ -148,7 +148,13 @@ export function seo(): Plugin {
         // so, and it matches the slug the app reads back off the path.
         const page = pageForPath(ctx.path);
         const meta =
-          page.kind === 'tool' ? toolPage(page.tool) : page.kind === 'scan' ? SCAN_PAGE : HOME;
+          page.kind === 'tool'
+            ? toolPage(page.tool)
+            : page.kind === 'scan'
+              ? SCAN_PAGE
+              : page.kind === 'leaderboard'
+                ? LEADERBOARD_PAGE
+                : HOME;
 
         const withHead = replaceOnce(html, HEAD_ANCHOR, headTags(meta, where, card !== null));
         const withChrome = replaceOnce(withHead, CHROME_ANCHOR, chrome(where?.path ?? ''));
