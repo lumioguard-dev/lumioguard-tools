@@ -84,7 +84,7 @@ describe('leftovers', () => {
     expect(ids.has('leftover.lorem')).toBe(true);
     expect(ids.has('leftover.assistant-phrases')).toBe(true);
     expect(ids.has('leftover.your-company')).toBe(true);
-    expect(result.tier).toBe('Pure Slop');
+    expect(result.tier).toBe('Slop');
   });
 
   it('does not read ordinary English as a placeholder brand', () => {

@@ -29,7 +29,7 @@ function report(overrides: Partial<CrawlResponse> = {}): CrawlResponse {
     requestedMaxPages: 15,
     site: {
       score: 61,
-      tier: 'Pure Slop',
+      tier: 'Slop',
       tierDescription: 'Stock everything. The template is still showing.',
       headline: 'placeholder Latin still in the copy',
       method: 'max(homepage, median)',
@@ -138,7 +138,7 @@ describe('the recorded reading', () => {
     expect(body.host).toBe('example.com');
     expect(body.entryUrl).toBe('https://www.example.com/pricing');
     expect(body.score).toBe(61);
-    expect(body.tier).toBe('Pure Slop');
+    expect(body.tier).toBe('Slop');
   });
 
   it('sends the heaviest tells first and no more than ten', async () => {

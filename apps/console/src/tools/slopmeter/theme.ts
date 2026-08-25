@@ -14,10 +14,10 @@ import type { VerdictScale } from '@lumioguard/ui';
  * tool's vocabulary, so the mapping lives here.
  */
 const TIER_INK: Record<Tier, string> = {
-  'Hand-Crafted': band.calm,
+  Handmade: band.calm,
   'Lightly Templated': band.notice,
   'Heavily Templated': band.warn,
-  'Pure Slop': band.alarm,
+  Slop: band.alarm,
 };
 
 export function tierInk(tier: Tier): string {

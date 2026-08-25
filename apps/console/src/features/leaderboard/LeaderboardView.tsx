@@ -2,67 +2,44 @@ import type { LeaderboardSide } from '@lumioguard/shared';
 import { Panel, PanelGrid, PanelHead } from '@lumioguard/ui';
 import { useState } from 'react';
 import { LEADERBOARD_TOOL, toolCopy } from '../../tools/catalogue.js';
-import { Rank } from './Rank.js';
+import { BoardBody } from './BoardBody.js';
+import { WAITING } from './board.js';
 import { useBoard } from './useBoard.js';
 
 /** Vite's asset base, without its trailing slash. `''` when served at a root. */
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
-/** What the column is, in plain words. The band it filtered on sits beneath. */
-const TITLE: Record<LeaderboardSide, string> = {
-  best: 'Highest scoring',
-  worst: 'Lowest scoring',
-};
-
-/** An empty band and an unreadable one are different facts, and read as such. */
-const EMPTY = 'No site has landed in this band yet.';
-const UNREADABLE = 'The board could not be read.';
-
 const STEP =
-  'rounded-drawn-chip border-2 border-pen-700 px-[14px] py-[7px] font-sans text-14 text-ink-1 transition-colors hover:border-pen-600 hover:bg-paper-high disabled:cursor-default disabled:opacity-40 disabled:hover:border-pen-700 disabled:hover:bg-transparent';
+  'rounded-drawn-chip border-2 border-pen-700 px-[13px] py-[6px] font-sans text-13 text-ink-1 transition-colors hover:border-pen-600 hover:bg-paper-high disabled:cursor-default disabled:opacity-40 disabled:hover:border-pen-700 disabled:hover:bg-transparent';
 
-/** One side of the board, paged on its own: the two columns rank different sets. */
-function Column({
+/**
+ * One band, in its own box.
+ *
+ * Each side pages on its own: they rank different sets, so a single pager would
+ * have to advance both at once and one of them is usually one row long.
+ */
+function Board({
   side,
   hand,
 }: { readonly side: LeaderboardSide; readonly hand: 'a' | 'b' }): JSX.Element {
   const [page, setPage] = useState(1);
-  const { data, reading, failed, retry } = useBoard(side, page);
+  const board = useBoard(side, page);
+  const { data } = board;
 
   const pages = data === null || data.pageSize === 0 ? 0 : Math.ceil(data.total / data.pageSize);
-  const first = data === null ? 0 : (data.page - 1) * data.pageSize;
 
   return (
     <Panel hand={hand} span={6}>
-      {/* The band comes from the API, never a second copy of the ladder here:
-          this and the meter must call the same score the same thing. */}
-      <PanelHead title={TITLE[side]} kicker={data?.band} />
+      {/* The band names the box, so no row inside has to repeat it. */}
+      <PanelHead
+        title={data?.band ?? WAITING[side]}
+        kicker={data === null ? undefined : `${data.total} ${data.total === 1 ? 'site' : 'sites'}`}
+      />
 
-      {reading && data === null ? (
-        <p className="mt-4 text-body text-ink-3">Reading the board…</p>
-      ) : failed && data === null ? (
-        <p className="mt-4 text-body text-ink-2">
-          {UNREADABLE}{' '}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-hand"
-            onClick={retry}
-          >
-            Try again
-          </button>
-        </p>
-      ) : data === null || data.rows.length === 0 ? (
-        <p className="mt-4 text-body text-ink-2">{EMPTY}</p>
-      ) : (
-        <ol className="m-0 mt-4 list-none p-0" style={{ opacity: reading ? 0.5 : 1 }}>
-          {data.rows.map((row, index) => (
-            <Rank key={row.host} place={first + index + 1} row={row} />
-          ))}
-        </ol>
-      )}
+      <BoardBody board={board} />
 
       {pages > 1 && (
-        <nav className="mt-auto flex items-center gap-3 pt-5" aria-label={`${TITLE[side]} pages`}>
+        <nav className="mt-auto flex items-center gap-3 pt-5" aria-label={`${data?.band} pages`}>
           <button
             type="button"
             className={STEP}
@@ -88,10 +65,7 @@ function Column({
   );
 }
 
-/**
- * What the readings add up to: the sites that look least and most like every
- * other AI-built site. One row per host, the latest reading of it.
- */
+/** The two ends of the ladder, each in its own box. */
 export function LeaderboardView(): JSX.Element {
   const tool = toolCopy(LEADERBOARD_TOOL);
 
@@ -99,9 +73,6 @@ export function LeaderboardView(): JSX.Element {
     <PanelGrid>
       {/* The way back is the reading this board is of, not the browser's back
           button: a visitor may have arrived here from a search result. */}
-      {/* An anchor, not the report's button: this is its own page and a visitor
-          may have arrived from a search result with nothing to go back to. The
-          chip is the report's, so the two read as one control. */}
       <div className="col-span-6 lg:col-span-12">
         <a
           href={`${BASE}/${tool.slug}`}
@@ -119,8 +90,9 @@ export function LeaderboardView(): JSX.Element {
           Back to the reading
         </a>
       </div>
-      <Column side="best" hand="a" />
-      <Column side="worst" hand="b" />
+
+      <Board side="best" hand="a" />
+      <Board side="worst" hand="b" />
     </PanelGrid>
   );
 }
