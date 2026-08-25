@@ -1,28 +1,32 @@
 import type { LeaderboardRow } from '@lumioguard/shared';
 import { VERDICT_SCALE } from '../../tools/slopmeter/theme.js';
 
-/**
- * One line of the ledger.
- *
- * Rank sits in a ruled margin rather than floating at the left, which is what
- * stops a run of these reading as a checklist. No band on the line: the panel
- * it sits in is that band, so printing it per row said the same word eleven
- * times. The score keeps the band's ink through `inkFor`, which takes a plain
- * string and falls back, because the wire carries a tier this surface does not
- * own the vocabulary for.
- */
 export function LedgerRow({
   place,
   row,
   href,
+  onOpen,
 }: {
   readonly place: number;
   readonly row: LeaderboardRow;
   readonly href: string;
+  /** Given, a plain click reads the site here instead of loading the page. */
+  readonly onOpen?: (host: string) => void;
 }): JSX.Element {
   return (
     <a
       href={href}
+      // A link, not a button, even where it reads in place: middle-click, the
+      // context menu and every modified click stay real navigation.
+      onClick={
+        onOpen === undefined
+          ? undefined
+          : (event) => {
+              if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+              event.preventDefault();
+              onOpen(row.host);
+            }
+      }
       className="grid grid-cols-[34px_minmax(0,1fr)_auto] items-stretch gap-x-4 border-t border-pen-900 px-1 transition-colors first:border-t-0 hover:bg-paper-high focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-pen-300"
     >
       <span className="flex items-center justify-end border-r border-pen-800 py-[10px] pr-3 font-hand text-15 text-ink-4">

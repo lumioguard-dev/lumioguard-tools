@@ -18,10 +18,12 @@ const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 function Side({
   side,
   board,
+  onOpen,
   divided = false,
 }: {
   readonly side: LeaderboardSide;
   readonly board: BoardState;
+  readonly onOpen: (host: string) => void;
   readonly divided?: boolean;
 }): JSX.Element {
   const rule = divided
@@ -31,7 +33,7 @@ function Side({
   return (
     <div className={`min-w-0 ${rule}`}>
       <p className="m-0 font-hand text-16 text-ink-3">{board.data?.band ?? WAITING[side]}</p>
-      <BoardBody board={board} limit={SHOWN} />
+      <BoardBody board={board} limit={SHOWN} onOpen={onOpen} />
     </div>
   );
 }
@@ -46,7 +48,9 @@ function empty(board: BoardState): boolean {
  * shows nothing rather than an apology above the fold, but a board that could
  * not be READ says so and offers the read again.
  */
-export function LeaderboardPreview(): JSX.Element | null {
+export function LeaderboardPreview({
+  onScan,
+}: { readonly onScan: (address: string) => void }): JSX.Element | null {
   const best = useBoard('best', 1);
   const worst = useBoard('worst', 1);
 
@@ -91,8 +95,8 @@ export function LeaderboardPreview(): JSX.Element | null {
         </p>
       ) : (
         <div className="mt-5 grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-0">
-          <Side side="best" board={best} />
-          <Side side="worst" board={worst} divided />
+          <Side side="best" board={best} onOpen={onScan} />
+          <Side side="worst" board={worst} onOpen={onScan} divided />
         </div>
       )}
     </Panel>
