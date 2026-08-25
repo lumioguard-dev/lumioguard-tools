@@ -29,7 +29,7 @@ describe('the tier ladder', () => {
       [Tier.Slop, 0, 40],
       [Tier.HeavilyTemplated, 41, 60],
       [Tier.LightlyTemplated, 61, 80],
-      [Tier.Crafted, 81, 100],
+      [Tier.Handmade, 81, 100],
     ]);
   });
 });
