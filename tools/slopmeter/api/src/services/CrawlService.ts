@@ -34,11 +34,8 @@ export class CrawlService {
      *
      * The crawler collects a page it cannot load into `errors` rather than
      * throwing, which is right when fourteen of fifteen pages loaded. When none
-     * did, the score is computed over no evidence and comes back 0,
-     * "Hand-Crafted: almost nothing here comes out of a box", about a site
-     * nothing was able to read. Worse in the console than alone: 0 is the best
-     * possible score, so a site behind a bot challenge would set a consolidated
-     * verdict of Clean while every other reading failed.
+     * did, the score is computed over no evidence, and a site behind a bot
+     * challenge is published as a reading rather than as the failure it is.
      */
     if (report.pagesScanned === 0) {
       // Says what happened, not why. A status the site did return is worth

@@ -11,7 +11,7 @@ export class TierResolver {
     for (const band of this.bands) {
       if (score <= band.to) return band.tier;
     }
-    return Tier.PureSlop;
+    return Tier.Slop;
   }
 
   public describe(score: number): string {
