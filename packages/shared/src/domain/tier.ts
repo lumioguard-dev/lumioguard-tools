@@ -2,7 +2,7 @@ import { BAND_EDGES, type ScoreBand, type TrackSegment, trackOf } from './band.j
 
 /** Band names describe the OUTPUT, never the author. */
 export const Tier = {
-  Crafted: 'Crafted',
+  Handmade: 'Handmade',
   LightlyTemplated: 'Lightly Templated',
   HeavilyTemplated: 'Heavily Templated',
   Slop: 'Slop',
@@ -35,7 +35,7 @@ export const TIER_BANDS: readonly TierBand[] = Object.freeze([
     description: 'Mostly deliberate, leaning on a few defaults the crowd also uses.',
   },
   {
-    tier: Tier.Crafted,
+    tier: Tier.Handmade,
     ...BAND_EDGES[3],
     description: 'Almost nothing here comes out of a box.',
   },
