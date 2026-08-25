@@ -12,10 +12,13 @@ const LINE = 'mt-4 text-body';
 export function BoardBody({
   board,
   limit,
+  onOpen,
 }: {
   readonly board: BoardState;
   /** The preview shows the head of the band; the board shows the page. */
   readonly limit?: number;
+  /** Given, a row reads its site in place rather than loading the page. */
+  readonly onOpen?: (host: string) => void;
 }): JSX.Element {
   const { data, reading, failed, retry } = board;
 
@@ -52,6 +55,7 @@ export function BoardBody({
           place={first + index + 1}
           row={row}
           href={readingHref(row.host)}
+          onOpen={onOpen}
         />
       ))}
     </div>
