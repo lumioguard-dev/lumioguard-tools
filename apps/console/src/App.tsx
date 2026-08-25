@@ -43,8 +43,8 @@ function Masthead(): JSX.Element {
 const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
 
 /** What sits under the address field, which is the pinned reading's business. */
-function belowAsk(pinned: string | undefined): ReactNode {
-  if (pinned === LEADERBOARD_TOOL) return <LeaderboardPreview />;
+function belowAsk(pinned: string | undefined, onScan: (address: string) => void): ReactNode {
+  if (pinned === LEADERBOARD_TOOL) return <LeaderboardPreview onScan={onScan} />;
   if (pinned === 'leakpeek') return <CommonIssues />;
   if (pinned === 'citecheck') return <WhyItMatters />;
   return undefined;
@@ -206,7 +206,7 @@ export function App(): JSX.Element {
           pinned={pinned}
           // Each reading's own panel under the ask: the board is Slopmeter's,
           // the common issues are Leakpeek's, and the third has neither.
-          below={belowAsk(pinned?.id)}
+          below={belowAsk(pinned?.id, open)}
         />
       ) : (
         // No picker here. What to read is asked once, before the reading; on the
