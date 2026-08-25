@@ -28,10 +28,10 @@ suite and the app it hands off to.
 
 | Tier | Score | Meaning |
 |---|---|---|
-| Hand-Crafted | 81–100 | Somebody made decisions here |
+| Crafted | 81–100 | Somebody made decisions here |
 | Lightly Templated | 61–80 | Mostly deliberate, leaning on a few defaults |
 | Heavily Templated | 41–60 | The template is doing most of the talking |
-| Pure Slop | 0–40 | Stock everything |
+| Slop | 0–40 | Stock everything |
 
 ## What it judges, and what it refuses to
 

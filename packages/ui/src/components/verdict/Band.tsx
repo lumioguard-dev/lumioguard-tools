@@ -131,8 +131,8 @@ export function Band({
 
           The end stations are anchored to the ends of the track rather than
           centred on their zones, exactly as the scale above them is. A name is
-          wider than a fifth of a narrow track: centred, `Hand-Crafted` hung 9px
-          off the left end of the instrument it labels once the meter gave up a
+          wider than a fifth of a narrow track: centred, an end name hung 9px off
+          the left end of the instrument it labels once the meter gave up a
           column to the figure at 768px. Anchored, no width can put a station
           past the track, and the outer names line up with the 0 and the 100
           they stand over. */}
