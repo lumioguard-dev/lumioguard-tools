@@ -258,11 +258,15 @@ Beyond the six invariants above:
 Run before calling anything done:
 
 ```
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm rules:check
 ```
 
 A green test run is not a green gate. Vitest does not typecheck, so a test can
 pass against a fixture whose shape the compiler would reject.
+
+`rules:check` regenerates `docs/RULES.md` in memory and fails when it differs
+from the committed file. Adding a rule without running `pnpm rules` leaves the
+catalogue quietly describing an engine that has moved on.
 
 Lint must be clean, not merely quieter. If a rule is wrong for this codebase,
 turn it off in `biome.json` with a reason rather than scattering suppressions.

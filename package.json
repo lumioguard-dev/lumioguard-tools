@@ -33,7 +33,9 @@
     "lint": "biome check .",
     "format": "biome format --write .",
     "dev": "turbo run dev",
-    "deploy": "turbo run deploy"
+    "deploy": "turbo run deploy",
+    "rules": "node scripts/build-rule-catalog.mjs",
+    "rules:check": "node scripts/build-rule-catalog.mjs --check"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",

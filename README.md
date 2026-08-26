@@ -206,11 +206,16 @@ is the whole reason this is a monorepo rather than three repos.
 The engines are plain TypeScript with no I/O at all, which is why the whole test
 suite runs offline in a few seconds, and why a rule is easy to contribute.
 
+**[What each tool looks for](docs/RULES.md)** lists every check the three
+engines run, with its identifier and one line each. It is generated from the
+rule sources by `pnpm rules`, and CI fails if it falls behind them.
+
 ## Contributing
 
 New detection rules, bug reports and whole new tools are all welcome. The
 [contributing guide](CONTRIBUTING.md) covers the layout, the local ports, running
-the checks and shipping a tool.
+the checks and shipping a tool. After adding or changing a rule, run `pnpm rules`
+so [docs/RULES.md](docs/RULES.md) keeps up with it.
 
 ## Licence
 
