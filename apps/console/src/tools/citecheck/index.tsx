@@ -1,3 +1,4 @@
+import { MarkLegible } from '@lumioguard/ui';
 import { apiBase } from '../apiBase.js';
 import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
@@ -10,6 +11,7 @@ const client = new ScanClient(apiBase('citecheck'));
 
 export const citecheck: ToolDescriptor = {
   ...toolCopy('citecheck'),
+  mark: MarkLegible,
   async run(address, signal) {
     const result = await client.crawl(address, signal);
     return {

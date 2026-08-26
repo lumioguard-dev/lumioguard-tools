@@ -258,11 +258,15 @@ Beyond the six invariants above:
 Run before calling anything done:
 
 ```
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm rules:check
 ```
 
 A green test run is not a green gate. Vitest does not typecheck, so a test can
 pass against a fixture whose shape the compiler would reject.
+
+`rules:check` regenerates `.documentation/RULES.md` in memory and fails when it differs
+from the committed file. Adding a rule without running `pnpm rules` leaves the
+catalogue quietly describing an engine that has moved on.
 
 Lint must be clean, not merely quieter. If a rule is wrong for this codebase,
 turn it off in `biome.json` with a reason rather than scattering suppressions.
@@ -310,6 +314,12 @@ Assume a stranger is reading. Anything that only makes sense with context you
 happen to have is a comment that needs writing or a name that needs changing.
 
 ## Commits
+
+**Never `git add`, `git commit`, `git push`, open a pull request, tag a release
+or deploy unless the user has asked for it in that message.** Finishing a change
+and verifying it is not permission to commit it: leave the work in the tree, say
+what is ready, and wait. Approval for one commit is not approval for the next.
+This is how the author keeps the history theirs to write.
 
 **One line. No body.** `type(scope): summary`, conventional prefix (`feat`,
 `fix`, `refactor`, `chore`, `docs`), imperative, lower case, no trailing full

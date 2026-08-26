@@ -61,23 +61,30 @@ export function Panel({
   return <section className={`pen-box flex flex-col ${modifiers}`}>{children}</section>;
 }
 
+/**
+ * The space between the ask and the panel under it, matching the space above
+ * the ask. The grid's own `gap-10` already adds 40px, so this carries the rest
+ * of that 128px: change one and change the other.
+ */
+export const GAP_BELOW_ASK = 'mt-[88px]';
+
 export interface PanelGridProps {
-  /** Before anything is asked, the entry takes the middle of the screen. */
-  readonly centred?: boolean;
+  /** Fill the height left under the masthead, so the colophon sits at the foot. */
+  readonly fills?: boolean;
   readonly className?: string;
   readonly children: ReactNode;
 }
 
 /** The notebook page: twelve columns on desktop, six below. */
 export function PanelGrid({
-  centred = false,
+  fills = false,
   className = '',
   children,
 }: PanelGridProps): JSX.Element {
   return (
     <div
-      className={`mx-auto grid w-full max-w-[76rem] grid-cols-6 gap-10 px-4 pt-5 lg:grid-cols-12 lg:px-[26px] lg:pt-[26px] ${
-        centred ? 'flex-1 content-center pb-10' : ''
+      className={`mx-auto grid w-full max-w-[76rem] grid-cols-6 gap-10 px-4 pt-24 lg:grid-cols-12 lg:px-[26px] lg:pt-[128px] ${
+        fills ? 'flex-1 content-start pb-10' : ''
       } ${className}`}
     >
       {children}

@@ -1,3 +1,4 @@
+import { MarkTemplate } from '@lumioguard/ui';
 import { apiBase } from '../apiBase.js';
 import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
@@ -9,6 +10,7 @@ const client = new ScanClient(apiBase('slopmeter'));
 
 export const slopmeter: ToolDescriptor = {
   ...toolCopy('slopmeter'),
+  mark: MarkTemplate,
   async run(address, signal) {
     const result = await client.crawl(address, {}, signal);
     return {

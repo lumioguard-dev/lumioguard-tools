@@ -9,16 +9,26 @@ import { Panel, PanelHead, ResolvingShot } from '@lumioguard/ui';
  * Slopmeter's section it appeared or vanished depending on whether that one
  * tool had been selected.
  */
-export function SiteShot({ address }: { readonly address: string }): JSX.Element | null {
+export function SiteShot({
+  address,
+  resolving,
+}: {
+  readonly address: string;
+  /** True while any reading is still running: the render samples up as it waits. */
+  readonly resolving: boolean;
+}): JSX.Element | null {
   const src = mshotsUrl(address);
   if (src === null) return null;
 
   return (
     <Panel hand="d" span={7}>
       <PanelHead title="See it for yourself" />
-      {/* `resolving` is false because this is drawn only once every reading has
-          landed. The sampling animation exists to fill a wait that is over. */}
-      <ResolvingShot src={src} alt={`Render of ${address}`} address={address} resolving={false} />
+      <ResolvingShot
+        src={src}
+        alt={`Render of ${address}`}
+        address={address}
+        resolving={resolving}
+      />
     </Panel>
   );
 }

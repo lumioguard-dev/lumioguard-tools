@@ -12,7 +12,7 @@ import { ReadingSection } from './ReadingSection.js';
 import { SiteShot } from './SiteShot.js';
 
 const HANDOFF_OFFER =
-  'This is what a stranger with the URL can see. Log in for the full check, free.';
+  "This is what's visible to the public. Log in to perform code level check for free.";
 
 /**
  * Every reading of one site, under one verdict.
@@ -73,7 +73,7 @@ export function ConsoleReport({
    */
   if (everyOneFailed) {
     return (
-      <PanelGrid centred>
+      <PanelGrid fills>
         <Panel hand="c" red span={12}>
           <p className="pen-title">Nothing could be read</p>
           <p role="alert" className="mt-3 max-w-[62ch] text-body text-ink-2">
@@ -128,16 +128,11 @@ export function ConsoleReport({
 
       {!isReading && landed.length > 0 && <FailedReadings readings={readings} />}
 
-      {/* Both are ABOUT the whole reading, so neither is drawn until the whole
-          reading is in. Ranking culprits across tools while a tool is still
-          reading shows an order that is about to change, and the render beside
-          it would arrive alone and then be shoved down. */}
-      {!isReading && landed.length > 0 && (
-        <>
-          <SiteShot address={address} />
-          <Culprits readings={readings} />
-        </>
-      )}
+      {/* Mounted from the first frame and kept mounted, so the render samples
+          up and the culprits rule while the needle hunts. Held back until the
+          last tool landed, both arrived after the wait they exist to fill. */}
+      <SiteShot address={address} resolving={isReading} />
+      <Culprits readings={readings} pending={isReading} />
 
       {landed.map((reading) => (
         <ReadingSection key={reading.tool.id} reading={reading} />

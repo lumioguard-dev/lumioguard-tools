@@ -1,7 +1,8 @@
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { type Plugin, type ResolvedConfig, type UserConfig, loadEnv } from 'vite';
-import { HOME, OG_IMAGE, headTags } from './head.js';
+import { pageForPath } from '../src/tools/catalogue.js';
+import { HOME, LEADERBOARD_PAGE, OG_IMAGE, SCAN_PAGE, headTags, toolPage } from './head.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { renderPage } from './pages/render.js';
 import { staticShell } from './shell.js';
@@ -15,13 +16,44 @@ import { llmsTxt, robotsTxt, sitemapXml } from './wellKnown.js';
 const CARD_SOURCE = new URL('../../../assets/readout-home.jpg', import.meta.url);
 
 /**
- * Where the generated markup goes. A miss THROWS rather than no-ops:
- * `String.replace` with no match returns the string unchanged, so editing an
- * anchor out of `index.html` would silently ship the empty `#root` that
- * `access.shell` calls a blocker, and the build would look fine.
+ * Where the generated markup goes. A miss THROWS rather than no-ops: `replace`
+ * with no match returns the string unchanged, so a deleted anchor would ship
+ * the empty `#root` that `access.shell` calls a blocker and the build would pass.
  */
 const HEAD_ANCHOR = '<!--seo:head-->';
+const CHROME_ANCHOR = '<!--seo:chrome-->';
 const MOUNT_ANCHOR = '<div id="root"></div>';
+
+/**
+ * The head every document shares: icon, fonts, and the pre-paint theme read.
+ * Written once here rather than copied into each entry, and the icon carries
+ * the mount or a mounted app asks the HOST for its favicon and gets one.
+ */
+function chrome(mount: string): string {
+  return `<link rel="icon" href="${mount}/favicon.svg" type="image/svg+xml" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <meta name="color-scheme" content="light dark" />
+    <script>
+      (function () {
+        try {
+          // Must match THEME_STORAGE_KEY in @lumioguard/design-tokens, which
+          // useTheme reads, or a saved dark choice flashes light for one frame.
+          var stored = localStorage.getItem("slopmeter-theme");
+          document.documentElement.setAttribute(
+            "data-theme",
+            stored === "dark" || stored === "light" ? stored : "light"
+          );
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700;800&family=Architects+Daughter&display=swap"
+      rel="stylesheet"
+    />`;
+}
 
 /** Served in dev and emitted at build, so what you check locally is what ships. */
 interface WellKnownFile {
@@ -57,10 +89,8 @@ function replaceOnce(html: string, anchor: string, into: string): string {
 
 /**
  * Everything that makes this app legible to something that is not a browser.
- *
- * One plugin rather than three because the parts must agree: the canonical, the
- * sitemap's entry and the robots.txt `Sitemap:` line are one origin written
- * three times, and the shell names the readings the JSON-LD lists.
+ * One plugin, not three, because the parts must agree: the canonical, the
+ * sitemap entry and robots.txt's `Sitemap:` line are one origin written thrice.
  */
 export function seo(): Plugin {
   let where: Site | null = null;
@@ -72,19 +102,15 @@ export function seo(): Plugin {
     enforce: 'post',
 
     /**
-     * Vite's asset base comes from the SAME variable as the canonical.
-     *
-     * It is decided here, before the config resolves, so `loadEnv` reads the
-     * .env files itself rather than waiting for `config.env`. Writing the mount
-     * point twice, once as `--base` and once in the URL, is two literals that
-     * must agree: a page would link somewhere its own canonical denies.
+     * Vite's asset base comes from the SAME variable as the canonical, decided
+     * before the config resolves so `loadEnv` reads the .env files itself.
+     * Written twice, a page would link somewhere its own canonical denies.
      */
     config(userConfig: UserConfig, { mode }): UserConfig {
       const base = assetBase(loadEnv(mode, userConfig.root ?? '.', 'VITE_'));
-      // An explicit `--base` that disagrees is REFUSED rather than quietly
-      // overruled. Vite would take this hook's value and the flag would do
-      // nothing, so the assets ship under one path while the canonical and
-      // every link claim another, and the build says it succeeded.
+      // An explicit `--base` that disagrees is REFUSED, not quietly overruled:
+      // Vite takes this hook's value, so the assets would ship under one path
+      // while the canonical claims another and the build says it succeeded.
       if (userConfig.base !== undefined && userConfig.base !== base) {
         throw new Error(
           `[seo] --base=${userConfig.base} disagrees with ${SITE_URL_VAR} (${base}). The mount point is written once, in the URL; drop the flag.`,
@@ -116,12 +142,26 @@ export function seo(): Plugin {
 
     transformIndexHtml: {
       order: 'post',
-      handler(html: string) {
-        const withHead = replaceOnce(html, HEAD_ANCHOR, headTags(HOME, where, card !== null));
+      handler(html: string, ctx): string {
+        // Which document this is decides its title, its canonical and the
+        // reading its shell describes. The filename is the only thing that says
+        // so, and it matches the slug the app reads back off the path.
+        const page = pageForPath(ctx.path);
+        const meta =
+          page.kind === 'tool'
+            ? toolPage(page.tool)
+            : page.kind === 'scan'
+              ? SCAN_PAGE
+              : page.kind === 'leaderboard'
+                ? LEADERBOARD_PAGE
+                : HOME;
+
+        const withHead = replaceOnce(html, HEAD_ANCHOR, headTags(meta, where, card !== null));
+        const withChrome = replaceOnce(withHead, CHROME_ANCHOR, chrome(where?.path ?? ''));
         return replaceOnce(
-          withHead,
+          withChrome,
           MOUNT_ANCHOR,
-          `<div id="root">${staticShell(where?.path ?? '')}\n    </div>`,
+          `<div id="root">${staticShell(where?.path ?? '', page)}\n    </div>`,
         );
       },
     },
@@ -141,11 +181,9 @@ export function seo(): Plugin {
       for (const file of files) {
         this.emitFile({ type: 'asset', fileName: file.name, source: file.body });
       }
-      // `<slug>.html`, NOT `<slug>/index.html`. Cloudflare Pages answers
-      // `/slug` from `/slug.html` with a 200, but answers it from
-      // `/slug/index.html` with a 308 to `/slug/`. That redirect would make
-      // every canonical, sitemap entry and internal link point at a URL that
-      // moves, which is a defect the tool in this repo reports.
+      // `<slug>.html`, NOT `<slug>/index.html`: Cloudflare Pages answers
+      // `/slug` from the first with a 200 and from the second with a 308 to
+      // `/slug/`, pointing every canonical and link at a URL that moves.
       for (const page of CONTENT_PAGES) {
         this.emitFile({
           type: 'asset',

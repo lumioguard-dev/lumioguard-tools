@@ -20,12 +20,16 @@ below.
 ## Before you open a pull request
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm rules:check
 ```
 
-All four must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
+All five must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
 for this codebase, turn it off in `biome.json` with a reason rather than
 scattering suppressions.
+
+`rules:check` fails when [the rule catalogue](.documentation/RULES.md) has
+fallen behind the rule sources. `pnpm rules` regenerates it; the file is never
+edited by hand.
 
 Commits use conventional prefixes (`feat`, `fix`, `refactor`, `chore`, `docs`)
 scoped to the package, and the body says *why*. One logical change per commit.
@@ -229,12 +233,43 @@ in `pnpm build`, so what you check locally is what ships:
 | File | What it writes |
 |---|---|
 | `head.ts` | The `<head>` metadata and the JSON-LD, per page |
-| `shell.ts` | The static document that fills `#root` on the app |
+| `shell.ts` | The static document that fills `#root`, per tool page |
 | `pages/content.ts` | The explainers' prose, and the ladders read from `shared` |
 | `pages/render.ts` | One explainer to a complete standalone document |
 | `wellKnown.ts` | `robots.txt`, `sitemap.xml`, `llms.txt` |
 | `site.ts` | Reads `VITE_PUBLIC_SITE_URL` and refuses a malformed one |
 | `seo.ts` | The Vite plugin wiring them together |
+
+### The tool pages
+
+The app answers at five URLs, and each is a real document rather than a route.
+`/` is the CHOOSER and scans nothing: it asks which reading and links to the
+page that runs it. `/scan` runs whatever the picker has ticked, and `/<slug>`
+runs one reading alone with the picker hidden. The slugs are `ai-slop-check`,
+`security-check` and `seo-ai-visibility-check`.
+
+`scan` is deliberately NOT in the catalogue: it is a page, not a reading, and an
+entry there would put it in the picker, in the JSON-LD feature list and on the
+tool pages as if it were a fourth tool. A test holds it out.
+
+The chooser is the only page that links onward, and it links to all four. That
+is what earns `/` its own URL rather than duplicating `/scan`, and it is the one
+document a crawler reaches the rest from.
+
+They are separate files on purpose. A host rewrite would serve one document at
+four URLs, so all four would carry one title and one canonical and none of them
+could rank. Each is a Vite input, listed from the catalogue in `vite.config.ts`.
+
+`src/tools/catalogue.ts` is the single source: it carries each reading's `slug`,
+`headline` and `description`, the build names the file and writes the head from
+them, and `toolForPath()` reads the slug back off `window.location.pathname` at
+runtime to pin the reading. Adding a fourth tool adds its page with no other
+edit. On a tool page a `?tools=` parameter is ignored: the URL is the promise
+the heading made.
+
+The shared head, the fonts and the pre-paint theme script are injected from
+`build/seo.ts` through a `<!--seo:chrome-->` anchor rather than copied into each
+document, so a fifth page cannot ship with a stale copy of it.
 
 ### The explainer pages
 

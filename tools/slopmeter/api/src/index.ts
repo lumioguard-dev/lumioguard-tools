@@ -28,9 +28,18 @@ const app = new Hono<Bindings>();
 app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(context, next));
 
 app.use('*', standardHeaders());
+
+/**
+ * Paths that must not spend the SCAN budget. A board is a read of rows already
+ * taken, and the AI slop page asks for two of them on load: metered here, a
+ * visitor who opened that page twice could no longer scan anything. The board's
+ * own limit belongs upstream, with the data.
+ */
+const UNMETERED = new Set(['/api/health', '/api/leaderboard']);
+
 app.use('/api/*', async (context, next) => {
   if (
-    context.req.path !== '/api/health' &&
+    !UNMETERED.has(context.req.path) &&
     !(await allowedByRateLimit(context.env.SCAN_RATE_LIMITER, context.req.raw))
   ) {
     return context.json(
@@ -68,6 +77,24 @@ const analyze = (input: AnalyzeRequest): unknown =>
 
 /** Liveness only. */
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
+
+/**
+ * The public board. FAILS CLOSED: with no LumioGuard address configured there
+ * is no board, never a fork reading somebody else's.
+ */
+app.get('/api/leaderboard', async (context) => {
+  const base = context.env.LUMIOGUARD_API_BASE_URL?.replace(/\/$/, '');
+  if (!base) return context.json({ error: 'No leaderboard here' }, 404);
+
+  const side = context.req.query('side') === 'worst' ? 'worst' : 'best';
+  const asked = Number(context.req.query('page') ?? '1');
+  const page = Number.isFinite(asked) ? Math.max(1, Math.floor(asked)) : 1;
+
+  const board = await getContainer().leaderboard.read(base, side, page);
+  // Generic: the upstream's reasons are not this Worker's to relay.
+  if (board === null) return context.json({ error: 'Leaderboard unavailable' }, 502);
+  return context.json(board);
+});
 
 app.post('/api/scan', endpoint(scanRequestSchema, jsonBody, scanPage));
 

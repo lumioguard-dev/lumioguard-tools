@@ -1,6 +1,6 @@
 export { ResolvingShot } from './components/ResolvingShot.js';
 export { Hint } from './components/Hint.js';
-export { Panel, PanelGrid, PanelHead } from './components/Panel.js';
+export { GAP_BELOW_ASK, Panel, PanelGrid, PanelHead } from './components/Panel.js';
 export type {
   Hand,
   PanelProps,
@@ -15,6 +15,7 @@ export { ThemeToggle } from './components/ThemeToggle.js';
 export { useTheme } from './theme/useTheme.js';
 export { DrawnRule, MarkReel, MarkScored, MarkTick } from './components/Marks.js';
 export { HowItWorks } from './components/HowItWorks.js';
+export { MarkExposed, MarkLegible, MarkTemplate } from './components/ReadingMarks.js';
 export type { HowItWorksLabels } from './components/HowItWorks.js';
 export { Band } from './components/verdict/Band.js';
 export { Seal, SEAL_H, SEAL_W } from './components/verdict/Seal.js';

@@ -1,12 +1,5 @@
-import {
-  DESCRIPTION,
-  EXAMPLES,
-  HEADLINE_TEXT,
-  HOW_IT_WORKS,
-  NAME,
-  PUBLISHER,
-} from '../src/copy.js';
-import { CATALOGUE } from '../src/tools/catalogue.js';
+import { EXAMPLES, HEADLINE_TEXT, LEADERBOARD, NAME, PUBLISHER, SCAN, beats } from '../src/copy.js';
+import { CATALOGUE, type ConsolePage } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
 
 /** Scoped to the shell, and thrown away with it. */
@@ -27,20 +20,28 @@ const STYLE = [
 ].join('');
 
 /**
- * The document served before any JavaScript runs. Empty, `#root` is
- * `access.shell`, a blocker. Every word is imported, because served text that
- * differs from the rendered page is `access.agent-thin`.
+ * The document served before any JavaScript runs: empty, `#root` is
+ * `access.shell`, and text differing from the rendered page is
+ * `access.agent-thin`. `mount` is empty at a host root, so one build serves both.
  */
-/**
- * `mount` is where the app is served from, empty at a host root. Every link
- * here is written with it, so the same build works at `/` and at `/tools`.
- */
-export function staticShell(mount: string): string {
-  const tools = CATALOGUE.map(
-    (tool) => `<li><b>${escapeHtml(tool.label)}.</b> ${escapeHtml(tool.summary)}</li>`,
+export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' }): string {
+  const heading =
+    page.kind === 'tool'
+      ? page.tool.headline
+      : page.kind === 'scan'
+        ? SCAN.headline
+        : page.kind === 'leaderboard'
+          ? LEADERBOARD.headline
+          : HEADLINE_TEXT;
+  // The chooser is the only page that links onward, and it links to every
+  // reading: it is the one document a crawler reaches the rest from.
+  const choices = CATALOGUE.map(
+    (tool) =>
+      `<li><a href="${mount}/${tool.slug}">${escapeHtml(tool.label)}</a>. ${escapeHtml(tool.summary)}</li>`,
   ).join('\n          ');
 
-  const beats = [HOW_IT_WORKS.paste, HOW_IT_WORKS.read, HOW_IT_WORKS.result]
+  const how = beats(page.kind === 'tool' ? page.tool.checks : undefined);
+  const steps = [how.paste, how.read, how.result]
     .map((beat) => `<li>${escapeHtml(beat)}</li>`)
     .join('\n          ');
 
@@ -53,17 +54,20 @@ export function staticShell(mount: string): string {
   return `
       <div class="shell">
         <style>${STYLE}</style>
-        <h1>${escapeHtml(HEADLINE_TEXT)}</h1>
-        <p>${escapeHtml(DESCRIPTION)}</p>
-
+        <h1>${escapeHtml(heading)}</h1>
+${
+  page.kind === 'choose'
+    ? `
         <h2>What to read</h2>
         <ul>
-          ${tools}
+          ${choices}
         </ul>
-
+`
+    : ''
+}
         <h2>How it works</h2>
         <ol>
-          ${beats}
+          ${steps}
         </ol>
 
         <h2>Try one</h2>

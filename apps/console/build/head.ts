@@ -1,6 +1,6 @@
-import { DESCRIPTION, NAME, PUBLISHER, TITLE } from '../src/copy.js';
+import { DESCRIPTION, LEADERBOARD, NAME, PUBLISHER, SCAN, TITLE } from '../src/copy.js';
 import type { PageLink } from '../src/pages.js';
-import { CATALOGUE } from '../src/tools/catalogue.js';
+import { CATALOGUE, SCAN_SLUG, type ToolCopy, leaderboardPath } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
 import { type Site, absolute } from './site.js';
 
@@ -23,6 +23,29 @@ export const OG_IMAGE = {
  * page is an explainer that links back to it.
  */
 export const HOME: PageLink = { path: '/', title: TITLE, description: DESCRIPTION };
+
+/** Every reading at once. Its own promise, so its own title and canonical. */
+export const SCAN_PAGE: PageLink = {
+  path: `/${SCAN_SLUG}`,
+  title: `${SCAN.headline} · ${NAME}`,
+  description: SCAN.description,
+};
+
+/** What has been read, ranked. Its own promise, so its own title and canonical. */
+export const LEADERBOARD_PAGE: PageLink = {
+  path: leaderboardPath(),
+  title: `${LEADERBOARD.headline} · ${NAME}`,
+  description: LEADERBOARD.description,
+};
+
+/** One reading's own page, where it runs alone. */
+export function toolPage(tool: ToolCopy): PageLink {
+  return {
+    path: `/${tool.slug}`,
+    title: `${tool.headline} · ${NAME}`,
+    description: tool.description,
+  };
+}
 
 /**
  * Everything in `<head>` that says what this page is, split by whether it needs
@@ -70,12 +93,9 @@ function imageTags(card: string): string[] {
 }
 
 /**
- * What this page is, for something that will not read the prose.
- *
- * The Organization node answers `structured.no-entity`: an engine resolves who
- * a page is about before it attributes anything. Explainers are `WebPage` and
- * not `Article` on purpose: the Article types carry a date because being dated
- * is part of the type, and an evergreen page has no honest one to give.
+ * What this page is, for something that will not read the prose. The
+ * Organization node answers `structured.no-entity`. Explainers are `WebPage`
+ * and not `Article`: an Article carries a date, and an evergreen page has none.
  */
 function jsonLd(page: PageLink, where: Site, hasImage: boolean): string {
   const home = absolute(where.base, '/');

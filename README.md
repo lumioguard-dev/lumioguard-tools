@@ -121,14 +121,23 @@ is called out as such. That is where the `noindex` nobody meant to ship lives.
 
 ## Try them
 
-All three run from one page, hosted and free to use:
+Hosted and free to use at
+[lumioguard.dev/tools](https://lumioguard.dev/tools), or from a clone at
+`http://127.0.0.1:5200` (see [Run them yourself](#run-them-yourself)). The app
+is mounted at whichever address it is served from, so these paths are the same
+either way:
 
-| | |
+| Path | What it does |
 |---|---|
-| **Readout** | [lumioguard-readout.pages.dev](https://lumioguard-readout.pages.dev) |
+| `/` | Asks which reading you want, and sends you to the page that runs it |
+| `/scan` | Every reading you tick, at once |
+| `/ai-slop-check` | How much of the site came out of a template |
+| `/security-check` | What the site is exposing to anyone with the URL |
+| `/seo-ai-visibility-check` | Whether an answer engine can read it and quote it |
 
-Paste a URL, pick which readings you want, and every one you picked runs at
-once. They land on a single verdict: the **worst** of them, not an average.
+Paste a URL and every reading you picked runs at once, landing on a single
+verdict: the **worst** of them, not an average. The three single readings carry
+no picker, because the URL already answered what to read.
 
 If you want something to point it at,
 [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/) is a deliberately
@@ -197,11 +206,16 @@ is the whole reason this is a monorepo rather than three repos.
 The engines are plain TypeScript with no I/O at all, which is why the whole test
 suite runs offline in a few seconds, and why a rule is easy to contribute.
 
+**[What each tool checks](.documentation/RULES.md)** lists everything the three
+engines look for, a line each, in plain words. It is generated from the rule
+sources by `pnpm rules`, and CI fails if it falls behind them.
+
 ## Contributing
 
 New detection rules, bug reports and whole new tools are all welcome. The
 [contributing guide](CONTRIBUTING.md) covers the layout, the local ports, running
-the checks and shipping a tool.
+the checks and shipping a tool. After adding or changing a rule, run `pnpm rules`
+so [the rule catalogue](.documentation/RULES.md) keeps up with it.
 
 ## Licence
 

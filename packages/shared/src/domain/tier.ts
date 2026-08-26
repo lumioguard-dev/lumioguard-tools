@@ -2,10 +2,10 @@ import { BAND_EDGES, type ScoreBand, type TrackSegment, trackOf } from './band.j
 
 /** Band names describe the OUTPUT, never the author. */
 export const Tier = {
-  HandCrafted: 'Hand-Crafted',
+  Handmade: 'Handmade',
   LightlyTemplated: 'Lightly Templated',
   HeavilyTemplated: 'Heavily Templated',
-  PureSlop: 'Pure Slop',
+  Slop: 'Slop',
 } as const;
 
 export type Tier = (typeof Tier)[keyof typeof Tier];
@@ -20,7 +20,7 @@ export interface TierBand extends ScoreBand {
 /** Ordered low to high; the first band whose ceiling is not exceeded wins. */
 export const TIER_BANDS: readonly TierBand[] = Object.freeze([
   {
-    tier: Tier.PureSlop,
+    tier: Tier.Slop,
     ...BAND_EDGES[0],
     description: 'Stock everything. The template is still showing.',
   },
@@ -35,7 +35,7 @@ export const TIER_BANDS: readonly TierBand[] = Object.freeze([
     description: 'Mostly deliberate, leaning on a few defaults the crowd also uses.',
   },
   {
-    tier: Tier.HandCrafted,
+    tier: Tier.Handmade,
     ...BAND_EDGES[3],
     description: 'Almost nothing here comes out of a box.',
   },
