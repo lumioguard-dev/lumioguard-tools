@@ -1,5 +1,5 @@
 import type { LeaderboardSide } from '@lumioguard/shared';
-import { MarkTemplate, Panel, PanelHead } from '@lumioguard/ui';
+import { GAP_BELOW_ASK, MarkTemplate, Panel, PanelHead } from '@lumioguard/ui';
 import { leaderboardPath } from '../../tools/catalogue.js';
 import { BoardBody } from './BoardBody.js';
 import { WAITING } from './board.js';
@@ -61,7 +61,7 @@ export function LeaderboardPreview({
   const lost = best.data === null && worst.data === null && best.failed && worst.failed;
 
   return (
-    <Panel hand="c" span={12} className="mt-6">
+    <Panel hand="c" span={12} className={GAP_BELOW_ASK}>
       {/* The heading IS the way through, opened in its own tab: a reader here
           came to scan a site, and the board should not take the page from them. */}
       <PanelHead

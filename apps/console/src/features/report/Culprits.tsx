@@ -90,7 +90,7 @@ export function Culprits({
       {pending ? (
         <Ruling />
       ) : top.length === 0 ? (
-        <p className="mt-4 text-body text-ink-2">Nothing was charged by any reading.</p>
+        <p className="mt-4 text-body text-ink-2">Didn't find any obvious giveaways.</p>
       ) : (
         <ol className="m-0 mt-4 list-none p-0">
           {top.map((culprit) => (

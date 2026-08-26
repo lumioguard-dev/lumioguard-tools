@@ -1,4 +1,4 @@
-import { MarkExposed, Panel, PanelHead } from '@lumioguard/ui';
+import { GAP_BELOW_ASK, MarkExposed, Panel, PanelHead } from '@lumioguard/ui';
 import { KNOWN_ISSUES, type KnownIssue } from './knownIssues.js';
 
 function Issue({ issue }: { readonly issue: KnownIssue }): JSX.Element {
@@ -19,7 +19,7 @@ function Issue({ issue }: { readonly issue: KnownIssue }): JSX.Element {
  */
 export function CommonIssues(): JSX.Element {
   return (
-    <Panel hand="c" span={12} className="mt-6">
+    <Panel hand="c" span={12} className={GAP_BELOW_ASK}>
       <PanelHead title="Common Security Failures in AI-Built Apps" mark={<MarkExposed />} />
       <ol className="m-0 mt-4 list-none p-0">
         {KNOWN_ISSUES.map((issue) => (
