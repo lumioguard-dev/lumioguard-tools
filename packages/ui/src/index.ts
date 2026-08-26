@@ -1,6 +1,6 @@
 export { ResolvingShot } from './components/ResolvingShot.js';
 export { Hint } from './components/Hint.js';
-export { Panel, PanelGrid, PanelHead } from './components/Panel.js';
+export { GAP_BELOW_ASK, Panel, PanelGrid, PanelHead } from './components/Panel.js';
 export type {
   Hand,
   PanelProps,

@@ -1,4 +1,4 @@
-import { MarkLegible, Panel, PanelHead } from '@lumioguard/ui';
+import { GAP_BELOW_ASK, MarkLegible, Panel, PanelHead } from '@lumioguard/ui';
 
 /**
  * Why the reading is worth taking, on the page that offers it. Two short
@@ -6,7 +6,7 @@ import { MarkLegible, Panel, PanelHead } from '@lumioguard/ui';
  */
 export function WhyItMatters(): JSX.Element {
   return (
-    <Panel hand="c" span={12} className="mt-6">
+    <Panel hand="c" span={12} className={GAP_BELOW_ASK}>
       <PanelHead title="Be Found Wherever People Search" mark={<MarkLegible />} />
       <p className="mt-4 text-body leading-[1.6] text-ink-2">
         SEO and AI visibility help people discover your website when they are looking for a product,

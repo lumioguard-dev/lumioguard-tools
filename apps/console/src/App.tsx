@@ -106,7 +106,7 @@ function ReadingLink({
  */
 function ChooseView(): JSX.Element {
   return (
-    <PanelGrid centred>
+    <PanelGrid fills>
       <Panel hand="a" span={12}>
         <h1 className={H1}>
           <SiteQuestion />
@@ -142,7 +142,7 @@ function AskView({
   readonly below?: ReactNode;
 }): JSX.Element {
   return (
-    <PanelGrid centred>
+    <PanelGrid fills>
       <Panel hand="a" span={12}>
         <div className="grid gap-x-[46px] lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">
           <div className="flex flex-col lg:self-center">

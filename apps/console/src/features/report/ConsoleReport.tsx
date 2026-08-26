@@ -12,7 +12,7 @@ import { ReadingSection } from './ReadingSection.js';
 import { SiteShot } from './SiteShot.js';
 
 const HANDOFF_OFFER =
-  'This is what a stranger with the URL can see. Log in for the full check, free.';
+  "This is what's visible to the public. Log in to perform code level check for free.";
 
 /**
  * Every reading of one site, under one verdict.
@@ -73,7 +73,7 @@ export function ConsoleReport({
    */
   if (everyOneFailed) {
     return (
-      <PanelGrid centred>
+      <PanelGrid fills>
         <Panel hand="c" red span={12}>
           <p className="pen-title">Nothing could be read</p>
           <p role="alert" className="mt-3 max-w-[62ch] text-body text-ink-2">
