@@ -20,12 +20,16 @@ below.
 ## Before you open a pull request
 
 ```bash
-pnpm typecheck && pnpm lint && pnpm test && pnpm build
+pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm rules:check
 ```
 
-All four must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
+All five must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
 for this codebase, turn it off in `biome.json` with a reason rather than
 scattering suppressions.
+
+`rules:check` fails when [the rule catalogue](.documentation/RULES.md) has
+fallen behind the rule sources. `pnpm rules` regenerates it; the file is never
+edited by hand.
 
 Commits use conventional prefixes (`feat`, `fix`, `refactor`, `chore`, `docs`)
 scoped to the package, and the body says *why*. One logical change per commit.
