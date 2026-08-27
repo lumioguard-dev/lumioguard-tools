@@ -1,14 +1,41 @@
+import { AnalyticsEvent, type EventProperties, useAnalytics } from '@lumioguard/web-core';
 import { fullAuditUrl } from '../integration/lumioguard.js';
+
+/**
+ * The label, in two halves because the brand is SET lowercase rather than typed
+ * that way, and in constants because the click reports the words on the button.
+ * A label that drifts from what was captured is a number about a button nobody
+ * can find.
+ */
+const LABEL_VERB = 'Log in to';
+const LABEL_BRAND = 'LumioGuard';
+
+/**
+ * The address, without its query. That query carries the reading's site keys,
+ * and a handle to somebody's report is not a thing to hand a third party.
+ */
+function withoutKeys(href: string): string {
+  try {
+    const url = new URL(href);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return href;
+  }
+}
 
 /** The hand-off, offer and button together. Renders nothing when it is off. */
 export function NextSteps({
   siteKey,
   offer,
+  context,
 }: {
   readonly siteKey: string | null | readonly (string | null)[];
   /** What the hand-off is worth, in this tool's own words. */
   readonly offer: string;
+  /** What the page around it knows, sent with the click. Never an address. */
+  readonly context?: EventProperties;
 }): JSX.Element | null {
+  const analytics = useAnalytics();
   const href = fullAuditUrl(siteKey);
   if (href === null) return null;
 
@@ -26,12 +53,19 @@ export function NextSteps({
         href={href}
         target="_blank"
         rel="noreferrer noopener"
+        onClick={() =>
+          analytics.capture(AnalyticsEvent.CtaClick, {
+            cta_text: `${LABEL_VERB} ${LABEL_BRAND}`,
+            cta_href: withoutKeys(href),
+            ...context,
+          })
+        }
         className="inline-flex shrink-0 items-center gap-[10px] self-start rounded-drawn-chip border-2 border-pen-300 bg-pen-400 px-5 py-[13px] font-sans text-16 font-semibold text-paper-raised no-underline transition-colors hover:bg-pen-300 sm:self-auto sm:px-6 lg:px-7 lg:py-[15px] lg:text-17"
       >
         {/* Set lowercase rather than typed lowercase, as the masthead does: the
             document keeps the real name, so a copy or a bookmark still spells
             it properly. */}
-        Log in to <span className="lowercase">LumioGuard</span>
+        {LABEL_VERB} <span className="lowercase">{LABEL_BRAND}</span>
         <svg
           viewBox="0 0 22 15"
           className="h-[15px] w-[22px] fill-none stroke-current"

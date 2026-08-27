@@ -1,8 +1,14 @@
 import { useCallback, useEffect, useState } from 'react';
-import { type ToolCopy, pageForPath } from '../../tools/catalogue.js';
+import { type ToolCopy, pageForPath, pageName } from '../../tools/catalogue.js';
 import { DEFAULT_TOOL_IDS, TOOLS } from '../../tools/index.js';
 
-const SITE = 'site';
+/**
+ * The address being read rides in the query, so it is in every URL the page
+ * records about itself. Exported because analytics has to strip it back out of
+ * the URLs PostHog collects on its own, and two spellings of it could not fail
+ * together.
+ */
+export const SITE_PARAM = 'site';
 const TOOLS_PARAM = 'tools';
 
 /** What the address bar is currently asking for. */
@@ -15,6 +21,8 @@ export interface ConsoleRoute {
   readonly chooser: boolean;
   /** The board scans nothing either: it ranks what has already been read. */
   readonly board: boolean;
+  /** This page's own name, for an event that has to say where it happened. */
+  readonly pageName: string;
 }
 
 /** The ways the page changes it, each writing history and re-reading. */
@@ -52,7 +60,8 @@ export function useConsoleRoute(): ConsoleRoute & RouteControls {
     pinned: route.pinned,
     chooser: route.chooser,
     board: route.board,
-    open: useCallback((next: string) => go((params) => params.set(SITE, next), true), [go]),
+    pageName: route.pageName,
+    open: useCallback((next: string) => go((params) => params.set(SITE_PARAM, next), true), [go]),
     // No scroll: changing the selection re-reads in place, and yanking the page
     // to the top on a checkbox loses whatever the reader was looking at.
     select: useCallback(
@@ -64,29 +73,37 @@ export function useConsoleRoute(): ConsoleRoute & RouteControls {
         }, false),
       [go],
     ),
-    clear: useCallback(() => go((params) => params.delete(SITE), true), [go]),
+    clear: useCallback(() => go((params) => params.delete(SITE_PARAM), true), [go]),
   };
 }
 
 function read(): ConsoleRoute {
   const params = new URLSearchParams(window.location.search);
 
-  const site = params.get(SITE);
+  const site = params.get(SITE_PARAM);
   const address = site === null || site.trim() === '' ? null : site;
 
   // A tool page runs its own reading and nothing else. The path wins over the
   // parameter: the URL is the promise the page made, and a `?tools=` on it
   // would quietly read something the heading never offered.
   const page = pageForPath(window.location.pathname);
+  const name = pageName(page);
   if (page.kind === 'tool') {
-    return { address, toolIds: [page.tool.id], pinned: page.tool, chooser: false, board: false };
+    return {
+      address,
+      toolIds: [page.tool.id],
+      pinned: page.tool,
+      chooser: false,
+      board: false,
+      pageName: name,
+    };
   }
 
   const chooser = page.kind === 'choose';
   const board = page.kind === 'leaderboard';
   const raw = params.get(TOOLS_PARAM);
   if (raw === null) {
-    return { address, toolIds: DEFAULT_TOOL_IDS, pinned: null, chooser, board };
+    return { address, toolIds: DEFAULT_TOOL_IDS, pinned: null, chooser, board, pageName: name };
   }
 
   const wanted = raw.split(',').map((id) => id.trim());
@@ -97,5 +114,6 @@ function read(): ConsoleRoute {
     pinned: null,
     chooser,
     board,
+    pageName: name,
   };
 }

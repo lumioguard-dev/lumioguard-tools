@@ -138,6 +138,7 @@ fixtures to make it pass.
 | `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
 | `VITE_SLOPMETER_API_URL` | console | empty (the console proxies `/slopmeter/api`) |
 | `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
+| `VITE_POSTHOG_KEY` | console | unset (no analytics: nothing loads, nothing is sent) |
 | `SLOPMETER_PARITY_ROOT` | tests | unset (the parity suite skips) |
 
 All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Slopmeter is a

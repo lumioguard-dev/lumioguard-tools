@@ -1,3 +1,12 @@
 export { ApiClient, ScanApiError } from './api/ApiClient.js';
 export { useSiteScan } from './hooks/useSiteScan.js';
 export type { RunScan, SiteScanState } from './hooks/useSiteScan.js';
+export { Analytics } from './analytics/Analytics.js';
+export type { CaptureSink } from './analytics/Analytics.js';
+export { AnalyticsProvider, useAnalytics } from './analytics/AnalyticsContext.js';
+export { AnalyticsEvent } from './analytics/events.js';
+export type { EventProperties } from './analytics/events.js';
+export { readConsent } from './analytics/consent.js';
+export type { Consent } from './analytics/consent.js';
+export { loadPostHog } from './analytics/posthog.js';
+export type { AnalyticsConfig } from './analytics/posthog.js';

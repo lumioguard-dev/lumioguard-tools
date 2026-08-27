@@ -107,6 +107,21 @@ export function pageForPath(pathname: string): ConsolePage {
   return { kind: 'choose' };
 }
 
+/**
+ * What a page is called where a name is wanted rather than a route: analytics,
+ * chiefly. A `Record` rather than a `switch`, so a fourth kind of page fails to
+ * compile here instead of reporting itself as `undefined`.
+ */
+const PAGE_NAME: Record<Exclude<ConsolePage['kind'], 'tool'>, string> = {
+  scan: SCAN_SLUG,
+  leaderboard: LEADERBOARD_SLUG,
+  choose: 'choose',
+};
+
+export function pageName(page: ConsolePage): string {
+  return page.kind === 'tool' ? page.tool.slug : PAGE_NAME[page.kind];
+}
+
 /** Where the board lives: under the reading it ranks. */
 export function leaderboardPath(): string {
   return `/${toolCopy(LEADERBOARD_TOOL).slug}/${LEADERBOARD_SLUG}`;

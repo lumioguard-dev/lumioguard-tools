@@ -68,7 +68,7 @@ packages/shared                 wire contracts (zod) and shared domain vocabular
 packages/design-tokens          colour, type, radii, elevation, as a Tailwind plugin
 packages/ui                     the drawn surface: components, theme, stylesheet
 packages/api-core               transport, target resolution, reading hand-off
-packages/web-core               browser-side transport and scan state
+packages/web-core               browser-side transport, scan state and analytics
 tools/<tool>/core               detection engine. No I/O
 tools/<tool>/api                Cloudflare Worker over hono
 ```
