@@ -1,5 +1,22 @@
 import { describe, expect, it } from 'vitest';
-import { scrubProperties } from '../redact.js';
+import { scrubProperties, withoutQuery } from '../redact.js';
+
+// The hand-off carries the reading's site keys in its query, and those are
+// handles to somebody's report.
+describe('withoutQuery', () => {
+  it('drops the query and keeps the rest', () => {
+    expect(withoutQuery('https://app.lumioguard.dev/?sitekey=YKMEBQ_S7DK8P')).toBe(
+      'https://app.lumioguard.dev/',
+    );
+    expect(withoutQuery('https://app.lumioguard.dev/audit?sitekey=YKMEBQ#top')).toBe(
+      'https://app.lumioguard.dev/audit',
+    );
+  });
+
+  it('hands back anything it cannot read as an address', () => {
+    expect(withoutQuery('not a url')).toBe('not a url');
+  });
+});
 
 // PostHog collects $current_url without being asked, and this console carries
 // the site being read in the query. That address is somebody else's.

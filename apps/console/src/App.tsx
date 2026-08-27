@@ -10,7 +10,7 @@ import {
   ThemeToggle,
   useTheme,
 } from '@lumioguard/ui';
-import { AnalyticsEvent, useAnalytics } from '@lumioguard/web-core';
+import { AnalyticsEvent, type EventProperties, useAnalytics } from '@lumioguard/web-core';
 import type { ReactNode } from 'react';
 import { EXAMPLES, HEADLINE, PUBLISHER, beats } from './copy.js';
 import { LeaderboardPreview } from './features/leaderboard/LeaderboardPreview.js';
@@ -195,25 +195,28 @@ export function App(): JSX.Element {
   const analytics = useAnalytics();
 
   /**
+   * Which readings are in play, as BOTH events below say it. Written out at
+   * each call, a property added to one would leave the two disagreeing about
+   * the same choice.
+   */
+  const chosen = (ids: readonly string[]): EventProperties => ({
+    tool_page: pageName,
+    tools: ids.join(','),
+    tool_count: ids.length,
+  });
+
+  /**
    * The two things a visitor does before a reading exists, reported with what
    * they chose and never with what they typed. The address is somebody's site,
    * and sending it is a decision to take deliberately rather than by default.
    */
   const scan = (next: string): void => {
-    analytics.capture(AnalyticsEvent.ScanSubmit, {
-      tool_page: pageName,
-      tools: toolIds.join(','),
-      tool_count: toolIds.length,
-    });
+    analytics.capture(AnalyticsEvent.ScanSubmit, chosen(toolIds));
     open(next);
   };
 
   const choose = (ids: readonly string[]): void => {
-    analytics.capture(AnalyticsEvent.ToolsSelect, {
-      tool_page: pageName,
-      tools: ids.join(','),
-      tool_count: ids.length,
-    });
+    analytics.capture(AnalyticsEvent.ToolsSelect, chosen(ids));
     select(ids);
   };
 
@@ -242,7 +245,7 @@ export function App(): JSX.Element {
           key={address}
           address={address}
           tools={tools}
-          page={pageName}
+          pageName={pageName}
           onNewSite={clear}
         />
       )}
