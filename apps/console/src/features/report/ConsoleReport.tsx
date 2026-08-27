@@ -1,5 +1,6 @@
 import { ReadingTier, consolidatedScore, readingBandFor } from '@lumioguard/shared';
 import { NextSteps, Panel, PanelGrid, ReadingState, Verdict } from '@lumioguard/ui';
+import type { EventProperties } from '@lumioguard/web-core';
 import { useState } from 'react';
 import { VERDICT_SCALE } from '../../theme/reading.js';
 import type { ToolDescriptor } from '../../tools/registry.js';
@@ -10,6 +11,7 @@ import { PageList } from './PageList.js';
 import { PageLists } from './PageLists.js';
 import { ReadingSection } from './ReadingSection.js';
 import { SiteShot } from './SiteShot.js';
+import { useReportView } from './useReportView.js';
 
 const HANDOFF_OFFER =
   "This is what's visible to the public. Log in to perform code level check for free.";
@@ -29,10 +31,13 @@ const HANDOFF_OFFER =
 export function ConsoleReport({
   address,
   tools,
+  page,
   onNewSite,
 }: {
   readonly address: string;
   readonly tools: readonly ToolDescriptor[];
+  /** Which document this report is being read on, for the events it sends. */
+  readonly page: string;
   readonly onNewSite: () => void;
 }): JSX.Element {
   const { readings, isReading } = useReadings(address, tools);
@@ -62,6 +67,26 @@ export function ConsoleReport({
   ];
 
   const everyOneFailed = readings.length > 0 && !isReading && landed.length === 0;
+  const tier = landed.length === 0 ? ReadingTier.Clean : readingBandFor(score).tier;
+
+  /**
+   * What this reading is, on every event the page sends. ONE object rather than
+   * a bag written out at each call: a property added to the hand-off and not to
+   * the report would leave two events describing one reading differently, and
+   * the rate measured between them quietly wrong.
+   */
+  const readingContext: EventProperties = {
+    tool_page: page,
+    tools: landed.map((reading) => reading.tool.id).join(','),
+    score,
+    tier,
+    worst_tool: worst?.tool.id ?? null,
+  };
+
+  useReportView(!isReading && landed.length > 0, {
+    ...readingContext,
+    failed_count: readings.length - landed.length,
+  });
 
   /**
    * Nothing read means NO VERDICT, not a clean one.
@@ -118,11 +143,17 @@ export function ConsoleReport({
         scale={VERDICT_SCALE}
         subject={address}
         score={score}
-        tier={landed.length === 0 ? ReadingTier.Clean : readingBandFor(score).tier}
+        tier={tier}
         waiting={isReading ? <ReadingState /> : undefined}
         onNewSite={onNewSite}
         actions={
-          landed.length === 0 ? undefined : <NextSteps offer={HANDOFF_OFFER} siteKey={siteKeys} />
+          landed.length === 0 ? undefined : (
+            <NextSteps
+              offer={HANDOFF_OFFER}
+              siteKey={siteKeys}
+              context={{ ...readingContext, cta_location: 'report_verdict' }}
+            />
+          )
         }
       />
 

@@ -15,6 +15,14 @@ interface ImportMetaEnv {
   readonly VITE_LUMIOGUARD_APP_URL?: string;
   /** Where the wordmark points. Falls back to the app URL when unset. */
   readonly VITE_LUMIOGUARD_SITE_URL?: string;
+  /** Absent means no analytics: nothing is loaded and nothing is sent. */
+  readonly VITE_POSTHOG_KEY?: string;
+  /** A first-party proxy for PostHog. Its own host when unset. */
+  readonly VITE_POSTHOG_HOST?: string;
+  /** Only read behind a proxy, where toolbar links still need the real UI host. */
+  readonly VITE_POSTHOG_UI_HOST?: string;
+  /** Where this build answers. Analytics counts nothing at any other origin. */
+  readonly VITE_PUBLIC_SITE_URL?: string;
 }
 
 interface ImportMeta {

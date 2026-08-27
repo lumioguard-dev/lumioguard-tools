@@ -10,6 +10,7 @@ import {
   ThemeToggle,
   useTheme,
 } from '@lumioguard/ui';
+import { AnalyticsEvent, useAnalytics } from '@lumioguard/web-core';
 import type { ReactNode } from 'react';
 import { EXAMPLES, HEADLINE, PUBLISHER, beats } from './copy.js';
 import { LeaderboardPreview } from './features/leaderboard/LeaderboardPreview.js';
@@ -188,8 +189,33 @@ function Colophon(): JSX.Element {
 }
 
 export function App(): JSX.Element {
-  const { address, toolIds, pinned, chooser, board, open, select, clear } = useConsoleRoute();
+  const { address, toolIds, pinned, chooser, board, pageName, open, select, clear } =
+    useConsoleRoute();
   const tools = toolsById(TOOLS, toolIds);
+  const analytics = useAnalytics();
+
+  /**
+   * The two things a visitor does before a reading exists, reported with what
+   * they chose and never with what they typed. The address is somebody's site,
+   * and sending it is a decision to take deliberately rather than by default.
+   */
+  const scan = (next: string): void => {
+    analytics.capture(AnalyticsEvent.ScanSubmit, {
+      tool_page: pageName,
+      tools: toolIds.join(','),
+      tool_count: toolIds.length,
+    });
+    open(next);
+  };
+
+  const choose = (ids: readonly string[]): void => {
+    analytics.capture(AnalyticsEvent.ToolsSelect, {
+      tool_page: pageName,
+      tools: ids.join(','),
+      tool_count: ids.length,
+    });
+    select(ids);
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -200,19 +226,25 @@ export function App(): JSX.Element {
         <ChooseView />
       ) : address === null ? (
         <AskView
-          onScan={open}
+          onScan={scan}
           toolIds={toolIds}
-          onSelect={select}
+          onSelect={choose}
           pinned={pinned}
           // Each reading's own panel under the ask: the board is Slopmeter's,
           // the common issues are Leakpeek's, and the third has neither.
-          below={belowAsk(pinned?.id, open)}
+          below={belowAsk(pinned?.id, scan)}
         />
       ) : (
         // No picker here. What to read is asked once, before the reading; on the
         // report it was a control at the end of a page nobody scrolls to, for a
         // choice already made. `Read another site` is the way back to it.
-        <ConsoleReport key={address} address={address} tools={tools} onNewSite={clear} />
+        <ConsoleReport
+          key={address}
+          address={address}
+          tools={tools}
+          page={pageName}
+          onNewSite={clear}
+        />
       )}
       <Colophon />
     </div>

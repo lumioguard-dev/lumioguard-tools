@@ -46,7 +46,7 @@ packages/            what every tool shares
   design-tokens/     colour, type, spacing, radii → a Tailwind plugin
   ui/                the drawn surface: components, theme, stylesheet
   api-core/          transport and target resolution for a tool's Worker
-  web-core/          browser-side transport and scan state
+  web-core/          browser-side transport, scan state and analytics
 tools/<tool>/
   core/              the detection engine. Isomorphic, no I/O
   api/               Cloudflare Worker (Hono)
@@ -348,6 +348,39 @@ the markup:
 VITE_PUBLIC_SITE_URL=https://example.test pnpm --filter @lumioguard/console run build
 cat apps/console/dist/index.html apps/console/dist/robots.txt
 ```
+
+## Analytics
+
+Off by default and off in every fork: nothing loads and no request is made
+without `VITE_POSTHOG_KEY`. Set it and the console loads PostHog on its own
+chunk, configured exactly as the marketing site configures it, and reports four
+events.
+
+| Event | Sent when | Carries |
+|---|---|---|
+| `cta_click` | the hand-off button is clicked | `cta_text`, `cta_href`, `cta_location`, `tool_page`, `tools`, `score`, `tier`, `worst_tool` |
+| `scan_submit` | an address is submitted | `tool_page`, `tools`, `tool_count` |
+| `tools_select` | the picker changes | `tool_page`, `tools`, `tool_count` |
+| `report_view` | every reading has landed | `tool_page`, `tools`, `score`, `tier`, `worst_tool`, `failed_count` |
+
+**`cta_click` and its three `cta_` properties are the marketing site's own
+event**, kept name for name so one insight covers a click on either half of the
+site. That name lives in two repositories and no compiler can see both, so
+changing it here means changing `assets/consent.js` there. The same is true of
+the `lg-consent` key the banner writes and this console reads: the two halves of
+one site must not count differently, and same-origin is what carries the choice
+across.
+
+**No address is ever sent.** The site being read is somebody else's, and it
+reaches this app in the query, so `sanitize_properties` strips that parameter
+out of the URLs PostHog collects for itself. Sending it is a decision to take
+deliberately rather than one to arrive at by default. The hand-off's `cta_href`
+loses its query for the same reason: it carries the reading's site keys, which
+are handles to a report.
+
+Two guards, both of which must pass. The key is what a fork never has. The
+origin is `VITE_PUBLIC_SITE_URL`, so a preview deploy and a developer's laptop
+count nothing, which is the exclusion the marketing site makes by hostname.
 
 ## Local environment files
 

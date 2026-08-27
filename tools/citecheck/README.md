@@ -394,6 +394,7 @@ tools via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
 | `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
 | `VITE_CITECHECK_API_URL` | console | empty (the console proxies `/citecheck/api`) |
 | `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
+| `VITE_POSTHOG_KEY` | console | unset (no analytics: nothing loads, nothing is sent) |
 
 All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Citecheck is a
 complete tool with none of them set. With `VITE_LUMIOGUARD_APP_URL` unset, which

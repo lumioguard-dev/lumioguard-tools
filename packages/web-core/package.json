@@ -3,7 +3,7 @@
   "version": "0.11.0",
   "private": true,
   "type": "module",
-  "description": "Browser-side transport and scan state every tool's client shares.",
+  "description": "Browser-side transport, scan state and analytics every tool's client shares.",
   "main": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
@@ -14,7 +14,8 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@lumioguard/shared": "workspace:*"
+    "@lumioguard/shared": "workspace:*",
+    "posthog-js": "^1.421.1"
   },
   "peerDependencies": {
     "react": "^18.3.1",
