@@ -1,27 +1,18 @@
-import { AnalyticsEvent, type EventProperties, useAnalytics } from '@lumioguard/web-core';
+import {
+  AnalyticsEvent,
+  type EventProperties,
+  useAnalytics,
+  withoutQuery,
+} from '@lumioguard/web-core';
 import { fullAuditUrl } from '../integration/lumioguard.js';
 
 /**
- * The label, in two halves because the brand is SET lowercase rather than typed
- * that way, and in constants because the click reports the words on the button.
- * A label that drifts from what was captured is a number about a button nobody
- * can find.
+ * The label in two halves: the brand is SET lowercase rather than typed that
+ * way, and the click reports the words on the button, so a label that drifted
+ * from what was captured would be a number about a button nobody can find.
  */
 const LABEL_VERB = 'Log in to';
 const LABEL_BRAND = 'LumioGuard';
-
-/**
- * The address, without its query. That query carries the reading's site keys,
- * and a handle to somebody's report is not a thing to hand a third party.
- */
-function withoutKeys(href: string): string {
-  try {
-    const url = new URL(href);
-    return `${url.origin}${url.pathname}`;
-  } catch {
-    return href;
-  }
-}
 
 /** The hand-off, offer and button together. Renders nothing when it is off. */
 export function NextSteps({
@@ -56,7 +47,7 @@ export function NextSteps({
         onClick={() =>
           analytics.capture(AnalyticsEvent.CtaClick, {
             cta_text: `${LABEL_VERB} ${LABEL_BRAND}`,
-            cta_href: withoutKeys(href),
+            cta_href: withoutQuery(href),
             ...context,
           })
         }

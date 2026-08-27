@@ -1,4 +1,18 @@
 /**
+ * An address with its query dropped, for a URL reported ON PURPOSE rather than
+ * collected. The hand-off carries the reading's site keys there, and a handle
+ * to somebody's report is not a thing to give a third party.
+ */
+export function withoutQuery(href: string): string {
+  try {
+    const url = new URL(href);
+    return `${url.origin}${url.pathname}`;
+  } catch {
+    return href;
+  }
+}
+
+/**
  * The scanned address out of every URL PostHog records by itself.
  *
  * `$current_url` and its siblings are collected without being asked for, and a

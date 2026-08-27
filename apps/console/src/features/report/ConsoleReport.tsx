@@ -31,13 +31,13 @@ const HANDOFF_OFFER =
 export function ConsoleReport({
   address,
   tools,
-  page,
+  pageName,
   onNewSite,
 }: {
   readonly address: string;
   readonly tools: readonly ToolDescriptor[];
   /** Which document this report is being read on, for the events it sends. */
-  readonly page: string;
+  readonly pageName: string;
   readonly onNewSite: () => void;
 }): JSX.Element {
   const { readings, isReading } = useReadings(address, tools);
@@ -76,7 +76,7 @@ export function ConsoleReport({
    * the rate measured between them quietly wrong.
    */
   const readingContext: EventProperties = {
-    tool_page: page,
+    tool_page: pageName,
     tools: landed.map((reading) => reading.tool.id).join(','),
     score,
     tier,
