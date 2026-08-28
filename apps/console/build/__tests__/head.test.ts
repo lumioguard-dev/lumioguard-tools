@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { DESCRIPTION, NAME, TITLE } from '../../src/copy.js';
+import { DESCRIPTION, TITLE } from '../../src/copy.js';
 import { CATALOGUE } from '../../src/tools/catalogue.js';
 import { HOME, headTags } from '../head.js';
 
@@ -92,7 +92,10 @@ describe('the copy the head is built from', () => {
     expect(TITLE.length).toBeLessThanOrEqual(75);
   });
 
-  it('names the app in its own title', () => {
-    expect(TITLE).toContain(NAME);
+  // The publisher carries identity, so the title says what the page IS rather
+  // than what it is called.
+  it('says what the page is rather than naming a product', () => {
+    expect(TITLE).toMatch(/site/i);
+    expect(TITLE).not.toMatch(/readout/i);
   });
 });

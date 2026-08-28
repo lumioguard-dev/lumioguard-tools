@@ -1,6 +1,4 @@
 export { ApiClient, ScanApiError } from './api/ApiClient.js';
-export { useSiteScan } from './hooks/useSiteScan.js';
-export type { RunScan, SiteScanState } from './hooks/useSiteScan.js';
 export { Analytics } from './analytics/Analytics.js';
 export type { CaptureSink } from './analytics/Analytics.js';
 export { AnalyticsProvider, useAnalytics } from './analytics/AnalyticsContext.js';

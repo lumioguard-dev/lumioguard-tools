@@ -3,11 +3,9 @@ import type { PageLoader, PageSnapshot } from '@lumioguard/slopmeter-core';
 import type { PageFetcher } from './PageFetcher.js';
 
 /**
- * Adapter joining the crawler's `PageLoader` port to the real fetcher.
- *
- * Every discovered link is re-validated through `TargetResolver`: links come
- * from a third-party page, so a crawl must not become a way to make the Worker
- * fetch a private address on someone else's behalf.
+ * Joins the crawler's `PageLoader` port to the real fetcher. Every discovered link
+ * is re-validated through `TargetResolver`: links come from a third-party page, so
+ * a crawl must not fetch a private address on someone else's behalf.
  */
 export class SnapshotLoader implements PageLoader {
   private readonly fetcher: PageFetcher;

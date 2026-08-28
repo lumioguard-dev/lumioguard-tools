@@ -1,6 +1,3 @@
-// Single utility surface. stack-guard's plugin also carries legacy `lg-*` names
-// resolving to CSS vars; nothing here predates the tokens, so that is dropped.
-
 import type { Config } from 'tailwindcss';
 import plugin from 'tailwindcss/plugin';
 
@@ -72,8 +69,7 @@ export const designTokensPlugin = plugin(
     /*
      * Light on the bare root, so it is what a surface gets before anything has
      * been chosen. Dark is reached only by an explicit choice written to the
-     * document, never by the operating system: the product opens the same way
-     * for everyone, and the toggle is the only thing that changes it.
+     * document, never by the operating system.
      */
     addBase({
       ':root': cssVariablesFor(lightPalette),
@@ -124,7 +120,6 @@ export const designTokensPlugin = plugin(
           'radius-xl': radii.xl,
           'radius-2xl': radii['2xl'],
           'radius-full': radii.full,
-          // drawn corners: uneven per-corner radii, four hands
           'drawn-a': drawn.a,
           'drawn-b': drawn.b,
           'drawn-c': drawn.c,

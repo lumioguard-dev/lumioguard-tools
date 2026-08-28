@@ -1,13 +1,9 @@
-import { BAND_EDGES, type ScoreBand, type TrackSegment, bandOf, trackOf } from './band.js';
+import { BAND_EDGES, type ScoreBand, bandOf } from './band.js';
 
 /**
- * The one verdict a multi-tool reading lands on.
- *
- * Named for the SITE's standing, not for any one tool's subject: Slopmeter
- * grades a template, Leakpeek an exposure and Citecheck a page's legibility,
- * and no word from any of those three describes the other two. These four say
- * how much is wrong across whatever was run, and nothing about which reading
- * said so. The report names that separately, in that tool's own words.
+ * The one verdict a multi-tool reading lands on. Named for the SITE's standing,
+ * not for any one tool's subject: no word from Slopmeter, Leakpeek or Citecheck
+ * describes the other two. Which reading said so is named separately.
  */
 export const ReadingTier = {
   Clean: 'Clean',
@@ -27,9 +23,8 @@ export interface ReadingBand extends ScoreBand {
 
 /**
  * The same four bands every tool uses, because the consolidated score is the
- * WORST of the readings rather than a blend of them: it is always some tool's
- * own score, so a ladder that did not line up with theirs would put one number
- * in two different bands depending on which panel you read it in.
+ * WORST of the readings rather than a blend: it is always some tool's own score,
+ * and a ladder that did not line up would band one number two different ways.
  */
 export const READING_BANDS: readonly [ReadingBand, ...ReadingBand[]] = Object.freeze([
   {
@@ -57,10 +52,6 @@ export const READING_BANDS: readonly [ReadingBand, ...ReadingBand[]] = Object.fr
 export const READING_TIER_NAMES: readonly ReadingTier[] = Object.freeze(
   READING_BANDS.map((band) => band.tier),
 );
-
-export function readingBandTrack(band: ReadingBand): TrackSegment {
-  return trackOf(band, READING_MAX);
-}
 
 export function readingBandFor(score: number): ReadingBand {
   return bandOf(READING_BANDS, score, { min: READING_MIN, max: READING_MAX });

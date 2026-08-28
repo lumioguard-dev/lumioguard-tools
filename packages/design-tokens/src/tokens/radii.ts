@@ -8,7 +8,6 @@ export const radii = {
   full: '9999px',
 } as const;
 
-/** Drawn corners. */
 export const drawn = {
   a: '11px 3px 9px 4px / 4px 10px 3px 11px',
   b: '3px 10px 4px 11px / 9px 4px 11px 3px',

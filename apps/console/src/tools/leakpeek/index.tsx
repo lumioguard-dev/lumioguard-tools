@@ -2,15 +2,18 @@ import { MarkExposed } from '@lumioguard/ui';
 import { apiBase } from '../apiBase.js';
 import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
+import { CommonIssues } from './CommonIssues.js';
 import { ScanClient } from './ScanClient.js';
 import { FindingList } from './report/FindingList.js';
-import { tierInk } from './theme.js';
+import { VERDICT_SCALE, tierInk } from './theme.js';
 
 const client = new ScanClient(apiBase('leakpeek'));
 
 export const leakpeek: ToolDescriptor = {
   ...toolCopy('leakpeek'),
   mark: MarkExposed,
+  scale: VERDICT_SCALE,
+  belowAsk: () => <CommonIssues />,
   async run(address, signal) {
     const result = await client.scan(address, signal);
     return {

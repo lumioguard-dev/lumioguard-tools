@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { SlopAnalyzer } from '../SlopAnalyzer.js';
 import { PageSnapshot } from '../domain/PageSnapshot.js';
-import { QUALITY_AXIS_RULES } from '../rules/AxisPolicy.js';
+import { QUALITY_AXIS_RULES, RENDER_DEPENDENT_RULES } from '../rules/AxisPolicy.js';
 import { createDefaultRegistry } from '../rules/definitions/index.js';
 
 const analyzer = new SlopAnalyzer(createDefaultRegistry());
@@ -46,30 +46,52 @@ describe('scoring', () => {
   });
 });
 
-describe('alignment: the tool is not the offence', () => {
+describe('what built the page', () => {
   const CLEAN = page(
     `<h1>Northwind Trading</h1>${'<p>We have imported dried goods since 1994.</p>'.repeat(20)}`,
   );
 
-  it('building with an AI tool does not raise the score', () => {
+  /**
+   * Reversed on 2026-08-28: a generator tag or an injected attribute left in a
+   * published page is an untouched default like any other, so it scores. Hosting
+   * still does not, because where a site is deployed is not what was shipped.
+   */
+  it('scores the builder that made the page', () => {
     const plain = analyze(CLEAN);
     const toolBuilt = analyze(CLEAN.replace('<body>', '<body data-lov-id="x">'), {
       url: 'https://northwind.lovable.app/',
     });
 
-    expect(toolBuilt.score.value).toBe(plain.score.value);
-    expect(ruleIds(toolBuilt.provenanceFindings).has('fingerprint.lovable')).toBe(true);
-    expect(ruleIds(toolBuilt.findings).has('fingerprint.lovable')).toBe(false);
+    expect(toolBuilt.score.value).toBeLessThan(plain.score.value);
+    expect(ruleIds(toolBuilt.findings).has('maker.lovable')).toBe(true);
   });
 
-  it('reports what built the page without scoring it', () => {
-    const result = analyze(
-      CLEAN.replace('</head>', '<meta name="generator" content="v0.dev"></head>'),
+  /**
+   * base44.com collected Base44 AND Wix from asset references alone and scored
+   * 0. No page is built by two builders, so weak proof that conflicts is not
+   * proof of either.
+   */
+  it('drops two builder fingerprints that only reference each other', () => {
+    const both = CLEAN.replace(
+      '</head>',
+      '<img src="https://base44.app/logo.png"><img src="https://static.wixstatic.com/x.png"></head>',
     );
-    expect(ruleIds(result.provenanceFindings).has('fingerprint.v0')).toBe(true);
+    const ids = ruleIds(analyze(both).findings);
+    expect(ids.has('maker.base44')).toBe(false);
+    expect(ids.has('maker.wix')).toBe(false);
+  });
+
+  it('keeps a fingerprint the page admits to itself', () => {
+    const stated = CLEAN.replace('</head>', '<meta name="generator" content="Framer"></head>');
+    expect(ruleIds(analyze(stated).findings).has('maker.framer')).toBe(true);
+  });
+
+  it('still does not score where the page is hosted', () => {
+    const result = analyze(CLEAN, { url: 'https://northwind.vercel.app/' });
     for (const finding of result.provenanceFindings) {
       expect(finding.isScored).toBe(false);
     }
+    expect(ruleIds(result.findings).has('platform.vercel')).toBe(false);
   });
 });
 
@@ -81,9 +103,9 @@ describe('leftovers', () => {
         <p>Your Company will seamlessly unlock effortless, world-class growth.</p>`),
     );
     const ids = ruleIds(result.findings);
-    expect(ids.has('leftover.lorem')).toBe(true);
-    expect(ids.has('leftover.assistant-phrases')).toBe(true);
-    expect(ids.has('leftover.your-company')).toBe(true);
+    expect(ids.has('unfinished.lorem')).toBe(true);
+    expect(ids.has('unfinished.assistant-reply')).toBe(true);
+    expect(ids.has('unfinished.brand-slot')).toBe(true);
     expect(result.tier).toBe('Slop');
   });
 
@@ -92,19 +114,19 @@ describe('leftovers', () => {
     // both scored as unreplaced boilerplate at weight 16.
     for (const copy of ['Start your company today.', "Search your company's entire memory."]) {
       const result = analyze(page(`<h1>Northwind</h1><p>${copy}</p>`));
-      expect(ruleIds(result.findings).has('leftover.your-company')).toBe(false);
+      expect(ruleIds(result.findings).has('unfinished.brand-slot')).toBe(false);
     }
   });
 
   it('still catches a title-cased brand slot', () => {
     const result = analyze(page('<h1>Northwind</h1><p>Your Company will transform billing.</p>'));
-    expect(ruleIds(result.findings).has('leftover.your-company')).toBe(true);
+    expect(ruleIds(result.findings).has('unfinished.brand-slot')).toBe(true);
   });
 });
 
 describe('a reserved example address is not a contact detail', () => {
   const fired = (html: string): boolean =>
-    ruleIds(analyze(html).findings).has('leftover.placeholder-contact');
+    ruleIds(analyze(html).findings).has('unfinished.contact-details');
 
   // Both of these charged supabase.com 8 points. RFC 2606 reserves example.com
   // for documentation, so using it in a snippet is following the standard.
@@ -146,7 +168,7 @@ describe('a reserved example address is not a contact detail', () => {
   it('names which of the two it found rather than offering both', () => {
     const finding = analyze(
       page('<h1>Northwind</h1><p>Get in touch: hello@example.com</p>'),
-    ).findings.find((f) => f.ruleId === 'leftover.placeholder-contact');
+    ).findings.find((f) => f.ruleId === 'unfinished.contact-details');
     expect(finding?.evidence).toContain('hello@example.com');
     expect(finding?.evidence).not.toContain('555');
   });
@@ -160,13 +182,13 @@ describe('truncation must not turn a bundle into page copy', () => {
       '<html><body><p>Real copy.</p><script>var x=1; // TODO: fix this' +
       ' and a lot of minified bundle text that is not page copy';
     const result = analyze(html);
-    expect(ruleIds(result.findings).has('leftover.todo-in-production')).toBe(false);
+    expect(ruleIds(result.findings).has('unfinished.developer-note')).toBe(false);
   });
 
   it('still strips a properly closed script', () => {
     const result = analyze('<html><body><script>var a=1</script><p>After.</p></body></html>');
     expect(result.title).toBeNull();
-    expect(ruleIds(result.findings).has('leftover.todo-in-production')).toBe(false);
+    expect(ruleIds(result.findings).has('unfinished.developer-note')).toBe(false);
   });
 });
 
@@ -177,14 +199,14 @@ describe("a framework's inline sheet is not the author's design", () => {
     const rnw =
       '<style id="react-native-stylesheet">.r-1{background-image:radial-gradient(circle,#f0f 0%,#0ff 70%);filter:blur(60px)}</style>';
     const result = analyze(`<html><head>${rnw}</head><body><h1>Feed</h1></body></html>`);
-    expect(ruleIds(result.findings).has('layout.gradient-blob')).toBe(false);
+    expect(ruleIds(result.findings).has('composition.blurred-glow')).toBe(false);
   });
 
   it('still reads an ordinary inline <style> as authored', () => {
     const html =
       '<html><head><style>.hero{filter:blur(60px);background:linear-gradient(90deg,#a0f,#0af)}</style></head>' +
       '<body><h1>Hero</h1></body></html>';
-    expect(ruleIds(analyze(html).findings).has('layout.gradient-blob')).toBe(true);
+    expect(ruleIds(analyze(html).findings).has('composition.blurred-glow')).toBe(true);
   });
 });
 
@@ -207,12 +229,12 @@ describe('axis policy', () => {
     // Each fires more on hand-built pages than generated ones. Re-scoring any of
     // them needs new evidence, not new intuition.
     for (const id of [
-      'structure.oversized-payload',
-      'structure.no-viewport',
-      'leftover.placeholder-links',
+      'document.heavy-payload',
+      'document.no-viewport',
+      'unfinished.dead-links',
       'impeccable.flat-type-hierarchy',
       'impeccable.hover-scale-transform',
-      'craft.layout-transition',
+      'finish.layout-animation',
     ]) {
       expect(QUALITY_AXIS_RULES.has(id)).toBe(true);
     }
@@ -221,8 +243,8 @@ describe('axis policy', () => {
   it('reports placeholder links without scoring them', () => {
     const body = `<h1>Northwind</h1>${'<a href="#">Link</a>'.repeat(6)}`;
     const result = analyze(page(body));
-    expect(ruleIds(result.qualityFindings).has('leftover.placeholder-links')).toBe(true);
-    expect(ruleIds(result.findings).has('leftover.placeholder-links')).toBe(false);
+    expect(ruleIds(result.qualityFindings).has('unfinished.dead-links')).toBe(true);
+    expect(ruleIds(result.findings).has('unfinished.dead-links')).toBe(false);
   });
 
   it('detects a client-rendered shell and still scores it by default', () => {
@@ -230,7 +252,7 @@ describe('axis policy', () => {
     const result = analyzer.analyze(PageSnapshot.create({ url: 'https://app.test/', html: shell }));
     expect(result.caveats.isClientRendered).toBe(true);
     expect(result.unassessableFindings).toHaveLength(0);
-    expect(ruleIds(result.findings).has('structure.thin-shell')).toBe(true);
+    expect(ruleIds(result.findings).has('document.thin-shell')).toBe(true);
   });
 
   it('moves structural findings off the score when suppression is requested', () => {
@@ -241,8 +263,8 @@ describe('axis policy', () => {
         suppressShellRules: true,
       },
     );
-    expect(ruleIds(result.unassessableFindings).has('structure.thin-shell')).toBe(true);
-    expect(ruleIds(result.findings).has('structure.thin-shell')).toBe(false);
+    expect(ruleIds(result.unassessableFindings).has('document.thin-shell')).toBe(true);
+    expect(ruleIds(result.findings).has('document.thin-shell')).toBe(false);
   });
 });
 
@@ -255,8 +277,8 @@ describe('registry', () => {
 
   it('honours rule exclusions, which the eval harness relies on', () => {
     const registry = createDefaultRegistry();
-    const filtered = registry.select({ excludeRules: ['fingerprint.lovable'] });
-    expect(filtered.some((r) => r.id === 'fingerprint.lovable')).toBe(false);
+    const filtered = registry.select({ excludeRules: ['maker.lovable'] });
+    expect(filtered.some((r) => r.id === 'maker.lovable')).toBe(false);
     expect(filtered.length).toBe(registry.size - 1);
   });
 
@@ -278,5 +300,59 @@ describe('registry', () => {
     );
     expect(failed?.error).toBe('boom');
     expect(failed?.weight).toBe(0);
+  });
+});
+
+describe('voice.dash-density', () => {
+  const dashes = (n: number): string =>
+    Array.from({ length: n }, (_, i) => `<p>Line ${i} — and its aside.</p>`).join('');
+
+  it('fires on a page dense with real em-dashes', () => {
+    const found = ruleIds(analyze(page(dashes(6))).findings);
+    expect(found.has('voice.dash-density')).toBe(true);
+  });
+
+  // The rule counted a colon followed by a space, so any page using colons
+  // was reported as em-dash heavy and real em-dashes were never seen.
+  it('does not fire on colons', () => {
+    const colons = '<p>Pricing: monthly. Support: email. Status: live. Plan: team. Docs: here.</p>';
+    const found = ruleIds(analyze(page(colons)).findings);
+    expect(found.has('voice.dash-density')).toBe(false);
+  });
+
+  it('counts the title and headings, not only the body', () => {
+    const heads = Array.from({ length: 5 }, (_, i) => `<h2>Heading ${i} — with an aside</h2>`).join(
+      '',
+    );
+    const found = ruleIds(analyze(page(heads)).findings);
+    expect(found.has('voice.dash-density')).toBe(true);
+  });
+
+  // The entity table decoded &mdash; to a colon and a space, so an em dash
+  // written as an entity was destroyed before any rule could see it.
+  it('counts em-dashes written as entities', () => {
+    const entities = Array.from(
+      { length: 6 },
+      (_, i) => `<p>Line ${i} &mdash; and its aside.</p>`,
+    ).join('');
+    const found = ruleIds(analyze(page(entities)).findings);
+    expect(found.has('voice.dash-density')).toBe(true);
+  });
+});
+
+/**
+ * These sets name rules by id, in a file that has never heard of them. A
+ * renamed or mistyped id silently puts a rule back on the score, so the ids
+ * are checked against the pack rather than trusted.
+ */
+describe('the rule ids the axis policy names', () => {
+  const registry = createDefaultRegistry();
+
+  it.each([
+    ['QUALITY_AXIS_RULES', QUALITY_AXIS_RULES],
+    ['RENDER_DEPENDENT_RULES', RENDER_DEPENDENT_RULES],
+  ])('%s names only rules that exist', (_name, ids) => {
+    const missing = [...ids].filter((id) => registry.find(id) === undefined);
+    expect(missing).toEqual([]);
   });
 });

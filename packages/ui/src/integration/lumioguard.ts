@@ -1,11 +1,7 @@
 /**
- * The LumioGuard integration, which is OPTIONAL and OFF unless configured.
- *
- * One flag governs every mention of it: the hand-off button and its offer, the
- * wordmark on the masthead, and the credit in the colophon. A fork that sets
- * nothing ships a tool that never says the word, which is the point. It must
- * not advertise something it does not have, and there is no address here to
- * fall back to.
+ * OPTIONAL and OFF unless configured. ONE flag governs every mention: the hand-off,
+ * the wordmark and the colophon credit. A fork that sets nothing never says the
+ * word, and there is no address here to fall back to.
  */
 export function auditOrigin(configured: string | undefined): string | null {
   const trimmed = configured?.trim();
@@ -17,50 +13,36 @@ export const AUDIT_ORIGIN = auditOrigin(import.meta.env.VITE_LUMIOGUARD_APP_URL)
 export const LUMIOGUARD_ENABLED = AUDIT_ORIGIN !== null;
 
 /**
- * Where the WORDMARK points, which is not where the hand-off points.
- *
- * The hand-off carries a reading into the app and needs the app. The name in
- * the masthead and the colophon is a credit, and a credit belongs on the page
- * that says what LumioGuard is, not on a product surface behind a sign-in.
- *
- * Still governed by the one switch: with no app configured there is no
- * integration and no name anywhere, so this is never consulted. It falls back
- * to the app when unset rather than to an address written here, because a fork
- * that sets one variable must not find a second one it never chose.
+ * Where the WORDMARK points, which is not the hand-off's app: a credit belongs on
+ * the page saying what LumioGuard is, not behind a sign-in. Governed by the one
+ * switch, and falls back to the app when unset rather than an address written here.
  */
 export const PARENT_SITE = auditOrigin(import.meta.env.VITE_LUMIOGUARD_SITE_URL);
 
+/**
+ * Both the wordmark and the colophon's legal row read THIS: the row read
+ * `PARENT_SITE` directly once, and a deployment setting only the app URL got a
+ * wordmark and no Terms link.
+ */
+export function parentSiteHref(appUrl: string | null, siteUrl: string | null): string | null {
+  return appUrl === null ? null : (siteUrl ?? appUrl);
+}
+
 export function parentHref(): string | null {
-  return AUDIT_ORIGIN === null ? null : (PARENT_SITE ?? AUDIT_ORIGIN);
+  return parentSiteHref(AUDIT_ORIGIN, PARENT_SITE);
 }
 
 /**
- * The separator between keys in the one `sitekey` parameter.
- *
- * A reading runs several tools and each API mints its own key. They travel
- * JOINED rather than as a repeated parameter: the app parses its search with
- * zod, `sitekey` is a string there, and `?sitekey=A&sitekey=B` arrives as an
- * ARRAY. That threw before the router matched anything and the whole app
- * rendered blank, which is not the graceful degrade it was assumed to be.
- *
- * `_` is safe because it is not in the key alphabet, which is digits and
- * upper-case letters minus the lookalikes. A joined value can only split one
- * way, so the far side needs no delimiter rules of its own.
+ * Every key JOINED, never a repeated parameter: the app parses its search with zod
+ * where `sitekey` is a string, so `?sitekey=A&sitekey=B` arrived as an ARRAY and
+ * threw before any route matched. `_` is outside the key alphabet, so it splits one way.
  */
 const KEY_JOINER = '_';
 
 /**
- * The front door with this reading's handles attached, or null when the
- * integration is off.
- *
- * Never a sign-in path: that route has moved before and every visitor who
- * clicked landed on a 404. The app's own gate decides whether a login is needed.
- * The keys come from the readings, never derived from the address: deriving one
- * would carry everyone who scanned a host to the same stranger's verdict.
- *
- * EVERY key is carried, and the order is meaning. The caller passes the reading
- * that set the verdict first, and the far side lands the visitor on that tool's
- * area while importing the rest beside it.
+ * Never a sign-in path: that route has moved and every visitor landed on a 404. Keys
+ * come from the readings, never derived from the address, or everyone who scanned a
+ * host reaches one stranger's verdict. ORDER IS MEANING: the verdict's key leads.
  */
 export function fullAuditUrl(siteKeys: string | null | readonly (string | null)[]): string | null {
   if (AUDIT_ORIGIN === null) return null;

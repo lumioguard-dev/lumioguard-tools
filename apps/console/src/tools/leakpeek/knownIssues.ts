@@ -1,23 +1,7 @@
 /**
- * What developers auditing AI-built apps report finding, over and over.
- *
- * ORDERED BY HOW MANY INDEPENDENT WRITE-UPS REPORT IT, not by judgement. Eight
- * threads on r/vibecoding and r/SaaS where someone opened other people's
- * shipped apps and listed what was wrong, and the tally across them:
- *
- *   5  RLS missing                5  secrets in the frontend
- *   4  admin only in the UI       3  records fetched by id
- *   3  writable account fields    3  no limit on costly endpoints
- *   2  client sets the charge     2  .env or .git reachable
- *   2  local storage trusted      2  tokens not verified
- *
- * Merged where the reports were one fault under several names: hidden buttons,
- * client-side admin checks and an open /admin are all a missing server-side
- * check. Source maps are absent because no thread raised them, only this tool.
- *
- * This is what goes wrong in general, NOT a list of what this tool checks. It
- * reads three of them from outside; the rest need an account, a second account,
- * or the server's own code.
+ * ORDERED BY HOW MANY INDEPENDENT WRITE-UPS REPORT IT, not by judgement. The
+ * tally, and what was merged, is in `tools/leakpeek/README.md`. This is what
+ * goes wrong in general, NOT a list of what this tool checks.
  */
 export interface KnownIssue {
   readonly title: string;

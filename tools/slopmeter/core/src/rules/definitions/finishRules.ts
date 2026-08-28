@@ -1,30 +1,7 @@
 import { RuleCategory } from '../../domain/RuleCategory.js';
 import { type Rule, defineRule } from '../Rule.js';
+import { overusedFontHere } from '../fonts.js';
 import { countMatches, evidence, plural } from '../support.js';
-
-const OVERUSED_FONTS = [
-  'inter',
-  'roboto',
-  'open sans',
-  'lato',
-  'montserrat',
-  'fraunces',
-  'geist',
-  'mona sans',
-  'plus jakarta sans',
-  'space grotesk',
-  'recoleta',
-  'instrument sans',
-  'instrument serif',
-] as const;
-
-/** A typeface is not a monoculture tell on the site that commissioned it. */
-const BRAND_FONT_HOSTS: Readonly<Record<string, readonly string[]>> = {
-  roboto: ['google.com', 'youtube.com', 'android.com', 'web.dev'],
-  geist: ['vercel.com', 'nextjs.org', 'v0.app', 'v0.dev'],
-  'mona sans': ['github.com'],
-  inter: ['rsms.me'],
-};
 
 const DISPLAY_SERIFS = [
   'fraunces',
@@ -36,10 +13,10 @@ const DISPLAY_SERIFS = [
   'dm serif',
 ] as const;
 
-export const craftRules: readonly Rule[] = [
+export const finishRules: readonly Rule[] = [
   defineRule({
-    id: 'craft.side-tab',
-    category: RuleCategory.Craft,
+    id: 'finish.side-stripe',
+    category: RuleCategory.Finish,
     weight: 8,
     label: 'A thick coloured stripe down one edge',
     phrase: 'a thick coloured stripe down one edge',
@@ -54,8 +31,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.gradient-text',
-    category: RuleCategory.Craft,
+    id: 'finish.gradient-text',
+    category: RuleCategory.Finish,
     weight: 8,
     label: 'Text filled with a gradient',
     phrase: 'gradient-filled text',
@@ -76,37 +53,17 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.overused-font',
-    category: RuleCategory.Craft,
+    id: 'finish.crowd-typeface',
+    category: RuleCategory.Finish,
     weight: 6,
     label: 'One of the handful of fonts everything uses',
     phrase: 'the typeface everything else is set in',
-    evaluate: (ctx) => {
-      // Only the PRIMARY family of an author-declared stack counts.
-      const primaries = [...ctx.styles.authorCssLower.matchAll(/font-family\s*:\s*([^;}]+)/g)].map(
-        (m) => ((m[1] ?? '').split(',')[0] ?? '').replace(/["']/g, '').trim(),
-      );
-      const googleFonts = (
-        ctx.document.assetRefs.match(/fonts\.googleapis\.com\/css2?\?[^"'\s)>]*/g) ?? []
-      ).join(' ');
-
-      for (const font of OVERUSED_FONTS) {
-        const declared =
-          primaries.includes(font) ||
-          new RegExp(`family=${font.replace(/ /g, '\\+')}`, 'i').test(googleFonts);
-        if (!declared) continue;
-        const exempt = (BRAND_FONT_HOSTS[font] ?? []).some(
-          (host) => ctx.host === host || ctx.host.endsWith(`.${host}`),
-        );
-        if (!exempt) return font;
-      }
-      return null;
-    },
+    evaluate: (ctx) => overusedFontHere(ctx),
   }),
 
   defineRule({
-    id: 'craft.icon-tile-stack',
-    category: RuleCategory.Craft,
+    id: 'finish.icon-tiles',
+    category: RuleCategory.Finish,
     weight: 6,
     label: 'Rounded icon tiles stacked above headings',
     phrase: 'rounded icon tiles above every heading',
@@ -115,13 +72,20 @@ export const craftRules: readonly Rule[] = [
         ctx.html,
         /class="[^"]*\b(?:w|h)-(?:10|12|14|16)\b[^"]*\brounded-(?:lg|xl|2xl)\b[^"]*"[^>]*>\s*<svg/gi,
       );
-      return evidence(count >= 3, plural(count, 'icon tile'));
+      if (count >= 3) return plural(count, 'icon tile');
+
+      // The same tile without the utility classes, asked of the tree rather
+      // than of the markup: a rounded box whose own child is the icon.
+      const tiled = ctx.document.root.querySelectorAll(
+        '[style*="border-radius"] > svg, [class*="rounded"] > svg',
+      ).length;
+      return evidence(tiled >= 3, plural(tiled, 'icon tile'));
     },
   }),
 
   defineRule({
-    id: 'craft.kicker-eyebrow',
-    category: RuleCategory.Craft,
+    id: 'finish.shouted-label',
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'Tiny all-caps labels above headings',
     phrase: 'tiny all-caps labels above the headings',
@@ -130,13 +94,33 @@ export const craftRules: readonly Rule[] = [
         ctx.html,
         /class="[^"]*\btext-xs\b[^"]*\buppercase\b[^"]*\btracking-(?:wide|wider|widest)\b[^"]*"/gi,
       );
-      return evidence(count >= 3, plural(count, 'tiny all-caps label'));
+      if (count >= 3) return plural(count, 'tiny all-caps label');
+
+      // The same label written as CSS: uppercased and tracked out, in one rule.
+      const uppercase = /text-transform\s*:\s*uppercase/i;
+      const tracked = /letter-spacing\s*:\s*(?:0?\.0*[5-9]\d*em|[1-9][\d.]*(?:px|em|rem))/i;
+      const styled =
+        ctx.styles.authorBlockCount(uppercase, tracked) +
+        ctx.document.countStyleAttr(uppercase, tracked);
+      if (styled >= 2) return plural(styled, 'tiny all-caps label');
+
+      // Typed in capitals rather than transformed into them, which is what a visual
+      // builder produces. Asked of the tree, so a shouted line must precede a heading:
+      // counting capitals in the prose scored a technical site for writing MAUI and API.
+      const shouted = ctx.document.elements.filter((element) => {
+        if (element.children.length > 0) return false;
+        const line = (element.textContent ?? '').trim();
+        if (line.length < 4 || line.length > 48) return false;
+        if (line !== line.toUpperCase() || !/[A-Z]{3}/.test(line)) return false;
+        return /^H[1-3]$/.test(element.nextElementSibling?.tagName ?? '');
+      }).length;
+      return evidence(shouted >= 3, plural(shouted, 'tiny all-caps label'));
     },
   }),
 
   defineRule({
-    id: 'craft.bounce-easing',
-    category: RuleCategory.Craft,
+    id: 'finish.bounce-easing',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Bouncing animation',
     evaluate: (ctx) => {
@@ -149,20 +133,32 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.marquee',
-    category: RuleCategory.Craft,
+    id: 'finish.marquee',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'An auto-scrolling marquee',
-    evaluate: (ctx) =>
-      evidence(
-        /<marquee\b/i.test(ctx.html) || ctx.usesClass(/\banimate-marquee\b|\bmarquee\b/),
+    evaluate: (ctx) => {
+      if (/<marquee\b/i.test(ctx.html) || ctx.usesClass(/\banimate-marquee\b|\bmarquee\b/)) {
+        return 'marquee';
+      }
+      // A track translated its own width, forever: the hand-rolled marquee.
+      const named = /@keyframes\s+[\w-]*(?:marquee|ticker|scroll(?:ing)?|slide)\b/i;
+      const endless =
+        /animation[^;}]*\binfinite\b[^;}]*\blinear\b|animation[^;}]*\blinear\b[^;}]*\binfinite\b/i;
+      const shifts = /translate(?:3d|X)?\(\s*-?(?:100|50)%/i;
+      const css = ctx.styles.allCss;
+      return evidence(
+        named.test(css) ||
+          (shifts.test(css) &&
+            (endless.test(ctx.styles.authorPaintingCss) || endless.test(ctx.document.styleText))),
         'marquee',
-      ),
+      );
+    },
   }),
 
   defineRule({
-    id: 'craft.pulsing-dot',
-    category: RuleCategory.Craft,
+    id: 'finish.pulsing-dot',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'A pulsing dot that reports nothing',
     evaluate: (ctx) => {
@@ -170,13 +166,21 @@ export const craftRules: readonly Rule[] = [
         ctx.html,
         /class="[^"]*\banimate-pulse\b[^"]*\brounded-full\b[^"]*"|class="[^"]*\brounded-full\b[^"]*\banimate-pulse\b[^"]*"/gi,
       );
-      return evidence(count >= 1, plural(count, 'pulsing dot'));
+      if (count >= 1) return plural(count, 'pulsing dot');
+
+      // Keyframes live outside the painting CSS, so read the sheets unfiltered.
+      const pulses = /@keyframes\s+[\w-]*(?:pulse|ping|blink|breath)/i.test(ctx.styles.allCss);
+      const round = /border-radius\s*:\s*(?:50%|100%|9{2,4}px)/i;
+      return evidence(
+        pulses && (round.test(ctx.styles.authorPaintingCss) || round.test(ctx.document.styleText)),
+        'a dot pulsing beside a status that never changes',
+      );
     },
   }),
 
   defineRule({
-    id: 'craft.dark-glow',
-    category: RuleCategory.Craft,
+    id: 'finish.coloured-glow',
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'Coloured glows instead of shadows',
     phrase: 'coloured glow where a shadow belongs',
@@ -190,8 +194,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.radial-halo',
-    category: RuleCategory.Craft,
+    id: 'finish.halo',
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'Decorative glowing halos',
     evaluate: (ctx) => {
@@ -205,8 +209,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.grid-background',
-    category: RuleCategory.Craft,
+    id: 'finish.graph-paper',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Graph-paper grid behind the content',
     evaluate: (ctx) =>
@@ -219,8 +223,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.tight-leading',
-    category: RuleCategory.Craft,
+    id: 'finish.tight-leading',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Body text set too tight to read comfortably',
     evaluate: (ctx) => {
@@ -233,8 +237,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.tiny-text',
-    category: RuleCategory.Craft,
+    id: 'finish.small-type',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Text too small to read comfortably',
     evaluate: (ctx) => {
@@ -256,8 +260,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.justified-text',
-    category: RuleCategory.Craft,
+    id: 'finish.justified-text',
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'Justified text without hyphenation',
     evaluate: (ctx) =>
@@ -269,8 +273,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.layout-transition',
-    category: RuleCategory.Craft,
+    id: 'finish.layout-animation',
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'Animating width and height, which stutters',
     evaluate: (ctx) =>
@@ -283,8 +287,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.italic-serif-display',
-    category: RuleCategory.Craft,
+    id: 'finish.italic-serif',
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'The italic serif headline of the moment',
     evaluate: (ctx) => {
@@ -300,8 +304,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.aphoristic-cadence',
-    category: RuleCategory.Craft,
+    id: 'finish.clipped-slogans',
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'Copy written in clipped slogans',
     evaluate: (ctx) => {
@@ -316,8 +320,8 @@ export const craftRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'craft.nested-cards',
-    category: RuleCategory.Craft,
+    id: 'finish.nested-cards',
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Cards inside cards',
     evaluate: (ctx) => {
@@ -325,9 +329,17 @@ export const craftRules: readonly Rule[] = [
         ctx.html,
         /class="[^"]*\brounded-(?:lg|xl|2xl)\b[^"]*\bborder\b[^"]*"[^>]*>[\s\S]{0,300}?class="[^"]*\brounded-(?:lg|xl|2xl)\b[^"]*\bborder\b[^"]*"/gi,
       );
+      if (count >= 4) {
+        return plural(count, 'card inside another card', 'cards inside other cards');
+      }
+      // One rounded, bordered surface opening inside another. A descendant
+      // query says that; a regex over 300 characters of markup only guessed it.
+      const nested = ctx.document.root.querySelectorAll(
+        '[style*="border-radius"] [style*="border-radius"]',
+      ).length;
       return evidence(
-        count >= 4,
-        plural(count, 'card inside another card', 'cards inside other cards'),
+        nested >= 4,
+        plural(nested, 'card inside another card', 'cards inside other cards'),
       );
     },
   }),

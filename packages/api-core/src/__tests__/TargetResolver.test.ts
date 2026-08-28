@@ -2,12 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { InvalidTargetError, TargetResolver } from '../services/TargetResolver.js';
 
 /**
- * The server-side request boundary.
- *
- * Both Workers fetch whatever this returns, so every case below is a request
- * the scanner must refuse to make on a stranger's behalf. A regression here
- * does not break a scan: it turns a public scanner into a probe for whatever
- * sits next to it on the network, and nothing on screen looks wrong.
+ * The server-side request boundary. Every case below is a request the scanner
+ * must refuse on a stranger's behalf: a regression here does not break a scan, it
+ * turns a public scanner into a probe for whatever sits next to it.
  */
 
 const resolver = new TargetResolver();

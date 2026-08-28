@@ -2,13 +2,9 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { PageDocument } from '../read/PageDocument.js';
 
 /**
- * A BCP 47 language subtag, which is what an `hreflang` has to open with.
- *
- * Only the LANGUAGE is validated, as Lighthouse does: the value may be
- * language, language-script, or language-region, and the parts after the first
- * are checked for shape rather than against a registry. Two or three letters
- * covers every registered language subtag; anything longer or containing a
- * digit is not one.
+ * Only the LANGUAGE is validated, as Lighthouse does: two or three letters
+ * covers every registered subtag, and the parts after the first are checked for
+ * shape rather than against a registry.
  */
 const LANGUAGE = /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i;
 
@@ -16,12 +12,9 @@ const LANGUAGE = /^[a-z]{2,3}(?:-[a-z0-9]{2,8})*$/i;
 const X_DEFAULT = 'x-default';
 
 /**
- * `hreflang` validity, after Lighthouse's `hreflang` audit.
- *
- * Two failures, both of which silently void the annotation rather than
- * degrading it: a language code no engine recognises, and a relative `href`.
- * An hreflang set that does not parse is an hreflang set that does nothing, and
- * a site publishing one has already decided it wants the alternates honoured.
+ * After Lighthouse's `hreflang` audit. Two failures silently VOID the
+ * annotation rather than degrading it: a language code no engine recognises,
+ * and a relative `href`. A set that does not parse is one that does nothing.
  */
 export function checkHreflang(page: PageDocument): CiteFinding[] {
   const alternates = page.links.filter(

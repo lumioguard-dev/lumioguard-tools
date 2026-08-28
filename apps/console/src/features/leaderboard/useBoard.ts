@@ -12,15 +12,13 @@ export interface BoardState {
   readonly retry: () => void;
 }
 
-/** One side of the board, read and re-readable. Shared by the board and its preview. */
 export function useBoard(side: LeaderboardSide, page: number): BoardState {
   const [data, setData] = useState<LeaderboardResponse | null>(null);
   const [reading, setReading] = useState(true);
   const [failed, setFailed] = useState(false);
   const [attempt, setAttempt] = useState(0);
 
-  // `attempt` is not read in here: it IS the trigger, and bumping it is what
-  // asks the board again after a failed load.
+  // `attempt` is not read in here: it IS the trigger, bumped to ask again.
   // biome-ignore lint/correctness/useExhaustiveDependencies: the extra dep is the point
   useEffect(() => {
     const abort = new AbortController();
@@ -28,9 +26,8 @@ export function useBoard(side: LeaderboardSide, page: number): BoardState {
     setFailed(false);
     client.page(side, page, abort.signal).then((result) => {
       if (abort.signal.aborted) return;
-      // Null is a FAILURE, not an empty board: the first is worth retrying and
-      // the second is the answer. Read as one, a dropped request said the site
-      // had never been scanned.
+      // Null is a FAILURE, not an empty board. Read as one, a dropped request said
+      // the site had never been scanned.
       if (result === null) setFailed(true);
       else setData(result);
       setReading(false);

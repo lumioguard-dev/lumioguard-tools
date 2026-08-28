@@ -39,13 +39,9 @@ function serviceOver(page: string | null): CrawlService {
 
 describe('a crawl that read nothing', () => {
   /**
-   * The failure that looks like success, and the reason this suite exists.
-   *
-   * The crawler collects a page it cannot load into `errors` rather than
-   * throwing, which is right when most of a site loaded. When NONE of it did,
-   * the summariser still had the site-wide findings to score, and a host that
-   * does not resolve came back as 17, Legible, "a machine can read this, name
-   * what it is, and answer from it". Nothing about that response looks wrong.
+   * The failure that looks like success. The crawler collects a page it cannot
+   * load into `errors` rather than throwing, so when NONE of it loaded the
+   * summariser still scored the site-wide findings and a dead host read Legible.
    */
   it('fails the reading rather than reporting a quotable site', async () => {
     await expect(serviceOver(null).crawlSite('not-a-real-host.invalid')).rejects.toBeInstanceOf(
@@ -55,9 +51,8 @@ describe('a crawl that read nothing', () => {
 
   /**
    * The reason a fetch failed is whatever the runtime handed back, and for a
-   * host that does not resolve that is an opaque reference id. It must not
-   * reach the surface: it is the string a person who mistyped a domain would
-   * have been shown instead of being told to check the spelling.
+   * host that does not resolve that is an opaque reference id. It must not reach
+   * a person who simply mistyped a domain.
    */
   it('does not forward the runtime’s reason to the reader', async () => {
     await expect(serviceOver(null).crawlSite('not-a-real-host.invalid')).rejects.toThrow(

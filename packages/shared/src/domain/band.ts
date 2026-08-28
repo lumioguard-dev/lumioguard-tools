@@ -1,14 +1,7 @@
 /**
- * The arithmetic every tool's ladder shares, written once.
- *
- * Four ladders now run 0-100 with the same four bands, and the two calculations
- * that place a score on one were copied per tool: the same clamp-and-walk, the
- * same track width with the same off-by-one guard on the unbounded top band.
- * Three copies of a formula that must agree is the shape this repo calls a bug
- * that has not happened yet, and a fourth was about to be written.
- *
- * The band VOCABULARY stays per tool. What is shared is where a number falls,
- * never what to call it.
+ * The arithmetic every tool's ladder shares, written once: four ladders run
+ * 0-100 over the same bands, and three copies of the clamp-and-walk had to agree.
+ * The band VOCABULARY stays per tool: where a number falls is shared, not its name.
  */
 
 /** The shape a ladder's band must have. Each tool narrows `tier` to its own union. */
@@ -26,26 +19,18 @@ export interface TrackSegment {
 }
 
 /**
- * A band's place on the track, as percentages.
- *
- * The `min` is what keeps the unbounded top band on the track: its `to` is
- * infinity, and the width has to stop at the end of the scale rather than run
- * off it. A test asserts the bands are contiguous and fill the track exactly
- * once, which is the property this exists to hold.
+ * A band's place on the track, as percentages. The `min` keeps the unbounded top
+ * band on it: that band's `to` is infinity, so the width must stop at the end of
+ * the scale. A test asserts the bands fill the track exactly once.
  */
 export function trackOf(band: ScoreBand, max: number): TrackSegment {
   return { left: band.from, width: Math.min(band.to + 1 - band.from, max - band.from) };
 }
 
 /**
- * The band a score falls in: the first whose ceiling it does not exceed.
- *
- * Total by construction rather than by assertion. An earlier shape fell out of
- * the loop and asserted the last element back into existence, which
- * `noUncheckedIndexedAccess` had correctly typed as possibly absent: the cast
- * was load-bearing for compilation and a lie if the list were ever empty.
- * Carrying the last band seen needs no such claim, so the non-empty tuple type
- * is the only guarantee required.
+ * The band a score falls in: the first whose ceiling it does not exceed. Total by
+ * construction, not by assertion: an earlier shape asserted the last element back
+ * into existence, a cast that was a lie if the list were ever empty.
  */
 export function bandOf<T extends ScoreBand>(
   bands: readonly [T, ...T[]],

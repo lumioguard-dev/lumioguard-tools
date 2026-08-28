@@ -12,13 +12,9 @@ export interface HeadingRef {
   readonly level: number;
   readonly text: string;
   /**
-   * False for a heading inside a `<footer>` or a `<nav>`.
-   *
-   * Those are navigation furniture, and their levels are a styling choice
-   * rather than the document's outline: counting them reported supabase.com as
-   * skipping a level because a screen reader's `<h2>Footer</h2>` sits above six
-   * `<h6>` column labels. Nothing else is excluded, because a hero `<h1>` turns
-   * up outside `<main>` often enough that a wider rule loses real ones.
+   * False for a heading inside a `<footer>` or a `<nav>`, whose levels are a
+   * styling choice: counting them reported supabase.com as skipping a level over
+   * a screen reader's `<h2>Footer</h2>` sitting above six `<h6>` column labels.
    */
   readonly inContent: boolean;
   /** `aria-hidden` marks a copy that exists to be seen and not read. */
@@ -47,22 +43,17 @@ export interface LinkRef {
 }
 
 /**
- * The served page, read once.
- *
- * Every check draws from this rather than re-scanning the HTML, so a page is
- * parsed once per reading however many rules look at it. Built by a static
- * factory rather than a constructor doing the work, so the parse is one
- * traceable step and the fields are all readonly after it.
+ * The served page, read once: every check draws from this rather than
+ * re-scanning the HTML. Built by a static factory so the parse is one traceable
+ * step and every field is readonly after it.
  */
 export class PageDocument {
   public readonly url: string;
   public readonly host: string;
   public readonly html: string;
   /**
-   * The document with `<script>`, `<style>` and comments removed.
-   *
-   * What every check that reads ELEMENTS must use. The raw HTML is kept beside
-   * it for the few that genuinely want the code, and mixing them up read
+   * The document with `<script>`, `<style>` and comments removed. What every
+   * check that reads ELEMENTS must use: mixing it up with the raw `html` read
    * cnn.com's Handlebars template as the page's only heading.
    */
   public readonly markup: string;
@@ -147,10 +138,9 @@ export class PageDocument {
         const key = name.toLowerCase();
         meta[key] = content;
 
-        // OpenGraph read from `name` as well as `property`. The spec says
-        // `property`, and MDN ships `<meta name="og:title">`, which every real
-        // consumer honours. Reading only the spec form reported the most
-        // quotable reference page on the web as having no OpenGraph at all.
+        // OpenGraph read from `name` as well as `property`: the spec says
+        // `property`, MDN ships `<meta name="og:title">`, and reading only the
+        // spec form reported the most quotable page on the web as having none.
         if (key.startsWith('og:')) property[key] ??= content;
       }
 
@@ -231,22 +221,16 @@ export class PageDocument {
 const HEADING = /<h([1-6])\b([^>]*)>([\s\S]*?)<\/h\1\s*>/gi;
 
 /**
- * The only two elements whose headings are reliably furniture.
- *
- * NOT `<header>`. The first attempt excluded everything `contentRegion` strips,
- * and lovable.dev's `<h1>` sits after `</main>` closes: the page was reported as
- * having no h1 at all, which is worse than the footer noise it was meant to fix.
- * A hero can live anywhere; a footer's column labels cannot be anything else.
+ * NOT `<header>`: the first attempt excluded everything `contentRegion` strips,
+ * and lovable.dev's `<h1>` sits after `</main>` closes, so the page was reported
+ * as having no h1 at all. A hero can live anywhere; a footer's labels cannot.
  */
 const FURNITURE = /<(footer|nav)\b[^>]*>[\s\S]*?<\/\1\s*>/gi;
 
 /**
- * Every heading, tagged with whether it is part of the page's outline and
- * whether it is hidden from assistive technology.
- *
- * Membership is decided by POSITION rather than by matching markup: two
- * headings can be byte-for-byte identical (stripe.com layers a duplicate hero
- * `<h1>`), and any comparison by content puts both wherever the first one fell.
+ * Membership is decided by POSITION rather than by matching markup: two headings
+ * can be byte-for-byte identical (stripe.com layers a duplicate hero `<h1>`),
+ * and any comparison by content puts both wherever the first one fell.
  */
 function headingsIn(body: string): HeadingRef[] {
   const furniture: Array<[number, number]> = [];
@@ -282,15 +266,9 @@ function hostOfUrl(url: string): string {
 }
 
 /**
- * Whether the tag carries an `alt` attribute at all, with or without a value.
- *
- * A bare `alt` is HTML5's empty attribute syntax and means exactly `alt=""`: an
- * image the author has deliberately marked decorative. Requiring `alt=` counted
- * that as missing, and apple.com/airpods writes `<img src="…" alt>` fourteen
- * times, so a page doing it correctly was told fourteen of its images had none.
- *
- * Anchored on the whitespace before the name, which is what stops `data-alt`
- * and a path like `/images/alt/` from matching.
+ * A bare `alt` is HTML5's empty attribute syntax and means `alt=""`, a
+ * deliberately decorative image; apple.com/airpods writes it fourteen times.
+ * Anchored on the leading whitespace, which stops `data-alt` matching.
  */
 function hasAlt(tag: string): boolean {
   return /\salt(?=[\s=>/])/i.test(tag);

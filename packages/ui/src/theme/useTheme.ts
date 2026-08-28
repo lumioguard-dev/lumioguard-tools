@@ -17,11 +17,8 @@ function currentTheme(): ThemeName {
 }
 
 /**
- * Light unless the visitor says otherwise, and their answer is remembered.
- *
- * The operating system is deliberately not consulted: the brief is that this
- * opens light for everyone, so a dark desktop does not silently change what the
- * product looks like on first sight.
+ * The operating system is deliberately NOT consulted: this opens light for everyone,
+ * so a dark desktop does not silently change what the product looks like on sight.
  */
 export function useTheme(): {
   readonly theme: ThemeName;

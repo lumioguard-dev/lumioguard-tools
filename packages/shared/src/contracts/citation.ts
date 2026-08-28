@@ -5,9 +5,8 @@ import { enumOf } from './zod.js';
 export const citationTierSchema = enumOf(CITATION_TIER_NAMES);
 
 /**
- * Ordered worst-first, the order a report lists findings in. `absent` is NOT a
- * fourth severity: it flags a signal the page does not publish and weighs
- * nothing. Absence is a choice, and only a BROKEN one is a defect.
+ * Worst first, the order a report lists findings in. `absent` is NOT a fourth
+ * severity: it flags a signal the page does not publish, and weighs nothing.
  */
 export const IMPACTS = ['blocker', 'major', 'minor', 'absent'] as const;
 export const impactSchema = enumOf(IMPACTS);
@@ -23,15 +22,9 @@ export const citeAreaSchema = enumOf(CITE_AREAS);
 export type CiteArea = (typeof CITE_AREAS)[number];
 
 /**
- * One thing standing between this page and being quoted, as the visitor is
- * shown it. No `fix` on the wire, deliberately: the remediation is the reason
- * to continue into LumioGuard.
- *
- * `evidence` is what the page actually served, quoted back. A page's own markup
- * is already public to anyone with the URL, so unlike an exposure report there
- * is nothing here to redact; what it must not do is paraphrase, because a
- * finding the author cannot locate in their own source is a finding they cannot
- * act on.
+ * No `fix` on the wire, deliberately: the remediation is the reason to continue
+ * into LumioGuard. `evidence` quotes what the page served verbatim, because a
+ * finding the author cannot locate in their own source cannot be acted on.
  */
 export const citationFindingSchema = z.object({
   /** Opaque and valid only within this response; exists so a list can be keyed. */
@@ -50,21 +43,13 @@ export const agentAccessSchema = enumOf(AGENT_ACCESS);
 export type AgentAccess = (typeof AGENT_ACCESS)[number];
 
 /**
- * What `robots.txt` says to one named crawler. REPORTED, NEVER SCORED.
- *
- * Blocking an AI crawler is a decision, not a defect: plenty of sites mean it.
- * Scoring it would charge people for a choice they made on purpose, which is
- * the false positive that costs a report its credibility. What is scored is a
- * CONTRADICTION between two things the site says, never the posture itself.
- *
- * `unmentioned` is its own answer and not a synonym for allowed: nothing in
- * robots.txt applies to this agent at all, so it may read by default, but the
- * site never said so and the next edit could change that silently.
+ * What `robots.txt` says to one named crawler. REPORTED, NEVER SCORED: blocking
+ * an AI crawler is a deliberate choice, so only a CONTRADICTION between two
+ * things the site says is charged. `unmentioned` does not mean allowed.
  */
 export const agentPostureSchema = z.object({
   /** The token as robots.txt spells it. */
   agent: z.string(),
-  /** Who runs it, for a reader who does not recognise the token. */
   operator: z.string(),
   access: agentAccessSchema,
   /** The group that decided it, e.g. `User-agent: *`. Null when nothing matched. */
@@ -72,12 +57,9 @@ export const agentPostureSchema = z.object({
 });
 
 /**
- * How the page's own text reached the reader.
- *
- * `shell` is the finding that matters and the reason this field exists: the
- * served HTML carried no prose, so every crawler that does not run JavaScript
- * sees an empty document. `hydrated` means the prose was there AND a framework
- * also runs, which is fine.
+ * How the page's own text reached the reader. `shell` is the finding this field
+ * exists for: the served HTML carried no prose, so every crawler that does not
+ * run JavaScript sees an empty document. `hydrated` is prose plus a framework.
  */
 export const RENDERINGS = ['served', 'hydrated', 'shell'] as const;
 export const renderingSchema = enumOf(RENDERINGS);
@@ -93,9 +75,8 @@ export const pageProfileSchema = z.object({
 });
 
 /**
- * What this reading actually read. False means "not fetched", never "fetched
- * and clean" -- so the report can say it found no sitemap rather than implying
- * it checked one and it was fine.
+ * What this reading actually read. False means "not fetched", never "fetched and
+ * clean", so the report never implies it checked a sitemap that was not there.
  */
 export const citationSourcesSchema = z.object({
   robotsTxt: z.boolean(),

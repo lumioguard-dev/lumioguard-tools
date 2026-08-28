@@ -20,10 +20,9 @@ describe('minting a site key', () => {
     expect(keys.size).toBe(2000);
   });
 
-  // 256 is not a multiple of 31, so taking a raw byte modulo the alphabet would
-  // make the first eleven characters measurably likelier. Uniform enough that
-  // every character appears, which a biased sampler would still pass, but a
-  // badly broken one (a constant, a truncated alphabet) would not.
+  // 256 is not a multiple of 31, so a raw byte modulo the alphabet would make the
+  // first eleven characters likelier. This catches a badly broken sampler (a
+  // constant, a truncated alphabet), not a subtly biased one.
   it('uses the whole alphabet', () => {
     const seen = new Set([...Array.from({ length: 4000 }, () => newSiteKey()).join('')]);
     expect(seen.size).toBe(31);

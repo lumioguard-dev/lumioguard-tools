@@ -1,157 +1,101 @@
 # LumioGuard Tools
 
-**Paste a URL. Find out something true about the site.**
+Paste a public URL and get three independent readings of what the site actually
+serves:
 
-You shipped something. Maybe you built it fast, maybe an AI builder wrote most of
-it. Three questions are worth asking before anyone else does:
+- **Slopmeter** finds visual, structural, and verbal defaults left in a generated
+  or templated site.
+- **Leakpeek** checks what the page, its bundles, and its public backend expose
+  without signing in.
+- **Citecheck** checks whether answer-engine crawlers can reach, understand, and
+  quote the served content.
 
-**Does it look like everyone else's?**, **is it leaking?**, and **can the thing
-that answers questions about your industry even read it?**
+The tools need no repository access, database connection, installed agent, or
+account. They inspect the public site from the outside.
 
-These are the tools that answer them, and they run from one page. Pick which
-readings you want, paste an address, and every one you picked runs at once. No
-sign-up, no access to your code, no connection to your database, no agent to
-install. They read what your site already serves to the public, exactly as a
-visitor would.
+![The Readout home page with one address field and three selectable readings](assets/readout-home.jpg)
 
-![The Readout home page: one address bar, and a row of readings to pick from](assets/readout-home.jpg)
+## One report
 
----
+All scores run from 0 to 100, with higher being better. When several readings
+run together, the report uses the lowest score as its verdict. It does not
+average them: a clean design reading cannot cancel an exposed database.
 
-## One verdict, not three meters
+Findings from different tools are ranked together by how many points they cost.
+Each tool then gets its own section, score, evidence, and vocabulary.
 
-Every score runs **0-100 where higher is better**, and three scores on one page
-ask the reader which number is the answer. So the readings land on a **single
-verdict: the worst of them**, never an average. A site is not two thirds fine
-because two readings came back clean, and adding a reading it happens to pass
-must not improve the number with nothing fixed.
+[![A Readout report showing the consolidated verdict, site image, and findings ranked by score cost](assets/readout.jpg)](apps/console)
 
-[![The Readout report: a Critical verdict of 40 out of 100, a render of the
-site, and the culprits from every reading ranked by what each one
-cost](assets/readout.jpg)](apps/console)
+## The readings
 
-Underneath, every finding from every reading is ranked together by **what it
-cost the score**, which is the one thing findings from three unrelated engines
-have in common. Then each reading gets its own section, with its own score in
-its own words.
+### Slopmeter
 
----
+Slopmeter crawls the site and looks for defaults that repeatedly appear in
+generated pages: familiar gradient treatments, interchangeable card layouts,
+placeholder copy, dead navigation, stock component choices, builder residue,
+and unfinished metadata.
 
-## Leakpeek: what is this app exposing?
+Every scored tell includes its evidence and cost. The engine judges published
+output, not who made it. Hosting on Vercel or Netlify costs nothing; visible
+generator artifacts may score because they are part of the page.
 
-Leakpeek reads your page and the JavaScript it ships. Where that JavaScript
-points at a backend, it reads that too. Then it tells you what a stranger can
-already reach.
+[![A Slopmeter result with its score and weighted tells](assets/slopmeter.png)](tools/slopmeter)
 
-[![Leakpeek's section: a Wide Open score of 40, and a critical finding that a
-database table is readable without signing in](assets/leakpeek.png)](tools/leakpeek)
+[Read the Slopmeter documentation](tools/slopmeter)
 
-The finding at the top of that report is the one that matters: a database table
-returning rows to a request that never signed in. Not "you may have a
-misconfiguration", but the actual read, the actual row count, the actual column
-names. Something you can act on before breakfast.
+### Leakpeek
 
-It also finds API keys baked into your bundle, source maps you did not mean to
-publish, `.env` files served from your web root, missing security headers, and
-trackers running before anyone consented.
+Leakpeek reads the document and JavaScript bundles, then follows supported
+public client configuration to the application's backend. It detects exposed
+secrets, reachable source maps, public environment files, weak response headers,
+privacy problems, and Supabase tables readable without authentication.
 
-**It reads. It never writes.** No account is created, no row is changed, nothing
-is deleted. And the report proves a hole without becoming one: it shows you that
-1,240 rows came back and what the columns were called, never what was in them.
+Its probes are read-only. Reports include enough structure to prove a finding,
+such as a row count and column names, but never returned row values.
 
-**[Read more →](tools/leakpeek)**
+[![A Leakpeek result showing a critical unauthenticated database read](assets/leakpeek.png)](tools/leakpeek)
 
----
+[Read the Leakpeek documentation](tools/leakpeek)
 
-## Slopmeter: how much of this is still the template?
+### Citecheck
 
-Slopmeter crawls a few pages and scores how closely your site's choices match the
-defaults that generated sites ship with. Purple-blue gradients. Rounded cards in a
-three-up grid. "Elevate your workflow." The things that make a hundred sites look
-like one site.
+Citecheck reads beyond the home page and compares what a browser receives with
+what a recognised crawler receives. It finds empty client-rendered shells,
+blocking directives, bot filtering, contradictory crawler instructions, broken
+metadata, and document structure that machines cannot use reliably.
 
-[![Slopmeter's section: a Lightly Templated score of 74, and the weighted tells
-that produced it](assets/slopmeter.png)](tools/slopmeter)
+The tool measures access to served content. It does not predict rankings or
+promise that an answer engine will cite the site. Deliberately blocking a
+crawler is reported as a policy choice; contradictions and broken signals are
+the defects that cost points.
 
-Every point in the score comes with the reason it was scored, so you can disagree
-with it. That is the point: a number you cannot see the reasons for is a number
-you cannot argue with, and you should not trust one.
+[![A Citecheck result showing a high score and one minor finding](assets/citecheck.png)](tools/citecheck)
 
-**It judges the page, never you and never your tools.** Which builder made the
-site is reported and scores exactly zero. Something built with AI that somebody
-actually designed comes out clean; a hand-coded page of stock defaults does not.
+[Read the Citecheck documentation](tools/citecheck)
 
-**[Read more →](tools/slopmeter)**
+## Use the hosted version
 
----
+The public console is at [lumioguard.dev/tools](https://lumioguard.dev/tools).
 
-## Citecheck: can an answer engine cite this?
-
-A growing share of the people who should be finding your site are asking a model
-instead of typing a query. Citecheck reads your site the way one of those
-crawlers does, asks again as one, and reports what stands between your pages and
-being quoted.
-
-The finding that catches most people is the first fetch: a page that is empty
-until JavaScript runs. It looks perfect in a browser. Most crawlers that feed
-answer engines do not run JavaScript, so what they store for that URL is a blank
-document. The second is the bot filter you installed for scrapers, now returning
-`403` to every agent that would have cited you.
-
-[![Citecheck's section: a Legible score of 98, one minor finding, and the rest
-flagged as not found rather than charged for](assets/citecheck.png)](tools/citecheck)
-
-Absence is a choice, so it is flagged rather than priced. The reference pages
-answer engines quote every day are missing several of these apiece: what costs
-you is a signal that is there and does not work.
-
-It also reads what `robots.txt` says to each of those crawlers, one row each.
-**Turning one away is a decision, not a defect**, so that is listed and confirmed,
-never corrected. What gets scored is a *contradiction*: an `llms.txt` inviting AI
-readers beside a `robots.txt` turning them away, or a page your sitemap offers
-and your robots.txt refuses.
-
-**It reads past the front door.** The pages worth citing are almost never the
-homepage, so a reading is a crawl, and anything found only behind the front door
-is called out as such. That is where the `noindex` nobody meant to ship lives.
-
-**[Read more →](tools/citecheck)**
-
----
-
-## Try them
-
-Hosted and free to use at
-[lumioguard.dev/tools](https://lumioguard.dev/tools), or from a clone at
-`http://127.0.0.1:5200` (see [Run them yourself](#run-them-yourself)). The app
-is mounted at whichever address it is served from, so these paths are the same
-either way:
-
-| Path | What it does |
+| Path | Reading |
 |---|---|
-| `/` | Asks which reading you want, and sends you to the page that runs it |
-| `/scan` | Every reading you tick, at once |
-| `/ai-slop-check` | How much of the site came out of a template |
-| `/security-check` | What the site is exposing to anyone with the URL |
-| `/seo-ai-visibility-check` | Whether an answer engine can read it and quote it |
+| `/` | Choose one or more tools |
+| `/scan` | Run the selected tools together |
+| `/ai-slop-check` | Slopmeter only |
+| `/security-check` | Leakpeek only |
+| `/seo-ai-visibility-check` | Citecheck only |
 
-Paste a URL and every reading you picked runs at once, landing on a single
-verdict: the **worst** of them, not an average. The three single readings carry
-no picker, because the URL already answered what to read.
+For a safe test target, use
+[leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/). It is deliberately
+vulnerable and appears in the screenshots above.
 
-If you want something to point it at,
-[leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/) is a deliberately
-broken app kept for exactly that. It is the site in every screenshot above.
+Only scan sites you own or have permission to assess. Leakpeek makes real
+read-only requests to public backends discovered in a site's bundles. See
+[SECURITY.md](SECURITY.md) before scanning third-party infrastructure.
 
-**Only read a site you own, or one whose owner has asked you to.** Leakpeek
-proves a finding by actually reading the target's backend, which is a real
-request against someone else's infrastructure. See [SECURITY.md](SECURITY.md)
-for what each tool does to a site, and how to report a flaw in them.
+## Run locally
 
-## Run them yourself
-
-Everything here is MIT-licensed and runs on your own machine. Node 22+ and
-pnpm 9+:
+Requirements: Node 22 or newer and pnpm 9 or newer.
 
 ```bash
 git clone https://github.com/lumioguard-dev/lumioguard-tools.git
@@ -160,63 +104,46 @@ pnpm install
 pnpm dev
 ```
 
-That starts every tool:
+No API key or external account is required.
 
-| | Try it at | Its API |
-|---|---|---|
-| Console | http://127.0.0.1:5200 | (proxies each tool below) |
-| Slopmeter | | http://127.0.0.1:8810 |
-| Leakpeek | | http://127.0.0.1:8820 |
-| Citecheck | | http://127.0.0.1:8830 |
+| Service | Address |
+|---|---|
+| Console | `http://127.0.0.1:5200` |
+| Slopmeter API | `http://127.0.0.1:8810` |
+| Leakpeek API | `http://127.0.0.1:8820` |
+| Citecheck API | `http://127.0.0.1:8830` |
 
-Nothing else is required. No API keys, no accounts, no services to sign up for.
-A fresh clone scans, scores and renders a full report out of the box.
+## Repository layout
 
-The workspace packages are intentionally marked `private`: releases publish
-source and deployable Workers, not npm packages. Consume them from a clone or a
-Git dependency rather than expecting them on the npm registry.
-
-## What is in here
-
-```
-apps/
-  console/    the one front end. Reads a site with every tool you pick
-    src/tools/
-      slopmeter/   its client, its report panels and its ink
-      leakpeek/    the same
-      citecheck/   the same
-packages/     what every tool shares: contracts, design tokens, the surface
-tools/
-  slopmeter/  core (the engine) · api (a Worker)
-  leakpeek/   the same two
-  citecheck/  the same two
+```text
+apps/console/                 shared React and Vite front end
+  src/tools/<tool>/           tool-specific client, report, and theme
+packages/shared/              domain vocabulary and wire contracts
+packages/design-tokens/       colour, type, spacing, and Tailwind output
+packages/ui/                  shared interface components
+packages/api-core/            Worker transport and safe target resolution
+packages/web-core/            browser transport and analytics
+tools/<tool>/core/            pure detection engine
+tools/<tool>/api/             Cloudflare Worker
 ```
 
-Each tool is a detection engine and a Cloudflare Worker that feeds it. There is
-**one** front end over all of them: three meters on one page ask the reader
-which number is the answer, so the console draws a single verdict and each
-tool's own score sits with its own section.
+Detection engines contain no network or filesystem I/O. Workers fetch and map
+results; the console renders them. A tool's private rule pack never enters the
+browser bundle or crosses an API response.
 
-Adding a tool is a folder under `tools/` for the engine and the Worker, a folder
-under `apps/console/src/tools/` for its surface, and one line in the console's
-tool registry. Nothing else in the console names a tool, so the picker, the
-consolidated score, the hand-off and the report all learn about it at once. That
-is the whole reason this is a monorepo rather than three repos.
+All workspace packages are private. Releases publish source and deployable
+Workers, not npm packages.
 
-The engines are plain TypeScript with no I/O at all, which is why the whole test
-suite runs offline in a few seconds, and why a rule is easy to contribute.
+## Work on the project
 
-**[What each tool checks](.documentation/RULES.md)** lists everything the three
-engines look for, a line each, in plain words. It is generated from the rule
-sources by `pnpm rules`, and CI fails if it falls behind them.
+[CONTRIBUTING.md](CONTRIBUTING.md) covers setup, testing, adding a tool, local
+configuration, and deployment. Engineering constraints live in
+[CLAUDE.md](CLAUDE.md).
 
-## Contributing
-
-New detection rules, bug reports and whole new tools are all welcome. The
-[contributing guide](CONTRIBUTING.md) covers the layout, the local ports, running
-the checks and shipping a tool. After adding or changing a rule, run `pnpm rules`
-so [the rule catalogue](.documentation/RULES.md) keeps up with it.
+[The generated rule catalogue](.documentation/RULES.md) lists every current
+check in plain language. After changing a detector, run `pnpm rules`; CI verifies
+the file with `pnpm rules:check`.
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE). Do what you like with it.
+MIT. See [LICENSE](LICENSE).

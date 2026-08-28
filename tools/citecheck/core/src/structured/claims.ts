@@ -3,13 +3,9 @@ import type { PageDocument } from '../read/PageDocument.js';
 import { type LdNode, type LdRead, typesOf } from './jsonLd.js';
 
 /**
- * What the page states about itself in a form a machine can read without
- * guessing, and where those statements are missing or contradict the prose.
- *
- * The one that matters most is the entity: an answer engine has to decide WHO
- * a page is about before it can attribute anything to them, and a site that
- * never says so in machine-readable form gets whatever the engine infers from
- * the domain name.
+ * The one that matters most is the entity: an answer engine has to decide WHO a
+ * page is about before it can attribute anything to them, and a site that never
+ * says so in machine-readable form gets what the engine infers from the domain.
  */
 export function checkClaims(page: PageDocument, ld: LdRead): CiteFinding[] {
   const organisation = ld.nodes.find(namesAPublisher);
@@ -81,14 +77,9 @@ export function checkClaims(page: PageDocument, ld: LdRead): CiteFinding[] {
 }
 
 /**
- * Whether a node names who publishes the page.
- *
- * Matched on the schema.org NAMING CONVENTION rather than an exact list.
- * `Organization` has dozens of subtypes and an exact match missed the one the
- * news sites use: bbc.com, cnn.com and nytimes.com all declare
- * `NewsMediaOrganization`, and all three were reported as never saying who
- * publishes them. Every subtype carries `Organization` or `Business` in its
- * name, which is what this looks for.
+ * Matched on the schema.org NAMING CONVENTION rather than an exact list: an
+ * exact `Organization` missed `NewsMediaOrganization`, so bbc.com, cnn.com and
+ * nytimes.com were all reported as never saying who publishes them.
  */
 function namesAPublisher(node: LdNode): boolean {
   return typesOf(node).some((type) => {

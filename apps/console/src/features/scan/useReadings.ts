@@ -13,7 +13,6 @@ export interface Reading {
 
 export interface ReadingsState {
   readonly readings: readonly Reading[];
-  /** True until every selected tool has landed or failed. */
   readonly isReading: boolean;
 }
 
@@ -24,26 +23,23 @@ function messageFor(caught: unknown): string {
 }
 
 /**
- * Every selected tool at once, each landing on its own: awaiting them together
- * holds the fastest behind the slowest, and one dead tool takes the page. A new
- * address aborts everything in flight, or a slow first reading replaces a fast
- * second one.
+ * Every selected tool at once, each landing on its own: awaited together, one dead
+ * tool takes the page. A new address aborts everything in flight, or a slow first
+ * reading replaces a fast second one.
  */
 export function useReadings(address: string, tools: readonly ToolDescriptor[]): ReadingsState {
   const [readings, setReadings] = useState<readonly Reading[]>([]);
 
-  // Held in a ref so the ADDRESS and the SELECTION drive the effect. The array
-  // itself is rebuilt on every render, and as a dependency it would abort and
-  // restart every reading on each one.
+  // Held in a ref so the ADDRESS and the SELECTION drive the effect: the array is
+  // rebuilt every render, and as a dependency would restart every reading.
   const toolsRef = useRef(tools);
   toolsRef.current = tools;
   const selection = tools.map((tool) => tool.id).join(',');
 
   useEffect(() => {
     const controller = new AbortController();
-    // Filtered by the KEY that triggered this run, not taken from the ref
-    // wholesale: the ref is written on every render and can already hold a
-    // newer selection than the one this effect was scheduled for.
+    // Filtered by the KEY that triggered this run: the ref is written every render
+    // and can already hold a newer selection than this effect was scheduled for.
     const wanted = selection.split(',');
     const running = toolsRef.current.filter((tool) => wanted.includes(tool.id));
     setReadings(running.map((tool) => ({ tool, outcome: null, error: null, isReading: true })));

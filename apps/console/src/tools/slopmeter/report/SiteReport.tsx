@@ -1,4 +1,4 @@
-import type { CrawlResponse, FindingDto } from '@lumioguard/shared';
+import { type CrawlResponse, type FindingDto, confidenceNote } from '@lumioguard/shared';
 import { MarkScored, Panel, PanelHead } from '@lumioguard/ui';
 import type { ReactNode } from 'react';
 
@@ -17,11 +17,8 @@ function toFindings(result: CrawlResponse): FindingDto[] {
 }
 
 /**
- * Everything under the reading: the full charge sheet, the way into the crawl
- * detail, and the handoff.
- *
- * The verdict itself is mounted a level up and stays mounted across the wait,
- * which is what lets the needle carry from hunting to settled without a cut.
+ * The verdict itself is mounted a level up and stays mounted across the wait, which
+ * is what lets the needle carry from hunting to settled without a cut.
  */
 export function SiteReport({
   result,
@@ -31,13 +28,14 @@ export function SiteReport({
   readonly verdict: ReactNode;
 }): JSX.Element {
   const findings = toFindings(result);
+  const thin = confidenceNote(result.confidence, result.pagesScanned);
 
   return (
     <Panel hand="a" span={12} className="settles-in">
-      {/* Says the word. "Report card" named its form and "What came out of a
-          template" talked around the subject; this tool is called Slopmeter and
-          the thing it measures has a name. */}
+      {/* Says the word: the alternatives named the panel's form or talked around
+          the subject, and the thing this tool measures has a name. */}
       <PanelHead title="Where the slop is" mark={<MarkScored />} trailing={verdict} />
+      {thin !== null && <p className="mt-4 text-body text-ink-2">{thin}</p>}
       {findings.length === 0 ? (
         <p className="mt-4 text-body text-ink-2">Nothing stock fired anywhere.</p>
       ) : (

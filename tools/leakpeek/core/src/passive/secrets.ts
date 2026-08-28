@@ -1,16 +1,9 @@
 import type { ExposureFinding } from '../domain/ExposureFinding.js';
 
 /**
- * Secrets baked into the served client bundle: the most common real leak on an
- * AI-built site, and fully passive: it is read from what the browser already
- * downloaded, nothing is probed.
- *
- * Two things this must get right. First, evidence is MASKED here, at the source,
- * so a raw key never travels further than this function: the report proves the
- * key exists without reprinting it (see the README). Second, a
- * Supabase `anon` key in a bundle is NORMAL and is not reported: it is public by
- * design. Only the `service_role` key is a leak, and the two are told apart by
- * decoding the JWT and reading its `role` claim, never by pattern alone.
+ * Evidence is MASKED here, at the source, so a raw key never travels further
+ * than this function. A Supabase `anon` key is NORMAL and never reported; only
+ * `service_role` is a leak, told apart by its `role` claim, never by shape.
  */
 
 interface SecretRule {
@@ -24,28 +17,16 @@ interface SecretRule {
 /** A JWT: three base64url segments. Supabase keys are JWTs; the role is inside. */
 const JWT = /(?<![\w-])eyJ[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}\.[A-Za-z0-9_-]{10,}(?![\w-])/g;
 
-// Every pattern here is fenced by `(?<![\w-])` … `(?![\w-])` rather than `\b`.
-// A word boundary does not reject a neighbouring hyphen, so a credential shape
-// embedded in a longer identifier still matched: `--AIza…-more-identifier` and
-// `--sk-dotnav-timed-duration` both read as leaked keys. Apple's carousel CSS
-// variables were reported as two OpenAI keys on that basis. The fence requires
-// the match to stand alone, which is what a real credential does: it follows a
-// quote, an equals or whitespace.
+// Fenced by `(?<![\w-])` and `(?![\w-])` rather than `\b`: a word boundary does
+// not reject a neighbouring hyphen, so a credential shape inside a longer
+// identifier matched, and apple.com's CSS variables read as two OpenAI keys.
 const RULES: readonly SecretRule[] = [
   {
     code: 'secret:openai',
     label: 'OpenAI API key',
     // A legacy key's body is base62 with NO separators, so the class must not
-    // accept `-` or `_`. `[A-Za-z0-9_-]{20,}` matched any hyphenated `sk-`
-    // identifier, and reported apple.com as shipping two OpenAI keys: they
-    // were the CSS custom properties `--sk-dotnav-timed-duration` and
-    // `--sk-dotnav-variable-duration`, which mask to `sk-d…ion` and read
-    // exactly like a key. Project keys DO carry separators, so they keep the
-    // wider class behind the `sk-proj-` prefix that identifies them.
-    //
-    // The lookbehind rejects a match glued to a preceding word character or
-    // hyphen, which is what `--sk-…` is; a real key follows a quote, an
-    // equals or whitespace.
+    // accept `-` or `_`: `[A-Za-z0-9_-]{20,}` matched any hyphenated `sk-`
+    // identifier. Project keys DO carry them, behind the `sk-proj-` prefix.
     pattern: /(?<![\w-])sk-(?:proj-[A-Za-z0-9_-]{20,}|[A-Za-z0-9]{20,})(?![\w-])/g,
     detail:
       'An OpenAI key is in the client bundle. Anyone can read it and spend against your account.',
@@ -110,8 +91,6 @@ export function scanForSecrets(sources: string): ExposureFinding[] {
   const findings: ExposureFinding[] = [];
   const seen = new Set<string>();
 
-  // Supabase service_role: a JWT whose decoded role is service_role. The anon
-  // key is a JWT too and is deliberately NOT reported: it is meant to be public.
   for (const token of sources.match(JWT) ?? []) {
     if (jwtRole(token) !== 'service_role') continue;
     const key = `service_role:${token.slice(0, 12)}`;

@@ -28,12 +28,9 @@ export const categorySchema = enumOf(CATEGORIES);
 export type ExposureCategory = (typeof CATEGORIES)[number];
 
 /**
- * One exposure, as the visitor is shown it. No `fix` on the wire, deliberately:
- * the remediation is the reason to continue into LumioGuard.
- *
- * `evidence` is STRUCTURAL and redacted by construction: shapes and counts,
- * never values. The report renders on sites the visitor does not own, so it must
- * prove a hole without becoming the leak.
+ * No `fix` on the wire, deliberately: the remediation is the reason to continue
+ * into LumioGuard. `evidence` is STRUCTURAL and redacted by construction, shapes
+ * and counts and never values, so a report cannot become the leak it describes.
  */
 export const exposureFindingSchema = z.object({
   /** Opaque and valid only within this response; exists so a list can be keyed. */
@@ -48,13 +45,9 @@ export const exposureFindingSchema = z.object({
 });
 
 /**
- * The platforms the site's response named. Reported, never scored.
- *
- * Each field is a DISTINCT claim and the surface must say which: `builder` made
- * it, `backend` holds its data, `hosting` serves it. Collapsing them under one
- * "built with" had the tool claiming a site was built with Cloudflare.
- *
- * No confidence field: weaker tells are dropped in the engine, not hedged.
+ * Reported, never scored. Each field is a DISTINCT claim: `builder` made it,
+ * `backend` holds its data, `hosting` serves it; collapsing them had the tool
+ * claim a site was built with Cloudflare. Weak tells are dropped, not hedged.
  */
 export const detectedStackSchema = z.object({
   builder: z.string().nullable(),

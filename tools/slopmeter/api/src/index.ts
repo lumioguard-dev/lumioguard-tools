@@ -30,10 +30,9 @@ app.use('*', async (context, next) => corsFor(context.env.ALLOWED_ORIGINS)(conte
 app.use('*', standardHeaders());
 
 /**
- * Paths that must not spend the SCAN budget. A board is a read of rows already
- * taken, and the AI slop page asks for two of them on load: metered here, a
- * visitor who opened that page twice could no longer scan anything. The board's
- * own limit belongs upstream, with the data.
+ * Paths that must not spend the SCAN budget. The AI slop page asks for two boards
+ * on load, so metering them would leave a visitor who opened it twice unable to
+ * scan. A board's own limit belongs upstream, with the data.
  */
 const UNMETERED = new Set(['/api/health', '/api/leaderboard']);
 
@@ -53,7 +52,6 @@ app.use('/api/*', async (context, next) => {
 const scanPage = (input: ScanRequest): Promise<unknown> =>
   getContainer().scanService.scanUrl(input.url);
 
-/** Breadth across a level, depth through levels. */
 const crawlSite = async (
   { url, ...options }: CrawlRequest,
   context: Context<Bindings>,
@@ -75,7 +73,6 @@ const crawlSite = async (
 const analyze = (input: AnalyzeRequest): unknown =>
   getContainer().scanService.analyzeContent(input);
 
-/** Liveness only. */
 app.get('/api/health', (context) => context.json({ status: 'ok' }));
 
 /**

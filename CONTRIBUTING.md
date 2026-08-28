@@ -1,11 +1,12 @@
 # Contributing
 
-Thanks for looking. Bug reports, new detection rules and whole new tools are all
-welcome.
+LumioGuard Tools welcomes bug fixes, detection rules, and new URL-only tools.
+Before changing an engine, read that tool's README. It defines the behaviour the
+code is meant to preserve.
 
-## Getting set up
+## Set up the workspace
 
-Node 22+ and pnpm 9+.
+You need Node 22 or newer and pnpm 9 or newer.
 
 ```bash
 git clone https://github.com/lumioguard-dev/lumioguard-tools.git
@@ -14,400 +15,159 @@ pnpm install
 pnpm dev
 ```
 
-`pnpm dev` starts every tool's web app and Worker at once. Ports are in the table
-below.
+`pnpm dev` starts the console and all three Workers:
 
-## Before you open a pull request
+| Service | Address |
+|---|---|
+| Console | `http://127.0.0.1:5200` |
+| Slopmeter API | `http://127.0.0.1:8810` |
+| Leakpeek API | `http://127.0.0.1:8820` |
+| Citecheck API | `http://127.0.0.1:8830` |
+
+The allocations live in `ports.json`. Both the Worker launcher and Vite proxy
+read that file. Do not copy its values into another config. Services bind to
+`127.0.0.1` so the proxy does not depend on how a machine resolves `localhost`.
+
+## Before opening a pull request
+
+Run the complete gate:
 
 ```bash
 pnpm typecheck && pnpm lint && pnpm test && pnpm build && pnpm rules:check
 ```
 
-All five must pass. Lint must be *clean*, not merely quieter. If a rule is wrong
-for this codebase, turn it off in `biome.json` with a reason rather than
-scattering suppressions.
+Vitest does not typecheck. A passing test suite is not enough on its own. Lint
+must finish cleanly. If a Biome rule is unsuitable for the repository, change
+`biome.json` with a reason instead of scattering suppressions.
 
-`rules:check` fails when [the rule catalogue](.documentation/RULES.md) has
-fallen behind the rule sources. `pnpm rules` regenerates it; the file is never
-edited by hand.
+`pnpm rules:check` compares `.documentation/RULES.md` with the current engines.
+After adding or renaming a rule, run `pnpm rules`; never edit the catalogue by
+hand.
 
-Commits use conventional prefixes (`feat`, `fix`, `refactor`, `chore`, `docs`)
-scoped to the package, and the body says *why*. One logical change per commit.
+Use `type(scope): summary` for commit subjects. Write in the imperative, keep it
+lower case, and omit the trailing full stop.
 
-## How the code is arranged
+## Repository map
 
-```
-apps/
-  console/           the one front end. React + Vite
-    src/tools/<tool>/  that tool's client, report panels, ink and descriptor
-    src/tools/registry.ts  what a tool must provide to appear in the console
-packages/            what every tool shares
-  shared/            wire contracts (zod) and domain vocabulary
-  design-tokens/     colour, type, spacing, radii → a Tailwind plugin
-  ui/                the drawn surface: components, theme, stylesheet
-  api-core/          transport and target resolution for a tool's Worker
-  web-core/          browser-side transport, scan state and analytics
-tools/<tool>/
-  core/              the detection engine. Isomorphic, no I/O
-  api/               Cloudflare Worker (Hono)
+```text
+apps/console/                 the React and Vite front end
+  build/                      documents generated for browsers and crawlers
+  src/tools/<tool>/           a tool's client, report, theme and descriptor
+packages/shared/              domain vocabulary and zod wire contracts
+packages/design-tokens/       colour, typography, spacing and Tailwind output
+packages/ui/                  shared React components and styles
+packages/api-core/            Worker HTTP, target safety and reading hand-off
+packages/web-core/            browser transport and analytics
+tools/<tool>/core/            pure detection engine
+tools/<tool>/api/             Cloudflare Worker around the engine
 ```
 
-**A tool has no front end of its own.** There is one app, and every tool's
-surface is a folder inside it. Three meters on one page ask the reader which
-number is the answer, so the console draws a single verdict, the worst of the
-readings that ran, and each tool's own score sits with its own section.
+There is one front end. A tool contributes a surface inside the console; it does
+not own another app. The console combines selected readings by taking the lowest
+score, then keeps each tool's score beside its own findings.
 
-Dependencies point one way. The console and `api` depend on `shared`; `api` also
-depends on `core`; `core` depends only on `shared`.
+The console must not import a tool's `core`. Doing so publishes the detector and
+its rule pack in the browser bundle. Values the report needs cross the API
+boundary explicitly instead of being recalculated from a second scoring table.
 
-**The console must never import `core`.** That would ship the whole rule pack to
-the browser, where anyone can read it. Anything both the engine and the surface
-need is domain vocabulary and belongs in `shared`. A weight the surface has to
-rank findings by is put on the WIRE by the mapper rather than recomputed in the
-client, so there is never a second copy of a scorer's table.
+The engines perform no I/O. Network requests, screenshots, time, environment
+access, and persistence belong to the Worker layer. Keeping `core` pure makes
+fixtures deterministic and lets the suite run offline.
 
-**`core` does no I/O.** Fetching, screenshots and the clock live in `api`
-services. That is what lets the engines be tested against fixtures with no
-network, and it is not negotiable: a `fetch` in `core` breaks the whole suite's
-offline guarantee.
+## Tests that belong here
 
-Within a package, group by what the code is *for*, not by what kind of file it
-is. A file named after a plural (`utils.ts`, `Panels.tsx`) usually means the
-folder should have taken the split instead.
+Put tests beside the code in `__tests__`. Prioritise failures that would otherwise
+look healthy:
 
-## Ports are allocated, not defaulted
+- a boundary being bypassed, such as a private address reaching the fetcher;
+- a product guarantee failing, such as a Leakpeek probe issuing a write;
+- two representations drifting, such as score bands and chart segments;
+- a realistic false positive or false negative in a detector;
+- private rule data appearing in an API response.
 
-More than one tool is expected to run at once, so ports come out of a table
-rather than from whatever Vite finds free.
+Slopmeter has an exact parity suite for the detector it replaced. The fixture
+corpus is external, so those cases run only when `SLOPMETER_PARITY_ROOT` points
+to it. A mismatch means scoring changed. Do not rewrite fixtures merely to
+restore green.
 
-| Range | Owner |
-|---|---|
-| `5173`, `8787` | Reserved for the LumioGuard app and its API. Never take these. |
-| `52xx` | apps |
-| `88xx` | tool Workers |
-
-| Service | Port |
-|---|---|
-| console | `5200` |
-| slopmeter api | `8810` |
-| leakpeek api | `8820` |
-| citecheck api | `8830` |
-
-A tool no longer serves a page of its own. There is one app, the console, and
-it proxies `/<tool>/api` to that tool's Worker.
-
-`ports.json` is the single source of truth. The console's `vite.config.ts` and
-`scripts/dev-worker.mjs` both read it, so a tool's number cannot drift apart
-from the proxy pointed at it, and `scripts/ports.mjs` fails loudly if two owners
-claim one port.
-
-Vite's fallback behaviour is why this is a table: it takes the next free port and
-prints it, so a collision surfaces as a proxy pointing at whatever answered
-rather than as an error.
-
-Everything binds **`127.0.0.1`, never `localhost`**. On a machine that resolves
-`localhost` to `::1` first, the proxy dials an address the Worker is not
-listening on and every request fails with nothing in the Worker's log.
-
-## Testing
-
-Tests live beside what they cover, in a `__tests__` folder. They run on Node
-with no DOM and no network, which is what keeps the whole suite a few seconds.
-
-What is worth a test here is narrower than "everything", and wider than "the
-happy path". The ones that earn their place guard something that would fail
-**silently**:
-
-- **A boundary.** `TargetResolver` refusing a private address, the error mapper
-  answering generically, `ApiClient` rejecting a body that is the wrong shape.
-  Break one of these and nothing on screen looks wrong.
-- **A promise the product makes.** Leakpeek's prober only ever issuing `GET`;
-  a critical finding pinning the score into the top band; the rule pack staying
-  off the wire.
-- **Two things that must agree.** A colour token and the custom property it
-  points at; the critical floor and the band it names. Assert them against each
-  other, never against a copy of the number.
-
-A test that restates the implementation is worse than no test: it fails when the
-code is refactored and passes when the behaviour is wrong.
-
-### The UI is measured, not mocked
-
-There are no jsdom or component tests, deliberately. A component that renders
-without throwing tells you almost nothing about a report whose whole job is to
-be read and believed, and the defects that actually shipped here were an arc of
-type under the 12px floor and a needle running to -18.9%, off the end of its own
-track. Neither would fail a render test.
-
-UI is checked in a real browser against the live DOM: overflow, contrast,
-collisions, and the *rendered* box rather than the intended one, because a
-rotated element's bounding box is wider than the element. Animation is sampled frame by
-frame. What is unit-tested is the pure logic underneath: the band maths, the
-token contract, the scale each verdict is drawn against.
-
-### The parity suite
-
-`slopmeter/core` carries a suite that re-scores a cached corpus and requires
-**exact** matches. That corpus is not in this repository, so it skips itself
-unless `SLOPMETER_PARITY_ROOT` points at a checkout of it.
-
-Where it runs, it is the safety net for any engine change: if it drifts, the
-change altered scoring, whether or not that was the intent. Never retune the
-fixtures to make it pass.
+For interface work, verify the rendered DOM as well as screenshots. Check
+overflow, collisions, contrast, and small text at narrow and wide viewports.
+Exercise reduced motion and the final state of every animation.
 
 ## Adding a tool
 
-1. Create `tools/<name>/{core,api,web}`. The workspace globs pick it up with no
-   config edit. Its `web` is a surface library, not an app: a client, a report
-   component and its ink, exported from `src/index.ts`.
-2. Claim the next free api slot in `ports.json`. The console proxies
-   `/<name>/api` to it with no edit anywhere.
-3. Add a descriptor in `apps/console/src/tools/` and a line in that folder's
-   `index.ts`. That is the whole surface change: the picker, the consolidated
-   score, the hand-off and the report all read that array. Its `id`, `label` and
-   `summary` are spread from `catalogue.ts`, which is the same list the served
-   document and the structured data are written from, so a new reading appears
-   to a crawler and to a visitor at once. `catalogue.test.ts` holds the two
-   lists to the same order.
-4. Add the tool to the `tool` choice list in `.github/workflows/deploy.yml`.
-5. Add `VITE_API_BASE_URL_<TOOL>` as a repository variable and map it to the
-   console's `VITE_<NAME>_API_URL` in the console build step.
+1. Add `tools/<name>/core` and `tools/<name>/api`.
+2. Allocate API and inspector ports in `ports.json`.
+3. Add `apps/console/src/tools/<name>/` with its client, report, theme, and
+   descriptor. Register it through that folder's `index.ts`.
+4. Put its public label, slug, headline, and summary in
+   `apps/console/src/tools/catalogue.ts`.
+5. Add the tool to the deploy workflow's choice list.
+6. Add `VITE_API_BASE_URL_<TOOL>` as a repository variable and map it to
+   `VITE_<TOOL>_API_URL` during the console build.
+7. Add its rules to `scripts/build-rule-catalog.mjs`, then run `pnpm rules`.
 
-## Deploying
+The registry drives selection, reporting, hand-off, and page lists. The
+catalogue drives runtime copy and generated documents. If a new tool needs
+conditionals elsewhere in the console, the abstraction has probably leaked.
 
-Each tool owns its own Worker and ships on its own, so releasing one never
-touches a sibling. That independence is why the repo is laid out by tool rather
-than by layer. There is **one** Pages project, because there is one app.
+## Generated documents
 
-| Part | Cloudflare resource | Name |
-|---|---|---|
-| `tools/<tool>/api` | Worker | `lumioguard-<tool>-api` |
-| `apps/console` | Pages | `lumioguard-readout` |
+The console does not serve an empty `#root`. Build code writes useful HTML for
+the chooser, scan page, tool pages, and explainers, using the same product copy
+React renders.
 
-**One-time.** Workers are created by `wrangler deploy` on first run; Pages
-projects are not:
-
-```bash
-pnpm dlx wrangler pages project create lumioguard-readout --production-branch main
-```
-
-Then set two repository secrets, `CLOUDFLARE_API_TOKEN` (with *Workers Scripts:
-Edit* and *Pages: Edit*) and `CLOUDFLARE_ACCOUNT_ID`, plus one variable per tool,
-`VITE_API_BASE_URL_<TOOL>`, holding that tool's deployed Worker origin.
-
-Those matter. In development the console proxies `/<tool>/api` to the local
-Worker, so the client uses a relative path. In production the Pages site and the
-Workers are **different origins**, and each is baked into the bundle at build
-time. Set one wrong and that tool's reading fails CORS with no useful error
-**while the other tools carry on**, which is easy to miss. Point each Worker's
-`ALLOWED_ORIGINS` at its Pages URL rather than leaving `*` in production.
-
-**Shipping.** GitHub → Actions → **Deploy** → Run workflow; pick the tool and
-whether to ship `api`, `web` or `both`. It typechecks, lints and runs the suite
-first, because a deploy that skips the suite ships the regression the suite
-exists to catch. Order within a tool is deliberate: **api first**, because the web bundle
-is built against the Worker's origin.
-
-**Rollback.** Workers and Pages both keep deployment history:
-
-```bash
-pnpm dlx wrangler deployments list --name lumioguard-<tool>-api
-pnpm dlx wrangler rollback --name lumioguard-<tool>-api
-```
-
-Pages rollback is done from the dashboard: pick a previous deployment and promote
-it to production.
-
-## What the console serves to a crawler
-
-The console is a single-page app, and for most of its life the document it
-served was `<div id="root"></div>` and nothing else. Citecheck, which ships in
-this repo, calls that `access.shell` and ranks it a **blocker**: one blocker
-pins a page into the bottom band whatever else is true of it. Measured with the
-engine in `tools/citecheck/core`, the console scored **40, Unreadable** on
-itself. It now scores **100, Legible**.
-
-`apps/console/build/` is what changed it, and it runs in `pnpm dev` as well as
-in `pnpm build`, so what you check locally is what ships:
-
-| File | What it writes |
+| File | Responsibility |
 |---|---|
-| `head.ts` | The `<head>` metadata and the JSON-LD, per page |
-| `shell.ts` | The static document that fills `#root`, per tool page |
-| `pages/content.ts` | The explainers' prose, and the ladders read from `shared` |
-| `pages/render.ts` | One explainer to a complete standalone document |
-| `wellKnown.ts` | `robots.txt`, `sitemap.xml`, `llms.txt` |
-| `site.ts` | Reads `VITE_PUBLIC_SITE_URL` and refuses a malformed one |
-| `seo.ts` | The Vite plugin wiring them together |
+| `build/documents.ts` | document assembly and escaping |
+| `build/head.ts` | metadata and JSON-LD |
+| `build/shell.ts` | static content inside `#root` |
+| `build/pages/content.ts` | explainer copy and score ladders |
+| `build/pages/render.ts` | standalone explainer documents |
+| `build/tokens.ts` | build-time design tokens |
+| `build/wellKnown.ts` | `robots.txt`, `sitemap.xml`, and `llms.txt` |
+| `build/site.ts` | validation of `VITE_PUBLIC_SITE_URL` |
+| `build/seo.ts` | Vite integration |
 
-### The tool pages
+Do not hand-copy runtime text into HTML. Set `VITE_PUBLIC_SITE_URL` for a
+production build; without it, absolute metadata is deliberately omitted.
 
-The app answers at five URLs, and each is a real document rather than a route.
-`/` is the CHOOSER and scans nothing: it asks which reading and links to the
-page that runs it. `/scan` runs whatever the picker has ticked, and `/<slug>`
-runs one reading alone with the picker hidden. The slugs are `ai-slop-check`,
-`security-check` and `seo-ai-visibility-check`.
+## Local configuration
 
-`scan` is deliberately NOT in the catalogue: it is a page, not a reading, and an
-entry there would put it in the picker, in the JSON-LD feature list and on the
-tool pages as if it were a fourth tool. A test holds it out.
+Each Worker provides `api/.dev.vars.example`. Copy it to `.dev.vars` only when
+you need optional integrations. For the console, copy `.env.example` to
+`.env.development.local`.
 
-The chooser is the only page that links onward, and it links to all four. That
-is what earns `/` its own URL rather than duplicating `/scan`, and it is the one
-document a crawler reaches the rest from.
+Do not use `.env.local`: Vite reads it during production builds too. Secrets
+belong in `.dev.vars` locally and Cloudflare Worker secrets in production. They
+never belong in `wrangler.toml` or git.
 
-They are separate files on purpose. A host rewrite would serve one document at
-four URLs, so all four would carry one title and one canonical and none of them
-could rank. Each is a Vite input, listed from the catalogue in `vite.config.ts`.
+Analytics and the LumioGuard hand-off are disabled unless configured. A fork
+with no keys or application URL must remain complete and must not advertise or
+contact LumioGuard. Analytics must never include scanned addresses or reading
+keys.
 
-`src/tools/catalogue.ts` is the single source: it carries each reading's `slug`,
-`headline` and `description`, the build names the file and writes the head from
-them, and `toolForPath()` reads the slug back off `window.location.pathname` at
-runtime to pin the reading. Adding a fourth tool adds its page with no other
-edit. On a tool page a `?tools=` parameter is ignored: the URL is the promise
-the heading made.
+## Deployment
 
-The shared head, the fonts and the pre-paint theme script are injected from
-`build/seo.ts` through a `<!--seo:chrome-->` anchor rather than copied into each
-document, so a fifth page cannot ship with a stale copy of it.
+The deploy workflow can ship one Worker, the shared console, or both. When both
+are selected, the Worker goes first because the console bundle contains each
+Worker's public origin.
 
-### The explainer pages
+| Source | Cloudflare resource |
+|---|---|
+| `tools/<tool>/api` | `lumioguard-<tool>-api` Worker |
+| `apps/console` | `lumioguard-readout` Pages project |
 
-The app is one screen with a URL bar on it, which is nothing for a search
-engine to rank: 64 words, one heading, one URL. `src/pages.ts` registers a set
-of explainers that give it something to be found for, and
-`build/pages/content.ts` pairs each entry with its prose the same way the tool
-descriptors pair with the catalogue.
+Production Workers need a restrictive `ALLOWED_ORIGINS` value and their
+`SCAN_RATE_LIMITER` binding. CORS is not an abuse-control boundary. Run normal
+deployments through GitHub Actions. Roll Workers back through Wrangler's
+deployment history and Pages back by promoting an earlier deployment.
 
-They are **prerendered documents, not app routes**. No React, no meter: the
-consolidated verdict stays on the one surface, and every page links back into
-it. Four things about them are load-bearing.
+## Security while contributing
 
-**They are emitted as `<slug>.html`, never `<slug>/index.html`.** Cloudflare
-Pages answers `/slug` from `/slug.html` with a 200, and answers it from
-`/slug/index.html` with a **308 to `/slug/`**. Under the second shape every
-canonical, sitemap entry and internal link points at a URL that moves. Verify
-with the real thing, because `vite preview` masks it by falling back to the
-app's `index.html` for any unknown path:
+Only scan a site you own or have permission to assess. Leakpeek sends real,
+read-only requests to backends discovered in public bundles.
 
-```bash
-pnpm --filter @lumioguard/console exec wrangler pages dev dist
-```
-
-**The app can be mounted under a path.** `VITE_PUBLIC_SITE_URL` may carry one:
-`https://lumioguard.dev/tools` serves the whole thing from `/tools`, and that
-single string is then the only place the mount point is written. Vite's asset
-base, every internal link, the canonical and the sitemap all read it. Passing it
-twice, once as `--base` and once in the URL, is two literals that must agree,
-and a page would link somewhere its own canonical denies.
-
-Mounted, no `robots.txt` is emitted. It is only read at the root of a host, so
-one under `/tools` is a file nothing fetches; the host's own robots.txt governs
-and should name this sitemap with a second `Sitemap:` line.
-
-**Every published number is read from `shared`.** The band tables on
-`/how-the-scores-work` come from `CITATION_BANDS`, `EXPOSURE_BANDS` and
-`TIER_BANDS`, so retuning a ladder moves the published table the same day it
-moves the score.
-
-**`content.ts` imports `shared` by a relative path on purpose.** It is reached
-from `vite.config.ts`, which Vite bundles with esbuild before any alias exists.
-A bare `@lumioguard/shared` is left external, Node then loads the package's own
-entry, and that entry is TypeScript source. The build dies with `Unknown file
-extension ".ts"`. The comment on the import says so; do not tidy it back.
-
-**The links live in the React colophon too.** A crawler that runs JavaScript
-sees what React rendered, so a link carried only by the prerendered shell is one
-Google never follows.
-
-Three things about it are load-bearing.
-
-**Every word is imported.** The heading, the description and the three beats
-come from `src/copy.ts`; the readings come from `src/tools/catalogue.ts`, which
-is also what the descriptors spread their `label` and `summary` from. Typed out
-twice, the served document could say something the app does not, and a page
-whose served text differs from what a reader sees is what `access.agent-thin`
-reports. Do not hand-write copy into `index.html`.
-
-**React clears `#root` on its first commit**, so the static document is what the
-page is until the app mounts and never after. It is not a fallback that lingers,
-and it is not hidden by script: hiding it from anything that runs JavaScript
-while serving it to anything that does not is cloaking, and Citecheck has a rule
-for that too.
-
-**The origin is not baked in.** With `VITE_PUBLIC_SITE_URL` unset there is no
-canonical, no OpenGraph URL and no sitemap, and the build says so on stderr. A
-fork must not ship a canonical pointing at our host, which is
-`document.foreign-canonical`, another blocker. Set the variable, or accept that
-what you deploy carries none of it.
-
-To check a change, build and read the engine's own verdict rather than trusting
-the markup:
-
-```bash
-VITE_PUBLIC_SITE_URL=https://example.test pnpm --filter @lumioguard/console run build
-cat apps/console/dist/index.html apps/console/dist/robots.txt
-```
-
-## Analytics
-
-Off by default and off in every fork: nothing loads and no request is made
-without `VITE_POSTHOG_KEY`. Set it and the console loads PostHog on its own
-chunk, configured exactly as the marketing site configures it, and reports four
-events.
-
-| Event | Sent when | Carries |
-|---|---|---|
-| `cta_click` | the hand-off button is clicked | `cta_text`, `cta_href`, `cta_location`, `tool_page`, `tools`, `score`, `tier`, `worst_tool` |
-| `scan_submit` | an address is submitted | `tool_page`, `tools`, `tool_count` |
-| `tools_select` | the picker changes | `tool_page`, `tools`, `tool_count` |
-| `report_view` | every reading has landed | `tool_page`, `tools`, `score`, `tier`, `worst_tool`, `failed_count` |
-
-**`cta_click` and its three `cta_` properties are the marketing site's own
-event**, kept name for name so one insight covers a click on either half of the
-site. That name lives in two repositories and no compiler can see both, so
-changing it here means changing `assets/consent.js` there. The same is true of
-the `lg-consent` key the banner writes and this console reads: the two halves of
-one site must not count differently, and same-origin is what carries the choice
-across.
-
-**No address is ever sent.** The site being read is somebody else's, and it
-reaches this app in the query, so `sanitize_properties` strips that parameter
-out of the URLs PostHog collects for itself. Sending it is a decision to take
-deliberately rather than one to arrive at by default. The hand-off's `cta_href`
-loses its query for the same reason: it carries the reading's site keys, which
-are handles to a report.
-
-Two guards, both of which must pass. The key is what a fork never has. The
-origin is `VITE_PUBLIC_SITE_URL`, so a preview deploy and a developer's laptop
-count nothing, which is the exclusion the marketing site makes by hostname.
-
-## Local environment files
-
-Copy each tool's `api/.dev.vars.example` → `.dev.vars`, and
-`apps/console/.env.example` → `apps/console/.env.development.local`. Both are
-gitignored, and every variable in them is optional.
-
-Use `.env.development.local`, **not** `.env.local`: Vite reads `.env.local` in
-every mode including `vite build`, so local values in it would ship in a laptop
-deploy. The `.development` infix keeps them out of a production build.
-
-Secrets never enter git. In production they are Worker secrets
-(`wrangler secret put NAME`), never values in `wrangler.toml`.
-
-Each Worker also declares a `SCAN_RATE_LIMITER` binding in `wrangler.toml`.
-Keep it enabled on public deployments: CORS controls which browsers can read a
-response, but it is not an authentication or abuse-control boundary.
-
-## A few house rules
-
-- **No casts to escape a type.** `as unknown as X` is always a defect, and so is
-  a lone `as X` used to silence an error. Narrow properly or fix the type.
-- **Before adding a constant, grep for its value.** Two literals that must agree
-  and cannot fail together are a bug that has not happened yet.
-- **Comments default to none.** One earns its place only by carrying what the
-  code cannot: why a threshold is that number, what broke that led to this shape,
-  a guarantee a future editor would otherwise undo. Design decisions belong in a
-  README, not above a function.
-- **No hard-coded LumioGuard address.** The integration is optional and off by
-  default; a fork must never advertise or reach something it does not have.
+All server-side URLs pass through `TargetResolver`, including redirect targets
+and secondary resources. Leakpeek remains `GET` only, and evidence is redacted
+where it is created. See [SECURITY.md](SECURITY.md) for private reporting.

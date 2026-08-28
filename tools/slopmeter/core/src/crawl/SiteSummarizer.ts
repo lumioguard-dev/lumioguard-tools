@@ -94,9 +94,8 @@ export class SiteSummarizer {
         worstPage: worst === null ? null : { url: worst.url, score: worst.score, tier: worst.tier },
         hiddenSignals: hidden.length,
         hiddenWeight: hidden.reduce((total, s) => total + s.weight, 0),
-        // How much WORSE the site score is than the homepage alone, so it stays
-        // a positive number for a crawl that found something behind the front
-        // door. The subtraction flips with the scale.
+        // How much WORSE the site score is than the homepage alone, kept
+        // positive for a crawl that found something behind the front door.
         hiddenDelta: homepage === null ? null : homepage.score - value,
         uniqueSignals: signals.filter((s) => s.weight > 0).length,
       },

@@ -8,7 +8,6 @@ import { describe, expect, it } from 'vitest';
 import { ScanResultMapper } from '../mappers/ScanResultMapper.js';
 import { NoScreenshotProvider } from '../services/ScreenshotProvider.js';
 
-/** The rule pack is the product. */
 const registry = createDefaultRegistry();
 const analyzer = new SlopAnalyzer(registry);
 const mapper = new ScanResultMapper(new TierResolver(), new NoScreenshotProvider());

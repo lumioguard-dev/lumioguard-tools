@@ -1,11 +1,6 @@
-// This world is flat print: a drawn box has no depth and does not pretend to.
-// Elevation is reserved for things that genuinely float: the enlarged
-// screenshot, a dialog, and reads as shadow cast on paper, not glow. A
-// zero-offset coloured halo is decoration, and this product charges other pages
-// for it.
-//
-// The values are per-theme: a near-black shadow is invisible on dark stock at
-// low alpha and far too heavy on paper, so each ground carries its own.
+// A drawn box has no depth, so elevation is reserved for what genuinely floats:
+// a dialog, the enlarged screenshot. It reads as shadow cast on paper, and the
+// values are per-theme because one alpha cannot suit dark stock and cream both.
 
 import { tokenRefs } from './palette.js';
 

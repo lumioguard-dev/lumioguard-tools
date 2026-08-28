@@ -1,8 +1,7 @@
-/** The figure's metrics, in one place. */
 export const FIGURE_TYPE =
   'text-48 font-extrabold leading-tight tracking-tight tabular-nums lg:text-60';
 
-/** The figure's place on the page, before there is a figure. */
+/** Holds the figure's place before there is a figure. */
 export function PendingScore(): JSX.Element {
   return (
     <span className={`relative inline-block ${FIGURE_TYPE}`}>

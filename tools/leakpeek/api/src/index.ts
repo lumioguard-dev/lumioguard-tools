@@ -6,7 +6,7 @@ import {
   standardHeaders,
 } from '@lumioguard/api-core';
 import { NOT_FOUND, toHttpFailure } from '@lumioguard/api-core';
-import { type ExposureRequest, exposureRequestSchema } from '@lumioguard/shared';
+import { type ExposureRequest, exposureRequestSchema, hostOf } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
 import { getContainer } from './container.js';
 import type { Bindings } from './http/env.js';
@@ -39,10 +39,11 @@ const scan = async (input: ExposureRequest, context: Context<Bindings>): Promise
   const report = await container.scanService.scan(input.url);
 
   const config = recorderConfigFrom(context.env);
+  const host = hostOf(report.host);
   const siteKey =
     config === null
       ? null
-      : await container.recorder.record(readingFrom(report), config, report.host);
+      : await container.recorder.record(readingFrom(report, host), config, host);
 
   return { ...report, siteKey };
 };

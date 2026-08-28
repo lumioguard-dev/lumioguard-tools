@@ -1,40 +1,48 @@
-// Set ONE version across every workspace package.json. The repo ships as a
-// single version: the Release workflow reads it to tag, then bumps it here for
-// the next cycle.
-//
-//   node scripts/set-monorepo-version.mjs <version>   set every workspace
-//   node scripts/set-monorepo-version.mjs --print     print the current version
-//
-// The directories mirror the globs in pnpm-workspace.yaml — `packages/*` plus
-// each tool's `api`/`web`/`core`. Read from the same shape rather than a second
-// hardcoded list, so adding a tool needs no edit here either.
-//
-// Only the top-level "version" string is rewritten, no reformatting, so the diff
-// is one line per file.
+// Set ONE version across every workspace package.json. The repo ships as a single
+// version: the Release workflow reads it to tag, then bumps it here.
 
 import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
-const TOOL_LAYERS = ['api', 'web', 'core'];
-const SKIP = new Set(['node_modules', 'packages', 'scripts', 'docs', '.git', '.github']);
+
+/**
+ * Read from pnpm-workspace.yaml rather than a second hardcoded list. The list
+ * WAS hardcoded, as `<dir>/api|web|core`, which expanded to `tools/api` and
+ * left every tool and the console behind at the version before last.
+ */
+function workspaceGlobs() {
+  const yaml = readFileSync(join(ROOT, 'pnpm-workspace.yaml'), 'utf8');
+  return [...yaml.matchAll(/^\s*-\s*["']([^"']+)["']/gm)].map((match) => match[1]);
+}
+
+function expand(pattern) {
+  let dirs = [''];
+  for (const part of pattern.split('/')) {
+    const next = [];
+    for (const dir of dirs) {
+      if (part !== '*') {
+        const candidate = dir === '' ? part : `${dir}/${part}`;
+        if (existsSync(join(ROOT, candidate))) next.push(candidate);
+        continue;
+      }
+      const base = join(ROOT, dir);
+      if (!existsSync(base)) continue;
+      for (const name of readdirSync(base)) {
+        if (name.startsWith('.') || name === 'node_modules') continue;
+        if (statSync(join(base, name)).isDirectory())
+          next.push(dir === '' ? name : `${dir}/${name}`);
+      }
+    }
+    dirs = next;
+  }
+  return dirs;
+}
 
 function workspacePackageJsons() {
-  const dirs = ['.'];
-
-  const packages = join(ROOT, 'packages');
-  if (existsSync(packages)) {
-    for (const name of readdirSync(packages)) dirs.push(`packages/${name}`);
-  }
-
-  for (const name of readdirSync(ROOT)) {
-    if (SKIP.has(name) || name.startsWith('.')) continue;
-    if (!statSync(join(ROOT, name)).isDirectory()) continue;
-    for (const layer of TOOL_LAYERS) dirs.push(`${name}/${layer}`);
-  }
-
-  return dirs.map((d) => join(ROOT, d, 'package.json')).filter((p) => existsSync(p));
+  const dirs = ['.', ...workspaceGlobs().flatMap(expand)];
+  return dirs.map((dir) => join(ROOT, dir, 'package.json')).filter((path) => existsSync(path));
 }
 
 function rootVersion() {

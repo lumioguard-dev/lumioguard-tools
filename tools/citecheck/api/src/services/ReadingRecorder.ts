@@ -1,30 +1,13 @@
-import type { RecorderConfig } from '@lumioguard/api-core';
+import { type RecorderConfig, recorderConfigFor } from '@lumioguard/api-core';
 import type { CitationCrawlResponse, CitationResponse, Impact } from '@lumioguard/shared';
 import type { Env } from '../http/env.js';
 
 /**
- * What is Citecheck's about recording a reading. The signing, the transport and
- * the response handling are one implementation in `@lumioguard/api-core`,
- * because they were written twice and the two copies were the signing code.
- */
-
-/**
- * Read per request: bindings arrive with the request, the container does not.
- *
- * Both halves are required and neither has a default: a fork that sets a secret
- * but no address must not post its readings to somebody else's API.
+ * Read per request rather than baked into the container: bindings arrive with
+ * the request in Workers, and the container is built once per isolate.
  */
 export function recorderConfigFrom(env: Env): RecorderConfig | null {
-  const secret = env.CITECHECK_INGEST_SECRET;
-  const base = env.LUMIOGUARD_API_BASE_URL?.replace(/\/$/, '');
-  if (!secret || !base) return null;
-  return {
-    // One intake for every reading tool; the tool is named in the path.
-    endpoint: `${base}/api/external/citecheck/readings`,
-    secret,
-    signatureHeader: 'x-citecheck-signature',
-    timestampHeader: 'x-citecheck-timestamp',
-  };
+  return recorderConfigFor('citecheck', env.CITECHECK_INGEST_SECRET, env.LUMIOGUARD_API_BASE_URL);
 }
 
 /**
@@ -52,10 +35,6 @@ export interface ReadingPayload {
 }
 
 /**
- * Field by field, not a spread: a spread forwards whatever is added to the wire
- * later. `impact` is sent as `severity`, the envelope all three tools share.
- */
-/**
  * TRANSLATED, not passed through. The ingest takes only
  * `critical | high | medium | low`, and `blocker` 400s the whole reading; the
  * recorder fails closed, so the symptom is a reading that never arrives.
@@ -67,10 +46,14 @@ const SEVERITY: Record<Impact, 'critical' | 'high' | 'medium' | 'low'> = {
   absent: 'low',
 };
 
-export function readingFrom(report: CitationResponse): ReadingPayload {
+/**
+ * Field by field, not a spread: a spread forwards whatever is added to the wire
+ * later. `impact` is sent as `severity`, the envelope all three tools share.
+ */
+export function readingFrom(report: CitationResponse, host: string): ReadingPayload {
   return {
     entryUrl: report.url,
-    host: report.host,
+    host,
     score: report.score,
     tier: report.tier,
     tierDescription: report.tierDescription,
@@ -92,10 +75,10 @@ export function readingFrom(report: CitationResponse): ReadingPayload {
   };
 }
 
-export function readingFromCrawl(report: CitationCrawlResponse): ReadingPayload {
+export function readingFromCrawl(report: CitationCrawlResponse, host: string): ReadingPayload {
   return {
     entryUrl: report.entry,
-    host: report.host,
+    host,
     score: report.site.score,
     tier: report.site.tier,
     tierDescription: report.site.tierDescription,

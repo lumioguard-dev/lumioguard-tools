@@ -5,12 +5,9 @@ import { PageFetchError } from '../services/PageFetchError.js';
 import { InvalidTargetError } from '../services/TargetResolver.js';
 
 /**
- * The boundary between an internal failure and what a stranger is told.
- *
- * Internal messages carry file paths and rule source, and the rule pack is the
- * product, so anything unrecognised has to come back generic. The failure this
- * guards is silent: a thrown Error whose message reaches the wire looks like a
- * perfectly ordinary error response.
+ * The boundary between an internal failure and what a stranger is told. Internal
+ * messages carry file paths and rule source, so anything unrecognised must come
+ * back generic. The failure is silent: a leaked message looks like a normal one.
  */
 
 describe('toHttpFailure', () => {

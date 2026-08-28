@@ -12,11 +12,8 @@ export interface WellKnown {
 }
 
 /**
- * What the site's well-known files say, and where two of them disagree.
- *
  * NOTHING HERE SCORES A POSTURE. Blocking an AI crawler is a decision a site is
- * entitled to make, and charging for it would be charging someone for meaning
- * what they said. What is scored is a CONTRADICTION: two files the same site
+ * entitled to make. What is scored is a CONTRADICTION: two files the same site
  * serves, giving opposite instructions, where at most one can be intended.
  */
 export function checkWellKnown(input: WellKnown): CiteFinding[] {
@@ -24,13 +21,6 @@ export function checkWellKnown(input: WellKnown): CiteFinding[] {
   const invitesAgents = input.llmsTxt !== null && input.llmsTxt.trim() !== '';
 
   return [
-    /**
-     * A line robots.txt does not understand, after Lighthouse's `robots-txt`.
-     *
-     * Distinct from the file being absent. A mistyped field is skipped without
-     * comment by every crawler that reads it, so the rule its author wrote was
-     * never in force and nothing anywhere says so.
-     */
     ...when(input.robots.invalidLines.length > 0, () =>
       finding({
         code: 'access.invalid-robots',
@@ -82,13 +72,9 @@ export function checkWellKnown(input: WellKnown): CiteFinding[] {
         }),
     ),
     /**
-     * The contradiction, not the posture: a file inviting AI readers beside a
-     * file turning them away. One of the two is out of date.
-     *
-     * It takes MOST of them, not one. notion.com publishes an llms.txt and
-     * blocks two agents of fourteen, allowing OpenAI, Anthropic and Perplexity
-     * while refusing Meta and Amazon. That is a considered policy, and calling
-     * it a contradiction charged them for having made a decision.
+     * The contradiction, not the posture, and it takes MOST of them: notion.com
+     * publishes an llms.txt and blocks two agents of fourteen, which is a
+     * considered policy rather than a contradiction.
      */
     ...when(invitesAgents && blocked.length > input.postures.length / 2, () =>
       finding({
@@ -106,11 +92,9 @@ export function checkWellKnown(input: WellKnown): CiteFinding[] {
         fix: 'Decide which agents you want, then make robots.txt and llms.txt agree.',
       }),
     ),
-    // Never asked of a sitemap INDEX. An index lists further sitemaps, not
-    // pages, so "this URL is not among its entries" is true of every page on
-    // the site and means nothing. Reported against stripe.com's index of nine
-    // child sitemaps, which is exactly the kind of confident false finding that
-    // costs a report its credibility.
+    // Never asked of a sitemap INDEX: an index lists further sitemaps, not
+    // pages, so "not among its entries" is true of every page on the site. It
+    // fired on stripe.com's index of nine child sitemaps.
     ...when(
       input.sitemap?.listsTarget === false && !input.sitemap.isIndex && input.sitemap.urlCount > 0,
       () =>
@@ -132,15 +116,9 @@ export function checkWellKnown(input: WellKnown): CiteFinding[] {
 }
 
 /**
- * A page robots.txt tells every crawler to leave alone.
- *
- * Half of Lighthouse's `is-crawlable`, the audit it weights above every other
- * in its SEO score, and the half this engine did not have: the directive was
- * computed and used only to decide whether the SITEMAP contradicted it, so a
- * page simply disallowed and not listed anywhere was never reported at all.
- *
- * A blocker on its own. Whatever else is true of the page, nothing is coming to
- * read it.
+ * Half of Lighthouse's `is-crawlable`, the audit it weights above every other,
+ * and the half this engine lacked: the directive was computed only to decide
+ * whether the SITEMAP contradicted it, so a disallowed page went unreported.
  */
 export function checkCrawlable(disallowedForAll: boolean, path: string): CiteFinding[] {
   return when(disallowedForAll, () =>
@@ -158,12 +136,9 @@ export function checkCrawlable(disallowedForAll: boolean, path: string): CiteFin
 }
 
 /**
- * A page disallowed by the same site that lists it in its sitemap.
- *
- * Separate from the checks above because it needs the posture of a general
- * crawler rather than the AI-specific ones, and because it is the sharpest
- * contradiction a site can serve: one file asking to be crawled, another
- * refusing.
+ * Separate from the checks above because it needs a general crawler's posture
+ * rather than the AI-specific ones: one file asking for the page to be crawled,
+ * another refusing it.
  */
 export function checkSitemapConflict(
   sitemap: SitemapRead | null,

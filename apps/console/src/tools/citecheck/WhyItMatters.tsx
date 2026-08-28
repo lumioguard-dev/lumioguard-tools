@@ -1,9 +1,5 @@
 import { GAP_BELOW_ASK, MarkLegible, Panel, PanelHead } from '@lumioguard/ui';
 
-/**
- * Why the reading is worth taking, on the page that offers it. Two short
- * paragraphs: what visibility buys, then what its absence costs.
- */
 export function WhyItMatters(): JSX.Element {
   return (
     <Panel hand="c" span={12} className={GAP_BELOW_ASK}>

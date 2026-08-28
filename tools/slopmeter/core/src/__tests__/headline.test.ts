@@ -16,7 +16,7 @@ function penalty(weight: number, phrase: string | null): Finding {
   return Finding.observed({
     ruleId: `test.${weight}`,
     label: 'test',
-    category: 'craft',
+    category: 'finish',
     axis: 'slop',
     weight,
     evidence: null,

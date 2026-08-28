@@ -1,4 +1,4 @@
-import { BAND_EDGES, type ScoreBand, type TrackSegment, trackOf } from './band.js';
+import { BAND_EDGES, type ScoreBand, type TrackSegment } from './band.js';
 
 /** Band names describe the OUTPUT, never the author. */
 export const Tier = {
@@ -44,8 +44,3 @@ export const TIER_BANDS: readonly TierBand[] = Object.freeze([
 export const TIER_NAMES: readonly Tier[] = Object.freeze(TIER_BANDS.map((band) => band.tier));
 
 export type { TrackSegment };
-
-/** A band's place on the 0–100 track, as percentages. */
-export function bandTrack(band: TierBand): TrackSegment {
-  return trackOf(band, SCORE_MAX);
-}

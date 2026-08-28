@@ -4,12 +4,8 @@ import { Panel } from '@lumioguard/ui';
 import { accessInk } from '../theme.js';
 
 /**
- * What robots.txt says to each answer engine's crawler.
- *
- * REPORTED, NEVER SCORED, and the panel says so in its own words rather than
- * leaving the reader to infer it from the absence of a penalty. A site that
- * turns these crawlers away on purpose should find that decision listed here
- * and confirmed, not corrected.
+ * REPORTED, NEVER SCORED, and the panel says so in its own words: a site that turns
+ * these crawlers away on purpose should find that decision confirmed, not corrected.
  */
 const ACCESS_LABEL: Record<AgentAccess, string> = {
   allowed: 'may read',
@@ -29,8 +25,8 @@ function AgentTag({
     <span
       className="inline-flex items-baseline gap-[9px] border-2 bg-paper-high px-[11px] py-[5px]"
       style={{
-        // From the token, not retyped: hand-written radii here did not move
-        // when the drawn scale was retuned.
+        // From the token, not retyped: hand-written radii did not move when the
+        // drawn scale was retuned.
         borderRadius: drawnCycle[index % drawnCycle.length],
         borderColor: `color-mix(in srgb, ${tint} 45%, transparent)`,
       }}

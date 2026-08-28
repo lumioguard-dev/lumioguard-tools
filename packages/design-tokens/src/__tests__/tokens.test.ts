@@ -3,13 +3,9 @@ import { band, colors, ink, paper, pen, red, severity, state } from '../tokens/c
 import { THEME_ATTRIBUTE, cssVariablesFor, darkPalette, lightPalette } from '../tokens/palette.js';
 
 /**
- * The token contract, which is easier to break than it looks.
- *
  * Every colour export is a `var()` string pointing at a custom property the
- * palette emits per theme. That is what lets an inline style follow the theme
- * without the component knowing a theme exists, and it is also why arithmetic
- * on one is silently fatal: appending hex alpha produces `var(--x)16`, which is
- * not a colour, and paints nothing at all.
+ * palette emits per theme, which is why arithmetic on one is silently fatal:
+ * appending hex alpha produces `var(--x)16`, not a colour, and paints nothing.
  */
 
 function everyLeaf(value: unknown, path: string[] = []): Array<[string, string]> {
@@ -27,7 +23,6 @@ describe('colour tokens', () => {
     expect(ALL_COLOURS.length).toBeGreaterThan(20);
   });
 
-  // The property that makes theming work at all.
   it.each(ALL_COLOURS)('%s is a var() reference, not a literal', (_name, value) => {
     expect(value).toMatch(/^var\(--[a-z0-9-]+\)$/i);
   });

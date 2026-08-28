@@ -1,9 +1,8 @@
 import { drawn } from '@lumioguard/design-tokens';
 
 /**
- * One reading's verdict, stamped in its section heading. A RECTANGLE, not a
- * second round seal: a die large enough for `LIGHTLY TEMPLATED` is taller than
- * the heading and left ninety pixels of nothing under a one-line title.
+ * A RECTANGLE, not a second round seal: a die large enough for the longest tier is
+ * taller than the heading and left ninety pixels of nothing under a one-line title.
  */
 export function ToolSeal({
   score,
@@ -19,8 +18,7 @@ export function ToolSeal({
     <span
       className="inline-flex shrink-0 items-baseline gap-[9px] border-2 px-[11px] py-[5px] leading-none"
       style={{
-        // Struck rather than printed: off the square by a degree, drawn corners,
-        // and the tool's own ink for the band on both the frame and the text.
+        // The tool's own ink for the band, on both the frame and the text.
         borderRadius: drawn.chip,
         borderColor: ink,
         color: ink,

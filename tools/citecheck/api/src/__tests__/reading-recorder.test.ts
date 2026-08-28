@@ -3,14 +3,9 @@ import { describe, expect, it } from 'vitest';
 import { readingFromCrawl } from '../services/ReadingRecorder.js';
 
 /**
- * The severity vocabulary is LumioGuard's, not Citecheck's.
- *
- * This suite exists because the mismatch was invisible from here. The ingest
- * validates `severity` against `critical | high | medium | low`; Citecheck's own
- * ladder is `blocker | major | minor | absent`, and sending it untranslated
- * rejected the entire reading with a 400. The recorder fails closed by design,
- * so nothing surfaced: no site key, no row in the app, no error on the report,
- * and a page that looked exactly like a successful reading.
+ * The severity vocabulary is LumioGuard's, not Citecheck's: the ingest validates
+ * `critical | high | medium | low`, and sending `blocker` untranslated rejected
+ * the whole reading. The recorder fails closed, so nothing surfaced at all.
  */
 const ACCEPTED = ['critical', 'high', 'medium', 'low'];
 
@@ -59,7 +54,7 @@ function crawl(impacts: readonly CitationCrawlResponse['signals'][number]['impac
 
 describe('what a reading sends as severity', () => {
   it('translates every impact into a severity the ingest accepts', () => {
-    const reading = readingFromCrawl(crawl(['blocker', 'major', 'minor', 'absent']));
+    const reading = readingFromCrawl(crawl(['blocker', 'major', 'minor', 'absent']), 'example.com');
     for (const finding of reading.findings) {
       expect(ACCEPTED).toContain(finding.severity);
     }
@@ -67,7 +62,7 @@ describe('what a reading sends as severity', () => {
 
   /** Blocker to critical, and a flag to the bottom: it costs the score nothing. */
   it('keeps the ladder in order rather than flattening it', () => {
-    const reading = readingFromCrawl(crawl(['blocker', 'major', 'minor', 'absent']));
+    const reading = readingFromCrawl(crawl(['blocker', 'major', 'minor', 'absent']), 'example.com');
     expect(reading.findings.map((finding) => finding.severity)).toEqual([
       'critical',
       'high',
@@ -77,7 +72,7 @@ describe('what a reading sends as severity', () => {
   });
 
   it('never sends Citecheck’s own vocabulary', () => {
-    const reading = readingFromCrawl(crawl(['blocker', 'absent']));
+    const reading = readingFromCrawl(crawl(['blocker', 'absent']), 'example.com');
     const sent = JSON.stringify(reading.findings);
     expect(sent).not.toContain('blocker');
     expect(sent).not.toContain('absent');

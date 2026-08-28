@@ -80,10 +80,9 @@ describe('contradictions', () => {
   });
 
   /**
-   * notion.com publishes an llms.txt and blocks two agents of fourteen,
-   * allowing OpenAI, Anthropic and Perplexity while refusing Meta and Amazon.
-   * That is a considered policy, and charging it was charging them for having
-   * made a decision.
+   * notion.com publishes an llms.txt and blocks two agents of fourteen, allowing
+   * OpenAI, Anthropic and Perplexity while refusing Meta and Amazon. That is a
+   * considered policy, and charging it charged them for making a decision.
    */
   it('does not charge a selective block beside an llms.txt', () => {
     const robots = parseRobots(

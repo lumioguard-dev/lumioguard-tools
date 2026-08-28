@@ -1,17 +1,12 @@
-import { PARENT_SITE, parentHref } from '../integration/lumioguard.js';
+import { parentHref } from '../integration/lumioguard.js';
 
 /**
- * The parent's artwork, served rather than inlined: it is ten kilobytes of
- * outlines and a fork with the integration off should carry none of it.
- * BASE_URL, because the app is also mounted under a path.
+ * SERVED, not inlined: ten kilobytes of outlines a fork with the integration off
+ * should carry none of. BASE_URL, because the app is also mounted under a path.
  */
 const ASSET = (file: string): string => `${import.meta.env.BASE_URL.replace(/\/$/, '')}/${file}`;
 
-/**
- * The parent wordmark, or nothing when the integration is off: in which case
- * the tool stands under its own name alone. Drawn at 528 by 103 and set here at
- * the height the masthead wants.
- */
+/** Nothing when the integration is off, so the tool stands under its own name. */
 export function ParentWordmark({ className }: { readonly className?: string }): JSX.Element | null {
   const href = parentHref();
   if (href === null) return null;
@@ -28,11 +23,11 @@ export function ParentWordmark({ className }: { readonly className?: string }): 
   );
 }
 
-/** The colophon's legal row, or nothing when there is no parent site to point at. */
 export function ParentCredit(): JSX.Element | null {
-  // The same switch the wordmark answers to, read the same way. Two conditions
-  // for one integration is how a fork ends up with the word "by" and no name.
-  const site = parentHref() === null ? null : PARENT_SITE;
+  // The SAME switch the wordmark answers to. Reading PARENT_SITE directly took the
+  // fallback from this row alone: a deployment setting only the app URL showed the
+  // wordmark and no legal links.
+  const site = parentHref();
   if (site === null) return null;
 
   const LINK = 'transition-colors hover:text-hand';

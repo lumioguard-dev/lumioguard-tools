@@ -1,5 +1,3 @@
-/** Two grounds for one world. */
-
 export type ColorRamp = {
   readonly 50: string;
   readonly 100: string;
@@ -23,11 +21,9 @@ export type Pair = {
 /**
  * A type alias, not an interface, and that is load-bearing: an interface has no
  * implicit index signature, so `Palette` did not satisfy `Branch` and every use
- * of the tree walk below reached past the type with `as unknown as`. The alias
- * satisfies it structurally and the casts disappear.
+ * of the tree walk below reached past the type with `as unknown as`.
  */
 export type Palette = {
-  /** The drawn line. */
   readonly pen: ColorRamp;
   /** The second pen. Index rules, the marker, charges, the stamp. */
   readonly red: ColorRamp;
@@ -109,7 +105,6 @@ export const lightPalette: Palette = {
     50: '#fdeced',
     100: '#fbd7d9',
     200: '#f4b0b4',
-    /** The middle weight band. */
     300: '#b04a52',
     400: '#bf242d',
     500: '#e0343d',
@@ -262,11 +257,8 @@ export function cssVariablesFor(palette: Palette): Record<string, string> {
 
 /**
  * Rebuilds a branch with every leaf replaced by the `var()` that points at it.
- *
  * Generic over the branch so the SHAPE survives the walk: the caller gets the
- * palette's own type back rather than an anonymous tree it then has to assert
- * into place. Every leaf is a string before and after, so the shape really is
- * preserved; only the values change.
+ * palette's own type back rather than a tree it then has to assert into place.
  */
 function mirror<T extends Branch>(node: T, path: readonly string[]): T {
   const out: Record<string, string | Branch> = {};

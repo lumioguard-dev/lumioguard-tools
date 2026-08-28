@@ -18,7 +18,7 @@ const GENERIC_TITLES = [
 
 export const qualityRules: readonly Rule[] = [
   defineRule({
-    id: 'quality.missing-meta',
+    id: 'quality.no-social-card',
     category: RuleCategory.Quality,
     weight: 6,
     label: 'No description for search or sharing',
@@ -33,7 +33,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.no-alt-text',
+    id: 'quality.unlabelled-images',
     category: RuleCategory.Quality,
     weight: 6,
     label: 'Images with no alt text',
@@ -47,7 +47,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.default-favicon',
+    id: 'quality.no-icon',
     category: RuleCategory.Quality,
     weight: 5,
     label: 'No favicon of its own',
@@ -56,7 +56,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.generic-title',
+    id: 'quality.placeholder-title',
     category: RuleCategory.Quality,
     weight: 5,
     label: 'A placeholder page title',
@@ -70,7 +70,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.missing-lang',
+    id: 'quality.no-language',
     category: RuleCategory.Quality,
     weight: 4,
     label: 'Page language never declared',
@@ -79,7 +79,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.skipped-heading',
+    id: 'quality.heading-gap',
     category: RuleCategory.Quality,
     weight: 4,
     label: 'Heading levels skip a step',
@@ -95,7 +95,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.console-log-inline',
+    id: 'quality.debug-logging',
     category: RuleCategory.Quality,
     weight: 4,
     label: 'Debug logging left switched on',
@@ -111,7 +111,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.huge-dom',
+    id: 'quality.heavy-dom',
     category: RuleCategory.Quality,
     weight: 6,
     label: 'An unusually complex page',
@@ -121,7 +121,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.inline-style-soup',
+    id: 'quality.inline-styles',
     category: RuleCategory.Quality,
     weight: 4,
     label: 'Styles written inline all over the markup',
@@ -133,7 +133,7 @@ export const qualityRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'quality.duplicate-headings',
+    id: 'quality.repeated-headings',
     category: RuleCategory.Quality,
     weight: 4,
     label: 'The same heading repeated over and over',

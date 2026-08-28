@@ -3,15 +3,18 @@ import { apiBase } from '../apiBase.js';
 import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
 import { ScanClient } from './ScanClient.js';
+import { WhyItMatters } from './WhyItMatters.js';
 import { AgentSlip } from './report/AgentSlip.js';
 import { SignalList } from './report/SignalList.js';
-import { tierInk } from './theme.js';
+import { VERDICT_SCALE, tierInk } from './theme.js';
 
 const client = new ScanClient(apiBase('citecheck'));
 
 export const citecheck: ToolDescriptor = {
   ...toolCopy('citecheck'),
   mark: MarkLegible,
+  scale: VERDICT_SCALE,
+  belowAsk: () => <WhyItMatters />,
   async run(address, signal) {
     const result = await client.crawl(address, signal);
     return {

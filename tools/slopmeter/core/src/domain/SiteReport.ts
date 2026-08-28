@@ -32,7 +32,7 @@ export interface SiteVerdict {
   readonly score: number;
   readonly tier: Tier;
   readonly method: string;
-  /** The site's three heaviest tells, in one sentence. Null when none has a phrase. */
+  /** The site's heaviest tells, in one sentence. Null when none has a phrase. */
   readonly headline: string | null;
   readonly homepageScore: number | null;
   readonly medianPageScore: number;

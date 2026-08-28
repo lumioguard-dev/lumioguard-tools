@@ -2,24 +2,18 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { PageDocument } from '../read/PageDocument.js';
 
 /**
- * The heading structure, which is the only map of a page a retriever gets.
- *
- * A model reading a page for an answer works from its headings: they are where
- * one passage stops being about one thing and starts being about another. A
- * page with no outline is one long undifferentiated block, and what comes back
- * from it is whichever few hundred words happened to match.
+ * The heading structure, the only map of a page a retriever gets: headings are
+ * where one passage stops being about one thing and starts another. A page with
+ * no outline is one long undifferentiated block.
  */
 /** Above this many distinct h1s, the tag is being used as a type size. */
 const MANY_H1 = 3;
 
 export function checkOutline(page: PageDocument): CiteFinding[] {
   /**
-   * The page's own outline: its content, and only what a reader is offered.
-   *
-   * Chrome is excluded because a footer's column labels are styling, not
-   * structure. `aria-hidden` copies are excluded because they exist to be seen
-   * and not read, and stripe.com layers a second, identical `<h1>` for a visual
-   * effect: counted, it made the page claim two subjects when it has one.
+   * The page's own outline. Chrome is excluded because a footer's column labels
+   * are styling; `aria-hidden` copies because stripe.com layers a second,
+   * identical `<h1>`, which counted made the page claim two subjects.
    */
   const outline = page.headings.filter((heading) => heading.inContent && !heading.hidden);
 
@@ -53,15 +47,9 @@ export function checkOutline(page: PageDocument): CiteFinding[] {
       }),
     ),
     /**
-     * DISTINCT h1s, not h1 elements: a page repeating one heading for a visual
-     * effect still has one subject, and counting elements sent stripe.com
-     * looking for a second subject it does not have.
-     *
-     * Graded, because a handful and a hundred are different defects. Two or
-     * three is an outline that cannot decide; stripe.com's pricing page carries
-     * 112, one per menu card, which is `h1` used as a type size. Reported as
-     * "83 top-level subjects" that read like a parser bug, and the markup was
-     * exactly what it said.
+     * DISTINCT h1s, not h1 elements: counting elements sent stripe.com looking
+     * for a second subject it does not have. Graded, because two or three is an
+     * outline that cannot decide and stripe.com's 112 is `h1` as a type size.
      */
     ...when(distinctH1s.size > 1, () =>
       distinctH1s.size > MANY_H1

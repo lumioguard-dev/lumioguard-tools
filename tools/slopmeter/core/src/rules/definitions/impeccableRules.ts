@@ -10,13 +10,12 @@ import { countMatches, evidence, plural } from '../support.js';
 export const impeccableRules: readonly Rule[] = [
   defineRule({
     id: 'impeccable.thin-border-wide-shadow',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 7,
     label: 'A hairline border under a big soft shadow',
     phrase: 'a hairline border under a wide soft shadow',
-    // Both halves must sit on ONE element. Testing the stylesheet twice matched
-    // a 1px divider in twitter's nav against a dropdown glow 33,000 characters
-    // away.
+    // Both halves must sit on ONE element. Testing the stylesheet twice matched a
+    // 1px divider in twitter's nav against a dropdown glow 33,000 characters away.
     evaluate: (ctx) => {
       const hairline = /(?<![\w-])border(?:-\w+)?\s*:\s*(?:0?\.5|1)px\s+solid/i;
       const wide = /(?<![\w-])box-shadow\s*:[^;]*\b(?:1[6-9]|[2-9]\d|\d{3})px\b[^;]*rgba?\(/i;
@@ -32,7 +31,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.hero-eyebrow-chip',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'A little pill above a giant headline',
     evaluate: (ctx) => {
@@ -41,10 +40,20 @@ export const impeccableRules: readonly Rule[] = [
         /\btext-(?:xs|sm)\b/,
         /\b(?:border|bg-\w+-\d{2,3}\/\d{1,2}|backdrop-blur)\b/,
       );
-      if (!pill) return null;
-      // Only a hero eyebrow when there is a hero for it to sit above.
+      if (pill) {
+        // Only a hero eyebrow when there is a hero for it to sit above.
+        return evidence(
+          ctx.usesClass(/\btext-(?:5|6|7|8)xl\b/),
+          'the rounded label-above-headline opening',
+        );
+      }
+      // The same chip written as style rather than utility classes, read only
+      // from what this page itself carries.
       return evidence(
-        ctx.usesClass(/\btext-(?:5|6|7|8)xl\b/),
+        ctx.document.hasSameStyleAttr(
+          /border-radius\s*:\s*(?:9{2,4}px|50px|100px)/i,
+          /text-transform\s*:\s*uppercase|font-size\s*:\s*1[0-3](?:\.\d+)?px/i,
+        ) && ctx.document.headings.some((heading) => heading.level === 1),
         'the rounded label-above-headline opening',
       );
     },
@@ -52,7 +61,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.radial-spotlight',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 5,
     label: 'Spotlight glows used as decoration',
     evaluate: (ctx) => {
@@ -69,7 +78,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.repeating-stripes',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Striped backgrounds',
     evaluate: (ctx) => {
@@ -83,7 +92,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.codex-grid-background',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Graph-paper grid behind the content',
     evaluate: (ctx) => {
@@ -103,7 +112,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.border-accent-on-rounded',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'A thick border fighting a big corner radius',
     evaluate: (ctx) => {
@@ -119,7 +128,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.oversized-h1',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'A whole sentence set at poster size',
     evaluate: (ctx) => {
@@ -140,7 +149,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.extreme-negative-tracking',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Letters squeezed together',
     evaluate: (ctx) => {
@@ -157,7 +166,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.numbered-section-labels',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'Sections numbered 01, 02, 03',
     evaluate: (ctx) => {
@@ -168,7 +177,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.hover-scale-transform',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Things that grow when you point at them',
     evaluate: (ctx) => {
@@ -190,12 +199,11 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.blinking-cursor',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'A fake blinking cursor',
     // Stop at `}` as well as `;`: minified CSS separates rules with `}`, so a
-    // permissive class ran out of one declaration into the next selector and
-    // fired on 177 of 200 sites.
+    // permissive class ran into the next selector and fired on 177 of 200 sites.
     evaluate: (ctx) => {
       const keyframes = /@keyframes\s+[\w-]*(?:blink|caret|typing)[\w-]*\s*\{/i.test(
         ctx.styles.appliedCss,
@@ -209,11 +217,10 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.cream-palette',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'The warm cream background of the moment',
-    // Parsed numerically: the earlier hex alternation was unreadable and matched
-    // almost nothing.
+    // Parsed numerically: the earlier hex alternation matched almost nothing.
     evaluate: (ctx) => {
       const isWarmOffWhite = (r: number, g: number, b: number): boolean =>
         r > 238 && g > 230 && b > 205 && r >= g && g >= b && r - b >= 8 && r - b <= 48;
@@ -241,7 +248,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.monotonous-spacing',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'Every gap the same size',
     evaluate: (ctx) => {
@@ -256,7 +263,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.shape-assembled-illustration',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'Illustrations built from basic shapes',
     evaluate: (ctx) => {
@@ -273,7 +280,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.flat-type-hierarchy',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 4,
     label: 'Every text size nearly the same',
     evaluate: (ctx) => {
@@ -293,7 +300,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.single-font',
-    category: RuleCategory.Craft,
+    category: RuleCategory.Finish,
     weight: 3,
     label: 'One font doing every job',
     evaluate: (ctx) => {
@@ -321,7 +328,7 @@ export const impeccableRules: readonly Rule[] = [
 
   defineRule({
     id: 'impeccable.theater-phrase',
-    category: RuleCategory.Copy,
+    category: RuleCategory.Voice,
     weight: 4,
     label: 'The "it is just theatre" line',
     evaluate: (ctx) =>

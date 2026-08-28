@@ -1,7 +1,6 @@
-// `URL` is a WHATWG global present in both Workers and Node, but TypeScript only
-// ships it in the `DOM` lib. Pulling in `DOM` would also hand every rule a
-// `document` and `window` this package must never touch, so the globals it
-// genuinely needs are declared here instead.
+// `URL` is a WHATWG global TypeScript ships only in the `DOM` lib, and pulling
+// `DOM` in would hand every rule a `document` and `window` this package must
+// never touch, so the globals it genuinely needs are declared here instead.
 
 declare class URLSearchParams {
   get(name: string): string | null;

@@ -3,11 +3,9 @@ import { NO_SITE_CONTEXT, analyzePage } from '../CiteAnalyzer.js';
 import { checkBrokenLinks } from '../crawl/duplicates.js';
 
 /**
- * One case per false positive found by reading seven well-built sites and
- * checking every finding against the served HTML. Each fired confidently, and
- * none of them looked wrong in the report: a page that is not broken being told
- * it is is the failure this tool cannot afford, because the reader has no way
- * to tell that finding from a real one.
+ * One case per false positive found by reading seven well-built sites against
+ * the served HTML. Each fired confidently and none looked wrong in the report,
+ * which is why a reader cannot tell one from a real finding.
  */
 function codesFor(html: string, url = 'https://example.test/'): string[] {
   return analyzePage({ url, html }, NO_SITE_CONTEXT).findings.map((finding) => finding.code);
@@ -80,8 +78,7 @@ describe('the outline', () => {
   /**
    * `document.skipped-level` is gone. It fired on the React reference,
    * Britannica, Healthline and Investopedia, and heading order is neither a
-   * citation nor a ranking barrier. A rule that fires on the pages people
-   * quote most is not measuring what it claims to.
+   * citation nor a ranking barrier.
    */
   it('no longer judges heading order', () => {
     expect(codesFor(page('<h4>Nested under nothing</h4>'))).not.toContain('document.skipped-level');
@@ -127,9 +124,8 @@ describe('the meta description', () => {
 describe('anchor text', () => {
   /**
    * stripe.com's "Link" points at /payments/link, which is their product.
-   * Lighthouse does not treat that word as non-descriptive in English either,
-   * and the list here is now lifted from its `link-text` audit rather than
-   * written from intuition.
+   * Lighthouse does not treat that word as non-descriptive either, and the list
+   * here is now lifted from its `link-text` audit.
    */
   it('does not treat a product name as a placeholder', () => {
     const body = '<a href="/payments/link">Link</a><a href="/pay">Payments</a>';
@@ -183,11 +179,9 @@ describe('dates', () => {
 
 describe('prose quality', () => {
   /**
-   * The check that read the `<h1>` and hunted for its words in the opening
-   * sentences is gone. lovable.dev's `<h1>` is the kicker "AI App Builder" and
-   * its opening says "Build something Lovable": "builder" is not a substring of
-   * "build", so a page that states its subject plainly took a MAJOR finding.
-   * It judged writing rather than markup, which this tool does not do.
+   * lovable.dev's `<h1>` is the kicker "AI App Builder" and its opening says
+   * "Build something Lovable", so a page stating its subject plainly took a
+   * MAJOR finding. It judged writing rather than markup, which this tool cannot.
    */
   it('is never judged', () => {
     const body = '<h1>Widgets</h1>';
@@ -203,9 +197,8 @@ describe('prose quality', () => {
 describe('the popular-site corpus', () => {
   /**
    * edition.cnn.com carries `<div id="apple-reg-wall-btn-wrapper"></div>`. With
-   * optional quotes the mount alternation matched the `app` at the start of
-   * `apple-`, and a served news front page with 1,428 words of its own content
-   * was called a JavaScript shell and scored into the top band.
+   * optional quotes the mount alternation matched the `app` of `apple-`, and a
+   * served news front page of 1,428 words was called a JavaScript shell.
    */
   it('does not call an empty div a mount because its id starts with app', () => {
     const body = '<div id="apple-reg-wall-btn-wrapper"></div><div id="approot-thing"></div>';
@@ -393,10 +386,8 @@ describe('lighthouse parity', () => {
 
 /**
  * Two findings whose weight depends on how much of the page they cover.
- *
  * Lighthouse fails an audit on one bad anchor because its result is pass or
- * fail. This score is additive, so the same rule flat-rated charges a skip link
- * what it charges a site whose whole navigation is script.
+ * fail; flat-rated here, a skip link costs what all-script navigation does.
  */
 describe('severity grading', () => {
   function impactOf(code: string, html: string): string | null {
@@ -444,10 +435,9 @@ describe('severity grading', () => {
 });
 
 /**
- * Pointing a duplicate at its original is what `rel=canonical` is FOR, so the
- * bare fact that one differs from the page's own address is not a defect. Every
- * filtered listing, sorted listing and `?utm_source` variant on the web does it
- * correctly, and a flat major charged all of them.
+ * Pointing a duplicate at its original is what `rel=canonical` is FOR, so one
+ * differing from the page's own address is not a defect. Every filtered listing
+ * and `?utm_source` variant does it correctly, and a flat major charged them.
  */
 describe('canonical grading', () => {
   function canonicalImpact(canonical: string, url: string): string | null {

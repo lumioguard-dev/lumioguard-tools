@@ -14,13 +14,9 @@ import type {
 } from '@lumioguard/shared';
 
 /**
- * Findings to the wire response. The internal `code` and the `fix` are both
- * dropped: the id is opaque so a list can be keyed, and the report names the
- * problem without handing out the remediation, which is the reason to continue
- * into LumioGuard.
- *
- * Score, tier and headline are derived here from the same ordered set, so the
- * number and the list can never disagree.
+ * The internal `code` and the `fix` are both dropped: the id is opaque so a list
+ * can be keyed, and the report names the problem without the remediation, which
+ * is the reason to continue. Score and headline come from one ordered set.
  */
 export interface ScanInputs {
   readonly result: PageResult;

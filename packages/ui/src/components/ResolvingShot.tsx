@@ -1,7 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
 
-/** The page under examination, arriving. */
-
 /** Sampling widths in blocks. The last step is the real image, not a canvas. */
 const STEPS = [7, 11, 18, 30, 52, 90] as const;
 const STEP_MS = 620;
@@ -15,7 +13,6 @@ export function ResolvingShot({
   readonly src: string;
   readonly alt: string;
   readonly address: string;
-  /** True while the read is running. */
   readonly resolving: boolean;
 }): JSX.Element | null {
   const [failed, setFailed] = useState(false);
@@ -95,18 +92,13 @@ export function ResolvingShot({
               height={900}
               onLoad={() => setLoaded(true)}
               onError={() => setFailed(true)}
-              // 16:9, not a fixed height. The renderer returns a 1200×900
-              // frame and a fixed 210/290px box cropped it to whatever that
-              // height happened to take: a different slice of the page at
-              // every breakpoint. A ratio crops the same way at every width,
-              // and the panels either side are spanned to suit it rather than
-              // the other way round.
+              // A RATIO, not a fixed height: the renderer returns 1200x900, and a
+              // fixed box cropped a different slice of the page at every breakpoint.
               className="block aspect-[16/9] w-full bg-paper-high object-cover object-top transition-opacity duration-500"
               style={{ opacity: pixelated ? 0 : 1 }}
             />
-            {/* No role and no aria-hidden: a canvas with no fallback content
-                exposes nothing to begin with, and the img beneath it already
-                carries the alt text. */}
+            {/* No role and no aria-hidden: a canvas with no fallback content exposes
+                nothing, and the img beneath already carries the alt text. */}
             <canvas
               ref={canvas}
               className="pointer-events-none absolute inset-0 h-full w-full transition-opacity duration-500"
@@ -121,8 +113,8 @@ export function ResolvingShot({
         ref={dialog}
         className="w-full max-w-[min(96vw,1200px)] border-0 bg-transparent p-0 backdrop:bg-[color-mix(in_srgb,var(--paper-sunk)_88%,transparent)]"
         aria-label="Enlarged render of the scanned page"
-        // Closes on a click that lands on the BACKDROP, which is the dialog
-        // element itself: a click inside lands on the div and is left alone.
+        // Closes on a click on the BACKDROP, which is the dialog element itself: a
+        // click inside lands on the div and is left alone.
         onClick={(event) => {
           if (event.target === dialog.current) dialog.current?.close();
         }}

@@ -1,9 +1,6 @@
 import type { ReactNode } from 'react';
 
-/**
- * The page is a notebook: a grid of boxes drawn by hand, each holding one
- * idea.
- */
+/** The page is a notebook: hand-drawn boxes, each holding one idea. */
 export type Hand = 'a' | 'b' | 'c' | 'd';
 
 export type PanelSpan = 4 | 5 | 6 | 7 | 8 | 12;
@@ -15,7 +12,6 @@ const HAND_CLASS: Record<Hand, string> = {
   d: 'pen-box--d',
 };
 
-/** Three arrangements, not two. */
 const SPAN_CLASS: Record<PanelSpan, string> = {
   4: 'col-span-6 md:col-span-3 lg:col-span-4',
   5: 'col-span-6 md:col-span-3 lg:col-span-5',
@@ -32,7 +28,6 @@ export interface PanelProps {
   /** The reading, ringed in the second pen. */
   readonly red?: boolean;
   readonly hatched?: boolean;
-  /** Columns of twelve. */
   readonly span?: PanelSpan;
   readonly className?: string;
   readonly children: ReactNode;
@@ -62,9 +57,8 @@ export function Panel({
 }
 
 /**
- * The space between the ask and the panel under it, matching the space above
- * the ask. The grid's own `gap-10` already adds 40px, so this carries the rest
- * of that 128px: change one and change the other.
+ * Matches the space ABOVE the ask. The grid's own `gap-10` adds 40px, so this
+ * carries the rest of that 128px: change one and change the other.
  */
 export const GAP_BELOW_ASK = 'mt-[88px]';
 
@@ -75,7 +69,6 @@ export interface PanelGridProps {
   readonly children: ReactNode;
 }
 
-/** The notebook page: twelve columns on desktop, six below. */
 export function PanelGrid({
   fills = false,
   className = '',
@@ -95,12 +88,10 @@ export function PanelGrid({
 export interface PanelHeadProps {
   readonly title: string;
   readonly kicker?: string;
-  /** The axis mark, drawn. */
   readonly mark?: ReactNode;
   readonly trailing?: ReactNode;
 }
 
-/** A title in the written register, with its printed kicker beneath. */
 export function PanelHead({ title, kicker, mark, trailing }: PanelHeadProps): JSX.Element {
   return (
     <div className="flex items-start gap-3">

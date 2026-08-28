@@ -15,10 +15,9 @@ export class InvalidTargetError extends Error {
 }
 
 /**
- * Turns user input into a URL that is safe to fetch server-side.
- *
- * The Worker fetches whatever it is handed, so the private-range and scheme
- * checks are the boundary that stops it being used to probe internal hosts.
+ * Turns user input into a URL that is safe to fetch server-side. The Worker
+ * fetches whatever it is handed, so the private-range and scheme checks are the
+ * boundary that stops it being used to probe internal hosts.
  */
 export class TargetResolver {
   public resolve(raw: string): URL {

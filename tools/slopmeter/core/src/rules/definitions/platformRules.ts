@@ -32,11 +32,17 @@ const MODERN_BACKENDS = [
   'xano.com',
 ] as const;
 
+/** Built once, one pass: seven regexes over the whole page became one. */
+const BACKEND_PATTERN = new RegExp(
+  `\\b(${MODERN_BACKENDS.map((name) => name.replace(/[.]/g, '\\.')).join('|')})[/"'\\s]`,
+  'i',
+);
+
 /** Context only: every rule here is reported and scores zero. */
-export const stackRules: readonly Rule[] = [
+export const platformRules: readonly Rule[] = [
   defineRule({
-    id: 'stack.vercel',
-    category: RuleCategory.Stack,
+    id: 'platform.vercel',
+    category: RuleCategory.Platform,
     weight: 6,
     label: 'Hosted on Vercel',
     phrase: 'a deploy straight out of the guide',
@@ -44,16 +50,16 @@ export const stackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'stack.netlify',
-    category: RuleCategory.Stack,
+    id: 'platform.netlify',
+    category: RuleCategory.Platform,
     weight: 5,
     label: 'Hosted on Netlify',
     evaluate: (ctx) => evidence(onNetlify(ctx), 'Netlify headers'),
   }),
 
   defineRule({
-    id: 'stack.supabase',
-    category: RuleCategory.Stack,
+    id: 'platform.supabase',
+    category: RuleCategory.Platform,
     weight: 7,
     label: 'Supabase backend',
     phrase: 'Supabase straight from the quickstart',
@@ -61,20 +67,17 @@ export const stackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'stack.modern-backends',
-    category: RuleCategory.Stack,
+    id: 'platform.managed-backend',
+    category: RuleCategory.Platform,
     weight: 8,
     label: 'AI-build-adjacent backend',
     phrase: 'the backend the walkthrough picked',
-    evaluate: (ctx) =>
-      MODERN_BACKENDS.find((backend) =>
-        new RegExp(`\\b${backend.replace('.', '\\.')}[/"'\\s]`, 'i').test(ctx.html),
-      ) ?? null,
+    evaluate: (ctx) => ctx.html.match(BACKEND_PATTERN)?.[1]?.toLowerCase() ?? null,
   }),
 
   defineRule({
-    id: 'stack.vibe-combo',
-    category: RuleCategory.Stack,
+    id: 'platform.builder-stack',
+    category: RuleCategory.Platform,
     weight: 10,
     label: 'Classic vibe-coding stack',
     phrase: 'the stack the tutorials ship with',
@@ -83,8 +86,8 @@ export const stackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'stack.shadcn-combo',
-    category: RuleCategory.Stack,
+    id: 'platform.component-stack',
+    category: RuleCategory.Platform,
     weight: 10,
     label: 'Stock shadcn component stack',
     phrase: "the component library's demo recoloured",

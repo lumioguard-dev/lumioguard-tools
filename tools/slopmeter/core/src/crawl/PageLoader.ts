@@ -9,5 +9,4 @@ export interface PageLoader {
   load(url: string, isEntry: boolean): Promise<PageSnapshot>;
 }
 
-/** Re-exported so the crawler's neighbours need not know where they live. */
 export { CRAWL_DEFAULTS, CRAWL_LIMITS } from '@lumioguard/shared';

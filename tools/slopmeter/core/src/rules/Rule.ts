@@ -20,8 +20,8 @@ export abstract class Rule {
   protected abstract evaluate(context: PageContext): string | null;
 
   /**
-   * Template method. A rule that throws is reported as a failure rather than
-   * taken down with the scan: one bad regex must not cost a page its result.
+   * A rule that throws is reported as a failure rather than taken down with the
+   * scan: one bad regex must not cost a page its result.
    */
   public execute(context: PageContext): RuleOutcome {
     try {
@@ -43,9 +43,9 @@ export interface RuleSpec {
 }
 
 /**
- * Most rules differ only in their predicate, so they are instances of one
- * class rather than ninety subclasses: inheritance here would be ceremony,
- * not structure. Rules that need real behaviour of their own subclass `Rule`.
+ * Most rules differ only in their predicate, so they are instances of one class
+ * rather than ninety subclasses. A rule needing behaviour of its own subclasses
+ * `Rule` instead.
  */
 export class PredicateRule extends Rule {
   public readonly id: string;

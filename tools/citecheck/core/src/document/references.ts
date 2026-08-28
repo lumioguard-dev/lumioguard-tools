@@ -2,16 +2,9 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { AnchorRef, PageDocument } from '../read/PageDocument.js';
 
 /**
- * Anchor text that describes nothing, taken FROM LIGHTHOUSE.
- *
- * Lifted from its `link-text` audit rather than invented here, so the bar is
- * one a site owner can check against a second tool. The list this replaced was
- * written from intuition and reported stripe.com for an anchor reading "Link",
- * which is the name of their product; Lighthouse does not treat that word as
- * non-descriptive in English either.
- *
- * Matched against the WHOLE trimmed text, so a link reading "more" fails and
- * one reading "more about pricing" does not.
+ * Lifted FROM LIGHTHOUSE's `link-text` audit rather than invented here: the list
+ * this replaced was written from intuition and reported stripe.com for an anchor
+ * reading "Link", their product. Matched against the WHOLE trimmed text.
  */
 const NON_DESCRIPTIVE = new Set([
   'click here',
@@ -150,14 +143,9 @@ export function checkReferences(page: PageDocument): CiteFinding[] {
 }
 
 /**
- * Anchors a crawler cannot follow, after Lighthouse's `crawlable-anchors`.
- *
- * A link that navigates by script is a link no crawler ever sees, so whatever
- * it points at is reachable only by a visitor who runs JavaScript. Only the
- * statically provable cases are reported: an `href` absent beside an event
- * handler, an empty one, `javascript:void(0)`, or one that will not parse.
- * Lighthouse also inspects listeners attached at runtime, which nothing reading
- * served markup can see, and those are left alone rather than guessed at.
+ * After Lighthouse's `crawlable-anchors`. Only the statically provable cases:
+ * an `href` absent beside an event handler, an empty one, `javascript:void(0)`,
+ * or one that will not parse. Runtime listeners are left alone, not guessed at.
  */
 function checkCrawlableAnchors(page: PageDocument): CiteFinding[] {
   const uncrawlable = page.anchors.filter((anchor) => {
@@ -175,10 +163,8 @@ function checkCrawlableAnchors(page: PageDocument): CiteFinding[] {
 
   /**
    * Graded by SHARE, because this score is additive where Lighthouse's is
-   * pass/fail. It fails the audit on a single bad anchor, which is right for a
-   * pass/fail result and wrong for points: microsoft.com's skip link is one
-   * uncrawlable anchor among about a hundred, and it cannot weigh the same as a
-   * page whose navigation is entirely script.
+   * pass/fail. microsoft.com's skip link is one uncrawlable anchor among about a
+   * hundred, and cannot weigh the same as navigation that is entirely script.
    */
   const share = uncrawlable.length / Math.max(1, page.anchors.length);
   const mostOfThem = uncrawlable.length >= 3 && share >= UNCRAWLABLE_SHARE;
