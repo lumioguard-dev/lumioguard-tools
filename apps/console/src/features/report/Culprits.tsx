@@ -1,9 +1,9 @@
 import { MarkScored, Panel, PanelHead } from '@lumioguard/ui';
+import { costInk } from '../../theme/cost.js';
 import type { Reading } from '../scan/useReadings.js';
 
 const SHOWN = 6;
 
-/** One ruled line, drawn rather than a grey block. */
 function Rule({ className }: { readonly className: string }): JSX.Element {
   return (
     <svg
@@ -19,13 +19,9 @@ function Rule({ className }: { readonly className: string }): JSX.Element {
   );
 }
 
-/** Placeholder rows, keyed by identity: they are static and never reorder. */
 const RULES = Array.from({ length: SHOWN }, (_, row) => ({ id: `rule-${row}`, row }));
 
-/**
- * The panel while the readings are still running. SHOWN rows, so the panel is
- * the height it will be and nothing below it moves when the real list lands.
- */
+/** SHOWN rows, so nothing below moves when the real list lands. */
 function Ruling(): JSX.Element {
   return (
     <ol className="m-0 mt-4 list-none p-0" aria-hidden="true">
@@ -48,35 +44,26 @@ function Ruling(): JSX.Element {
 }
 
 /**
- * The worst of everything, across every reading.
- *
- * Ranked by what each finding COST its tool's score, which is the one thing
- * findings from three unrelated engines have in common: they are all points on
- * the same 0-100 scale. Nothing else about them compares. Inventing a severity
- * word that spanned a leaked key, a stock hero image and a page a crawler
- * cannot read would have been a fourth vocabulary answering to nothing.
- *
- * The tool is named on every line, because a reader who wants the detail needs
- * to know which section below to look in, and because a bare list of six
- * problems reads as one engine's opinion rather than three.
+ * Ranked by what each finding COST its tool's score, the one thing findings from
+ * three unrelated engines share. A severity word spanning a leaked key, a stock
+ * hero and an unreadable page would be a fourth vocabulary answering to nothing.
  */
 export function Culprits({
   readings,
   pending,
 }: {
   readonly readings: readonly Reading[];
-  /**
-   * True until every reading is in. The panel rules rather than ranking: a
-   * partial order across three engines is one that is about to change.
-   */
+  /** The panel rules rather than ranks: a partial order is one about to change. */
   readonly pending: boolean;
 }): JSX.Element {
   const all = readings
     .flatMap((reading) =>
       (reading.outcome?.culprits ?? []).map((culprit) => ({
         ...culprit,
+        // Both: the id keys the row, because two readings may share a label and
+        // their opaque finding ids both start at f0.
+        toolId: reading.tool.id,
         tool: reading.tool.label,
-        ink: reading.outcome?.ink ?? '',
       })),
     )
     .sort((a, b) => b.cost - a.cost);
@@ -95,12 +82,12 @@ export function Culprits({
         <ol className="m-0 mt-4 list-none p-0">
           {top.map((culprit) => (
             <li
-              key={`${culprit.tool}-${culprit.id}`}
+              key={`${culprit.toolId}-${culprit.id}`}
               className="flex items-baseline gap-3 border-b border-pen-900 py-[10px] last:border-b-0"
             >
               <span
                 className="shrink-0 font-hand text-20 tabular-nums"
-                style={{ color: culprit.ink }}
+                style={{ color: costInk(culprit.cost) }}
               >
                 {/* Subtracted, not added: higher is better, so what a finding
                     cost is what it took off the score. */}

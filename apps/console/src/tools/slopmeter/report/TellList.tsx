@@ -8,13 +8,9 @@ interface TellListProps {
 }
 
 /**
- * One line per observation: what was found, and the evidence that keyed it. The
- * evidence sits on the line rather than behind a disclosure: a verdict a
- * reader cannot check is an opinion.
- *
- * The weight is the magnitude. A drawn bar beside it restated the same number
- * in a second form and took a whole column to do it, which on a list this long
- * read as a chart nobody asked for.
+ * The evidence sits on the line rather than behind a disclosure: a verdict a reader
+ * cannot check is an opinion. No bar beside the weight, which restated the number
+ * in a second form and read as a chart nobody asked for.
  */
 export function TellList({ findings, showWeights = true }: TellListProps): JSX.Element {
   return (
@@ -43,8 +39,8 @@ export function TellList({ findings, showWeights = true }: TellListProps): JSX.E
               className="justify-self-end text-right font-bold tabular-nums"
               style={{ color: weightInk(finding.weight) }}
             >
-              {/* A cost SUBTRACTS now: the scale runs higher-is-better, so a
-                  tell that charges 8 takes 8 off. A credit adds it back. */}
+              {/* A cost SUBTRACTS: the scale runs higher-is-better, so a tell that
+                  charges 8 takes 8 off, and a credit adds it back. */}
               {finding.weight > 0 ? `-${finding.weight}` : `+${Math.abs(finding.weight)}`}
             </span>
           ) : (

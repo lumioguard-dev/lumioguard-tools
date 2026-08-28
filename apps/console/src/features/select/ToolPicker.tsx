@@ -3,9 +3,8 @@ import { Hint, MarkTick } from '@lumioguard/ui';
 import type { ToolRegistry } from '../../tools/registry.js';
 
 /**
- * Which readings to run, all on until turned off. Real checkboxes, hidden with
- * the label as the target, so a screen reader and the keyboard get the control
- * they expect. The last one on cannot be turned off.
+ * Real checkboxes, hidden with the label as the target, so a screen reader and the
+ * keyboard get the control they expect. The last one on cannot be turned off.
  */
 export function ToolPicker({
   registry,
@@ -50,10 +49,8 @@ export function ToolPicker({
                       );
                     }}
                   />
-                  {/* The mark leads and the name follows, because the mark is
-                      the state: it was a word after the name ("on" / "off"),
-                      which put the answer at the far end of a chip whose length
-                      changes with the name on it. */}
+                  {/* The mark leads because the mark is the state. After the name it
+                      sat at the far end of a chip whose length the name changes. */}
                   <MarkTick on={on} />
                   <span className="font-sans text-15 font-medium leading-none">{tool.label}</span>
                 </label>

@@ -6,15 +6,8 @@ import { severityInk } from '../theme.js';
 import { StackSlip } from './StackSlip.js';
 
 /**
- * The panel header for a reading: what was found on the left, the platforms
- * behind it on the right.
- */
-/**
- * The heading, this reading's verdict, and what the site is built on.
- *
- * The stack sits UNDER the title rather than opposite it: the right of the
- * heading is where every section now carries its own score, and two things
- * competing for that side left neither of them readable.
+ * The stack sits UNDER the title rather than opposite it: the right of the heading
+ * carries every section's own score, and two things there left neither readable.
  */
 function ExposureHeader({
   title,
@@ -75,9 +68,8 @@ function FindingCard({ finding }: { readonly finding: ExposureFindingDto }): JSX
 }
 
 /**
- * The findings, worst first, in the order the API already sorted them. Nothing
- * is re-ranked here: the meter's score and this list are derived from the same
- * ordered set upstream, so the number and the list can never disagree.
+ * Nothing is re-ranked here: the meter's score and this list come from one ordered
+ * set upstream, so the number and the list can never disagree.
  */
 export function FindingList({
   findings,
@@ -95,9 +87,8 @@ export function FindingList({
     return (
       <Panel hand="a" span={12}>
         <ExposureHeader title="Nothing leaked" stack={stack} verdict={verdict} />
-        {/* Names only what was actually read. Saying "and its backend"
-            unconditionally credited a check that never ran on the many sites
-            that point at no backend at all. */}
+        {/* Names only what was READ: "and its backend" unconditionally credited a
+            check that never ran on the many sites pointing at no backend. */}
         <p className="mt-3 max-w-[60ch] text-body text-ink-2">
           {backendProbed
             ? 'The scanner read the page, its scripts and its backend, and found nothing exposed.'

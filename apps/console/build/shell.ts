@@ -1,12 +1,12 @@
-import { EXAMPLES, HEADLINE_TEXT, LEADERBOARD, NAME, PUBLISHER, SCAN, beats } from '../src/copy.js';
+import { EXAMPLES, HEADLINE_TEXT, LEADERBOARD, PUBLISHER, SCAN, beats } from '../src/copy.js';
 import { CATALOGUE, type ConsolePage } from '../src/tools/catalogue.js';
 import { escapeHtml } from './html.js';
+import { CSS_HAND, CSS_INK_1, CSS_INK_3 } from './tokens.js';
 
-/** Scoped to the shell, and thrown away with it. */
 const STYLE = [
-  '.shell{max-width:64rem;margin:0 auto;padding:3rem 1.5rem;color:var(--ink-1,#151b28);font-family:Archivo,system-ui,sans-serif;line-height:1.55}',
-  '.shell h1{font-family:Archivo,system-ui,sans-serif;font-size:2.25rem;line-height:1.12;color:var(--hand,#2f4fb5);margin:0 0 1rem;max-width:20ch}',
-  '.shell h2{font-family:"Architects Daughter",cursive;font-size:1.25rem;font-weight:400;color:var(--ink-3,#545f78);margin:2rem 0 .5rem}',
+  `.shell{max-width:64rem;margin:0 auto;padding:3rem 1.5rem;color:${CSS_INK_1};font-family:Archivo,system-ui,sans-serif;line-height:1.55}`,
+  `.shell h1{font-family:Archivo,system-ui,sans-serif;font-size:2.25rem;line-height:1.12;color:${CSS_HAND};margin:0 0 1rem;max-width:20ch}`,
+  `.shell h2{font-family:"Architects Daughter",cursive;font-size:1.25rem;font-weight:400;color:${CSS_INK_3};margin:2rem 0 .5rem}`,
   '.shell p{margin:0 0 1rem;max-width:62ch}',
   '.shell ul,.shell ol{margin:0;padding-left:1.25rem;max-width:62ch}',
   // The stylesheet this lands beside resets markers away, and a numbered step
@@ -15,14 +15,13 @@ const STYLE = [
   '.shell ol{list-style:decimal}',
   '.shell li{margin:.35rem 0}',
   '.shell nav{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.5rem}',
-  '.shell a{color:var(--hand,#2f4fb5)}',
-  '.shell footer{margin-top:2.5rem;color:var(--ink-3,#545f78);font-size:.85rem}',
+  `.shell a{color:${CSS_HAND}}`,
+  `.shell footer{margin-top:2.5rem;color:${CSS_INK_3};font-size:.85rem}`,
 ].join('');
 
 /**
- * The document served before any JavaScript runs: empty, `#root` is
- * `access.shell`, and text differing from the rendered page is
- * `access.agent-thin`. `mount` is empty at a host root, so one build serves both.
+ * The document served before any JavaScript runs. Empty, `#root` is `access.shell`;
+ * text differing from the rendered page is `access.agent-thin`.
  */
 export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' }): string {
   const heading =
@@ -33,8 +32,7 @@ export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' 
         : page.kind === 'leaderboard'
           ? LEADERBOARD.headline
           : HEADLINE_TEXT;
-  // The chooser is the only page that links onward, and it links to every
-  // reading: it is the one document a crawler reaches the rest from.
+  // The chooser is the one document a crawler reaches every reading from.
   const choices = CATALOGUE.map(
     (tool) =>
       `<li><a href="${mount}/${tool.slug}">${escapeHtml(tool.label)}</a>. ${escapeHtml(tool.summary)}</li>`,
@@ -45,8 +43,8 @@ export function staticShell(mount: string, page: ConsolePage = { kind: 'choose' 
     .map((beat) => `<li>${escapeHtml(beat)}</li>`)
     .join('\n          ');
 
-  // The addresses the app itself reads on load, so each works whether or not
-  // the script arrives, and they are the only way out of this page.
+  // The addresses the app itself reads on load, so each works without the script,
+  // and they are the only way out of this page.
   const examples = EXAMPLES.map(
     (site) => `<a href="${mount}/?site=${encodeURIComponent(site)}">Read ${escapeHtml(site)}</a>`,
   ).join('\n          ');
@@ -75,6 +73,6 @@ ${
           ${examples}
         </nav>
 
-        <footer>${escapeHtml(NAME)} by ${escapeHtml(PUBLISHER)}</footer>
+        <footer>${escapeHtml(PUBLISHER)}</footer>
       </div>`;
 }

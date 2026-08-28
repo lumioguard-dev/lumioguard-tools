@@ -2,14 +2,9 @@ import { drawnCycle } from '@lumioguard/design-tokens';
 import type { DetectedStackDto } from '@lumioguard/shared';
 
 /**
- * The platforms the site named about itself, drawn as tags.
- *
- * EACH TAG CARRIES ITS OWN LEAD-IN. One heading has to be true of everything
- * under it, and the only one that fitted all three roles was "built with":
- * which then claimed a site was built with Cloudflare. Two words per tag remove
- * a whole class of false claim.
- *
- * The marks are the surface's own ballpoint, never a brand logo.
+ * EACH TAG CARRIES ITS OWN LEAD-IN. One heading true of all three roles could only
+ * be "built with", which then claimed a site was built with Cloudflare. The marks
+ * are the surface's own ballpoint, never a brand logo.
  */
 
 const PEN = {
@@ -22,7 +17,6 @@ const PEN = {
 /** The stroke is the page's, not the icon's: hold its weight at any size. */
 const NS = 'non-scaling-stroke';
 
-/** A wand with a spark: what made the site. */
 function MarkBuilder(): JSX.Element {
   return (
     <svg
@@ -40,7 +34,6 @@ function MarkBuilder(): JSX.Element {
   );
 }
 
-/** A drawn cylinder: the database behind it. */
 function MarkDatabase(): JSX.Element {
   return (
     <svg
@@ -64,7 +57,6 @@ function MarkDatabase(): JSX.Element {
   );
 }
 
-/** A drawn cloud: where it runs. */
 function MarkHosting(): JSX.Element {
   return (
     <svg
@@ -101,20 +93,19 @@ export function StackSlip({ stack }: { readonly stack: DetectedStackDto }): JSX.
   if (tags.length === 0) return null;
 
   return (
-    // The gap BETWEEN pairs is wider than the gap inside one, so a lead-in reads
-    // as belonging to the tag on its right rather than floating between two.
+    // The gap BETWEEN pairs is wider than the gap inside one, or a lead-in floats
+    // between two tags rather than belonging to the one on its right.
     <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
       {tags.map((tag, index) => (
         <span key={tag.role} className="inline-flex items-center gap-[7px]">
           <span className="font-hand text-14 lowercase tracking-wide text-ink-3">{tag.lead}</span>
-          {/* From the token, not retyped: hand-written radii here did not move
-              when the drawn scale was retuned. */}
+          {/* From the token, not retyped: hand-written radii did not move when the
+              drawn scale was retuned. */}
           <span
             className="inline-flex items-center gap-[7px] border-2 border-pen-700 bg-paper-high px-[11px] py-[4px]"
             style={{ borderRadius: drawnCycle[index % drawnCycle.length] }}
           >
             {tag.mark}
-            {/* Evidence read off the response, so set rather than written. */}
             <span className="font-sans text-14 font-medium leading-none text-ink-1">
               {tag.name}
             </span>
