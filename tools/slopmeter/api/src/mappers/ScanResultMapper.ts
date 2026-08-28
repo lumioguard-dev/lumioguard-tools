@@ -3,10 +3,9 @@ import type { Finding, ScanResult, TierResolver } from '@lumioguard/slopmeter-co
 import type { ScreenshotProvider } from '../services/ScreenshotProvider.js';
 
 /**
- * Keeps the wire shape a deliberate choice rather than a leak of the domain
- * model, which here is a security boundary, not only a design one. The rule
- * pack is the product: ids, categories and the catalogue itself stay server
- * side, and only what a visitor is actually told crosses the wire.
+ * Keeps the wire a deliberate choice rather than a leak of the domain model, which
+ * here is a security boundary: the rule pack is the product, so ids and categories
+ * stay server side and only what a visitor is told crosses the wire.
  */
 export class ScanResultMapper {
   private readonly tierResolver: TierResolver;

@@ -1,5 +1,3 @@
-/** What the visitor typed, turned into something worth fetching. */
-
 export interface ParsedAddress {
   /** Host and path, no scheme. What is shown and what is put in the URL. */
   readonly address: string;
@@ -71,11 +69,8 @@ export function parseAddress(input: string): AddressResult {
 }
 
 /**
- * Host only, and www is not a different site.
- *
- * Lives here with the rest of the address parsing rather than beside the site
- * key: it NAMES a reading and never keys one, so the two moved for different
- * reasons and the key's own file said as much.
+ * Host only, and www is not a different site. Lives with the address parsing
+ * rather than beside the site key: it NAMES a reading and never keys one.
  */
 export function hostOf(address: string): string {
   try {

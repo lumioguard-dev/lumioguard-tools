@@ -2,12 +2,8 @@ import { mshotsUrl } from '@lumioguard/shared';
 import { Panel, PanelHead, ResolvingShot } from '@lumioguard/ui';
 
 /**
- * A render of the site under examination.
- *
- * Console-level, not Slopmeter's. It is a picture of the address, which is true
- * of the whole reading rather than of any one tool, and while it lived in
- * Slopmeter's section it appeared or vanished depending on whether that one
- * tool had been selected.
+ * Console-level, not Slopmeter's: it is a picture of the address, true of the
+ * whole reading. In one tool's section it vanished when that tool was not picked.
  */
 export function SiteShot({
   address,

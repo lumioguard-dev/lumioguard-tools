@@ -3,29 +3,26 @@ import { type ToolCopy, pageForPath, pageName } from '../../tools/catalogue.js';
 import { DEFAULT_TOOL_IDS, TOOLS } from '../../tools/index.js';
 
 /**
- * The address being read rides in the query, so it is in every URL the page
- * records about itself. Exported because analytics has to strip it back out of
- * the URLs PostHog collects on its own, and two spellings of it could not fail
- * together.
+ * The address rides in the query, so it is in every URL the page records about
+ * itself. Exported because analytics strips it back out, and two spellings of it
+ * could not fail together.
  */
 export const SITE_PARAM = 'site';
 const TOOLS_PARAM = 'tools';
 
-/** What the address bar is currently asking for. */
 export interface ConsoleRoute {
   readonly address: string | null;
   readonly toolIds: readonly string[];
   /** The reading this page runs alone, or null where it offers a choice. */
   readonly pinned: ToolCopy | null;
-  /** The chooser scans nothing: it is the page that sends you to one that does. */
+  /** The chooser scans nothing: it sends you to a page that does. */
   readonly chooser: boolean;
   /** The board scans nothing either: it ranks what has already been read. */
   readonly board: boolean;
-  /** This page's own name, for an event that has to say where it happened. */
   readonly pageName: string;
 }
 
-/** The ways the page changes it, each writing history and re-reading. */
+/** Each writes history and re-reads. */
 interface RouteControls {
   readonly open: (address: string) => void;
   readonly select: (ids: readonly string[]) => void;
@@ -33,9 +30,9 @@ interface RouteControls {
 }
 
 /**
- * The reading lives at its own address. A query parameter, not a path: a path
- * needs the host to rewrite unknown routes and works on no static host by
- * default. The SELECTION rides along, or a shared link runs different tools.
+ * A query parameter, not a path: a path needs the host to rewrite unknown routes
+ * and works on no static host by default. The SELECTION rides along, or a shared
+ * link runs different tools.
  */
 export function useConsoleRoute(): ConsoleRoute & RouteControls {
   const [route, setRoute] = useState<ConsoleRoute>(read);
@@ -62,8 +59,7 @@ export function useConsoleRoute(): ConsoleRoute & RouteControls {
     board: route.board,
     pageName: route.pageName,
     open: useCallback((next: string) => go((params) => params.set(SITE_PARAM, next), true), [go]),
-    // No scroll: changing the selection re-reads in place, and yanking the page
-    // to the top on a checkbox loses whatever the reader was looking at.
+    // No scroll: yanking the page to the top on a checkbox loses the reader's place.
     select: useCallback(
       (ids: readonly string[]) =>
         go((params) => {
@@ -83,9 +79,8 @@ function read(): ConsoleRoute {
   const site = params.get(SITE_PARAM);
   const address = site === null || site.trim() === '' ? null : site;
 
-  // A tool page runs its own reading and nothing else. The path wins over the
-  // parameter: the URL is the promise the page made, and a `?tools=` on it
-  // would quietly read something the heading never offered.
+  // The path WINS over the parameter: the URL is the promise the page made, and a
+  // `?tools=` on it would quietly read something the heading never offered.
   const page = pageForPath(window.location.pathname);
   const name = pageName(page);
   if (page.kind === 'tool') {

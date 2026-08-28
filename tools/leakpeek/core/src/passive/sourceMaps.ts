@@ -1,7 +1,5 @@
 import type { ExposureFinding } from '../domain/ExposureFinding.js';
 
-/** Source maps shipped to production. */
-
 const SOURCE_MAPPING = /\/\/#\s*sourceMappingURL=(\S+)/;
 
 /** The `sourceMappingURL` a script points at, or null. Relative or absolute. */

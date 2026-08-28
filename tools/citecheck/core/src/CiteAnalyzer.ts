@@ -65,12 +65,9 @@ export const NO_SITE_CONTEXT: SiteContext = Object.freeze({
 });
 
 /**
- * One page, read four ways.
- *
  * The four areas are asked in the order a reader hits them: can a machine reach
  * this at all, does it say what it is, is the document sound, and is there
- * anything here worth quoting. Every check is a pure function of what was
- * served, so the whole suite runs from fixtures with no network.
+ * anything worth quoting. Every check is a pure function of what was served.
  */
 export function analyzePage(input: PageInput, site: SiteContext): PageResult {
   const page = PageDocument.read(input);
@@ -116,10 +113,8 @@ export function analyzePage(input: PageInput, site: SiteContext): PageResult {
 }
 
 /**
- * The checks that belong to the SITE rather than a page, run once per reading.
- *
- * Kept out of `analyzePage` because a crawl would otherwise report the same
- * missing sitemap once for every page it read.
+ * The checks that belong to the SITE rather than a page. Kept out of
+ * `analyzePage` because a crawl would report one missing sitemap per page.
  */
 export function analyzeSite(wellKnown: WellKnown): CiteFinding[] {
   return checkWellKnown(wellKnown);

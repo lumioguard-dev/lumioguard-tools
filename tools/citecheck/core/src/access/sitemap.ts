@@ -10,9 +10,8 @@ export interface SitemapRead {
 
 /**
  * Two URLs are the same entry when only the trailing slash or the scheme
- * differs. A sitemap that lists `https://x.com/a/` while the site serves
- * `https://x.com/a` is not a missing entry, and reporting it as one sends
- * people looking for a bug that is not there.
+ * differs. Reporting `https://x.com/a/` against a served `https://x.com/a` as a
+ * missing entry sends people looking for a bug that is not there.
  */
 function sameEntry(a: string, b: string): boolean {
   const key = (value: string): string => {

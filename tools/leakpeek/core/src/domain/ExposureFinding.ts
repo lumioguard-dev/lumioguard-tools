@@ -9,8 +9,7 @@ export interface ExposureFinding {
   readonly detail: string;
   /**
    * STRUCTURAL proof, redacted by construction: that something returned and its
-   * shape, never the values. Null when the finding needs no evidence beyond its
-   * own title (a missing header is its own proof).
+   * shape, never the values. Null when the finding is its own proof.
    */
   readonly evidence: string | null;
   /** The one action that closes it, written for whoever shipped the app. */

@@ -1,13 +1,9 @@
 import type { ExposureFinding } from '../domain/ExposureFinding.js';
 
 /**
- * Missing response-security headers. Low severity by design: an absent header is
- * a hardening gap, not an open door, and reporting it at the same weight as a
- * readable database would teach people to ignore the colour. These are the ones
- * whose absence has a concrete attack, not the full checklist: a wall of
- * "consider adding" advisories is noise a first-time visitor scrolls past.
- *
- * `headers` is lower-cased keys, as a fetch delivers them.
+ * Low severity by design: an absent header is a hardening gap, not an open door,
+ * and weighing it like a readable database teaches people to ignore the colour.
+ * Only the ones whose absence has a concrete attack are here, not a checklist.
  */
 
 interface HeaderRule {

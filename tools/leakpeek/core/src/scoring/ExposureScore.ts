@@ -16,10 +16,9 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
 const WEIGHT: Record<Severity, number> = { critical: 40, high: 22, medium: 9, low: 3 };
 
 /**
- * What one finding costs, for a surface that has to rank findings from several
- * tools against each other. Read FROM the scorer's own table rather than copied
- * beside it: a retuned weight that moved the score but not the ordering would
- * be invisible, because both lists would still look sorted.
+ * What one finding costs, for a surface ranking findings from several tools
+ * against each other. Read FROM the scorer's own table: a retuned weight that
+ * moved the score but not the ordering would be invisible, both lists sorted.
  */
 export function weightOf(severity: Severity): number {
   return WEIGHT[severity];
@@ -48,12 +47,9 @@ export function scoreExposure(findings: readonly ExposureFinding[]): ScoredExpos
   }
 
   /**
-   * The penalty is subtracted from the top, ONCE, here.
-   *
-   * The rules produce a cost, because that is what a rule can say. The scale
-   * the reader sees runs the other way, and this is the only line that knows
-   * it: everything above counts against the site, everything below reads a
-   * number where 100 is a site leaking nothing.
+   * The penalty is subtracted from the top, ONCE, here. Rules produce a cost,
+   * because that is what a rule can say; the scale the reader sees runs the
+   * other way, and this is the only line that knows it.
    */
   const capped =
     counts.critical > 0 ? Math.min(EXPOSURE_MAX - sum, CRITICAL_CEILING) : EXPOSURE_MAX - sum;

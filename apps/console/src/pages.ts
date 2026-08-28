@@ -1,7 +1,6 @@
 /**
- * The explainers, as plain data. Here rather than `build/` because both read
- * it: the build writes the pages, and the app links them from the colophon,
- * which is the only copy a JavaScript-running crawler ever sees.
+ * Here rather than `build/` because both read it: the build writes the pages, and
+ * the app links them from the colophon, the only copy a JavaScript crawler sees.
  */
 export interface PageLink {
   /** Always starts with a slash, and is the path the document is written to. */
@@ -37,7 +36,7 @@ export const PAGES: readonly PageLink[] = [
   },
 ];
 
-/** The entry for one path, or a throw: a page with no link is a page nothing reaches. */
+/** Throws: a page with no link is a page nothing reaches. */
 export function pageLink(path: string): PageLink {
   const found = PAGES.find((page) => page.path === path);
   if (found === undefined) throw new Error(`No page registered at "${path}"`);

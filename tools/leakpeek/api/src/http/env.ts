@@ -11,7 +11,7 @@ export interface Env {
    */
   LEAKPEEK_INGEST_SECRET?: string;
 
-  /** Unset falls back to production; point it at 127.0.0.1:8787 in dev. */
+  /** Required alongside the secret, so a fork cannot post to an API it does not own. */
   LUMIOGUARD_API_BASE_URL?: string;
   SCAN_RATE_LIMITER?: RateLimiter;
 }

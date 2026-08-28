@@ -1,14 +1,6 @@
-// The dev port allocations, validated on read.
-//
-// `ports.json` is the source of truth: a tool's web port, its Worker port and
-// the proxy target that joins them all come from one row, so the two numbers
-// cannot drift apart. They were separate literals in `vite.config.ts` and
-// `api/package.json` — a pair that has to agree and cannot fail together, which
-// is the shape of a bug that has not happened yet.
-//
-// Validation runs on every read rather than in a separate lint step, so a
-// collision is caught by the thing that would have suffered from it: starting a
-// server. Silence here means the table is sound.
+// `ports.json` is the source of truth: a tool's web port, its Worker port and the
+// proxy target come from one row, so the numbers cannot drift apart. Validation
+// runs on every read, so starting a server is what catches a collision.
 
 import { readFileSync } from 'node:fs';
 
@@ -18,11 +10,9 @@ const config = JSON.parse(readFileSync(new URL('../ports.json', import.meta.url)
 export const HOST = config.host;
 
 /**
- * Every allocation as `{ label, port }`, reserved rows included.
- *
- * The reserved rows are the point: the other repo's app is not visible from
- * here, so nothing would otherwise stop a tool from taking 5173 and leaving a
- * developer with two servers fighting over one port and no clue why.
+ * Every allocation as `{ label, port }`, reserved rows included. The reserved
+ * rows are the point: the other repo's app is not visible from here, so nothing
+ * else stops a tool taking a port that app already binds.
  */
 function allocations() {
   const rows = [];

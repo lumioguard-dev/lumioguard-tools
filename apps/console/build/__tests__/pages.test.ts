@@ -6,11 +6,8 @@ import { renderPage } from '../pages/render.js';
 const ORIGIN = 'https://example.test';
 const ROOT = { base: ORIGIN, path: '' };
 
-/**
- * The explainers exist to be findable, so what is asserted here is the things
- * that decide whether they can be: one heading each, real prose, links out, and
- * metadata that does not collide with another page's.
- */
+// The explainers exist to be findable, so what is asserted is what decides whether
+// they can be: one heading each, real prose, links out, and metadata that is theirs.
 
 describe('the page register', () => {
   it('has prose for every registered page, and no page without a link', () => {

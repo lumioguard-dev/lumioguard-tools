@@ -26,11 +26,9 @@ function safeStorage(): ConsentStore | null {
 }
 
 /**
- * The choice a stored value carries, or null where it carries none.
- *
- * Null is NOT a refusal. A visitor who landed straight on a tool page has never
- * been shown the banner, and is counted the way the site counts one who has not
- * answered it yet.
+ * The choice a stored value carries, or null where it carries none. Null is NOT
+ * a refusal: a visitor who landed straight on a tool page has never been shown
+ * the banner, and is counted as one who has not answered yet.
  */
 export function parseConsent(raw: string | null): Consent | null {
   if (raw === null || raw === '') return null;

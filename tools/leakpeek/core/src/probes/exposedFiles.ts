@@ -2,12 +2,8 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
 
 /**
  * Files that should never be served but often are: a build that copies the repo
- * root into the web root ships `.env` and `.git` with it. The api does the GETs;
- * this module says what a response means.
- *
- * The trap to avoid is an SPA that answers 200 with its index.html for every
- * unknown path, so a 200 only counts when the body actually looks like the file
- * it asked for, never when it looks like HTML.
+ * root into the web root ships `.env` and `.git` with it. A 200 counts only when
+ * the body looks like the file, never when it looks like an SPA's HTML shell.
  */
 
 export interface ExposedFileCheck {

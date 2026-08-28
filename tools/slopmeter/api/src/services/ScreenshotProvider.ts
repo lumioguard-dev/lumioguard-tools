@@ -1,4 +1,3 @@
-/** A thumbnail of the page that was read. */
 import { SCREENSHOT_WIDTH, mshotsUrl } from '@lumioguard/shared';
 
 export interface ScreenshotProvider {

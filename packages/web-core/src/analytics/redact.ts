@@ -13,12 +13,9 @@ export function withoutQuery(href: string): string {
 }
 
 /**
- * The scanned address out of every URL PostHog records by itself.
- *
- * `$current_url` and its siblings are collected without being asked for, and a
- * console that carries the site being read in its query hands them over with
- * it. Somebody else's address, typed into this box, is not a thing to give a
- * third party.
+ * The scanned address out of every URL PostHog records by itself. `$current_url`
+ * and its siblings are collected without being asked for, and somebody else's
+ * address, typed into this box, is not a thing to give a third party.
  */
 function scrubUrl(value: string, params: readonly string[]): string {
   try {

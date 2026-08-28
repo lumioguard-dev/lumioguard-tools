@@ -12,13 +12,9 @@ import {
 } from '@lumioguard/leakpeek-core';
 
 /**
- * The active tier: the only place that touches a target's backend. Every request
- * here is a READ, method GET, no body, and there is no code path that issues
- * anything else. That is the whole read-only guarantee (see the README), and
- * keeping the network in one small class is what makes it checkable at a glance.
- *
- * The engine decides what a response MEANS; this class only performs the read and
- * hands the status and parsed body back to it.
+ * The only place that touches a target's backend. Every request here is a READ,
+ * method GET, no body, through the one primitive below, and there is no code
+ * path that issues anything else: the read-only guarantee (see the README).
  */
 
 /** Stop after this many readable tables: enough to prove the hole, not sweep it. */

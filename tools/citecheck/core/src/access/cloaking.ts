@@ -10,27 +10,22 @@ export interface AgentView {
 
 /**
  * Below this share of the browser's words, the crawler was served a different
- * page rather than a slightly different one. Half is generous on purpose: a
- * page that varies its content by visitor legitimately differs a little, and a
- * tighter ratio would report that as cloaking.
+ * page rather than a slightly different one. Half is generous on purpose: a page
+ * that varies its content by visitor legitimately differs a little.
  */
 const THIN_RATIO = 0.5;
 
 /**
- * Below this share, the crawler was served nothing rather than less. A page
- * stripped to a tenth of itself is not a worse citation, it is an impossible
- * one, and grading that as the same finding as a slightly shorter page put a
- * silently emptied response a rung below the shell it amounts to.
+ * Below this share, the crawler was served nothing rather than less. Grading a
+ * page stripped to a tenth of itself as merely shorter put a silently emptied
+ * response a rung below the shell it amounts to.
  */
 const EMPTY_RATIO = 0.1;
 
 /**
- * What the site serves a crawler, against what it serves a browser.
- *
- * This is the check nobody runs on themselves, and the one that catches the
- * most expensive accident in the set: a bot filter installed for scrapers, now
- * returning 403 to every agent that would have cited the page. The site looks
- * perfect in a browser, which is the only place its owner ever looks.
+ * What the site serves a crawler against what it serves a browser: the check
+ * nobody runs on themselves, and the one that catches a bot filter now turning
+ * away every agent that would have cited the page.
  */
 export function checkCloaking(browserWords: number, agent: AgentView | null): CiteFinding[] {
   if (agent === null) return [];

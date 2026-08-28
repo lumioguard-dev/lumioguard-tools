@@ -5,13 +5,9 @@ import { toCitationResponse } from '../mappers/CitationMapper.js';
 import { toCrawlResponse } from '../mappers/SiteReportMapper.js';
 
 /**
- * This suite exists because the boundary it guards is INVISIBLE. Nothing breaks
- * and no screen looks wrong when a mapper spreads the domain object onto the
- * response: the report renders identically, and the detector's internals ship
- * with it.
- *
- * Two things must never cross: the internal `code`, which names the check, and
- * the `fix`, which is the remediation the hand-off exists to sell.
+ * The boundary this guards is INVISIBLE: nothing breaks and no screen looks
+ * wrong when a mapper spreads the domain object onto the response. Two things
+ * must never cross: the `code`, and the `fix` the hand-off exists to sell.
  */
 const FINDING: CiteFinding = {
   code: 'access.shell',

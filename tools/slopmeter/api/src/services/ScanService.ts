@@ -4,12 +4,7 @@ import { PageSnapshot, type SlopAnalyzer } from '@lumioguard/slopmeter-core';
 import type { ScanResultMapper } from '../mappers/ScanResultMapper.js';
 import type { PageFetcher } from './PageFetcher.js';
 
-/**
- * The single-page scan use case.
- *
- * Deliberately no crawl: the deep multi-page scan stays out of this product,
- * so one request means one page.
- */
+/** Deliberately no crawl: one request here means one page. */
 export class ScanService {
   private readonly resolver: TargetResolver;
   private readonly fetcher: PageFetcher;
@@ -37,7 +32,6 @@ export class ScanService {
     return this.mapper.toResponse(this.analyzer.analyze(snapshot), this.clock());
   }
 
-  /** Scores content the caller already has; performs no I/O. */
   public analyzeContent(input: {
     url?: string;
     html: string;

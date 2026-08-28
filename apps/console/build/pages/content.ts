@@ -1,8 +1,6 @@
-// RELATIVE, not `@lumioguard/shared`, and it has to stay that way. This module
-// is reached from `vite.config.ts`, which Vite bundles with esbuild before any
-// alias exists: a bare specifier is left external, Node then loads the
-// package's own entry, and that entry is TypeScript source. The build dies with
-// `Unknown file extension ".ts"`. A relative path is bundled instead.
+// RELATIVE, not `@lumioguard/shared`, and it has to stay that way: `vite.config.ts`
+// reaches this before any alias exists, so a bare specifier is left external and
+// Node dies loading the package's TypeScript entry with `Unknown file extension`.
 import {
   CITATION_BANDS,
   CITATION_MAX,
@@ -14,9 +12,8 @@ import {
 import { type PageLink, pageLink } from '../../src/pages.js';
 
 /**
- * The explainer pages, as data. No meter on any of them: the verdict stays on
- * the one surface. Every number is read from the ladders in `shared`, so a
- * retuned band moves the published table the day it moves the score.
+ * No meter on any explainer: the verdict stays on the one surface. Every number is
+ * read from the ladders in `shared`, so a retuned band moves the published table.
  */
 
 export interface Table {
@@ -222,5 +219,4 @@ const SCORES: ContentPage = {
   ],
 };
 
-/** Every explainer, in the order they are offered. */
 export const CONTENT_PAGES: readonly ContentPage[] = [CITE, KEYS, SLOP, SCORES];

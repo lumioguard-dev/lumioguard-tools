@@ -5,14 +5,9 @@ import { enumOf } from './zod.js';
 export const tierSchema = enumOf(TIER_NAMES);
 
 /**
- * What a visitor is told about one observation.
- *
- * Deliberately NOT on the wire: the rule's id, its category, and its position
- * in the catalogue. Those describe the detector rather than the page, and the
- * rule pack is the product: publishing it hands anyone the means to clone the
- * instrument or to tune a page against it rule by rule. `id` is opaque and
- * valid only within the response that produced it; it exists so a list can be
- * keyed, and carries no meaning beyond that.
+ * What a visitor is told about one observation. The rule's id, category and
+ * catalogue position are deliberately NOT on the wire: publishing the rule pack
+ * hands anyone the means to tune a page against it. `id` here is opaque.
  */
 export const findingSchema = z.object({
   id: z.string(),

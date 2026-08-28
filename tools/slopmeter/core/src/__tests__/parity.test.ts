@@ -1,7 +1,6 @@
-// Compares this port against the JavaScript detector it was ported from, on its
-// cached corpus. That corpus is not in this repository, so the suite SKIPS
-// itself unless SLOPMETER_PARITY_ROOT points at a checkout of it: a clone with
-// neither the path nor the variable set simply runs the other suites.
+// Compares this port against the JavaScript detector it came from, on a cached
+// corpus that is not in this repository, so the suite SKIPS itself unless
+// SLOPMETER_PARITY_ROOT points at a checkout of it. A clone needs neither.
 
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join } from 'node:path';

@@ -35,12 +35,9 @@ const STOCK_TITLES: readonly string[] = [
 const TITLE_MAX = 75;
 
 /**
- * A description shorter than this is a label, not a summary.
- *
- * It was 50, which charged vercel.com for "The autonomous stack for every app
- * and agent." at 45 characters: a deliberate, complete sentence. The floor is
- * only defensible where no sentence can fit, so it sits where "Home", "Welcome"
- * and a bare product name fall and a real one does not.
+ * A description shorter than this is a label, not a summary. It was 50, which
+ * charged vercel.com for a deliberate 45-character sentence; the floor is only
+ * defensible where "Home", "Welcome" and a bare product name fall, and no more.
  */
 const DESCRIPTION_MIN = 25;
 
@@ -141,11 +138,9 @@ export function checkHead(page: PageDocument): CiteFinding[] {
 }
 
 /**
- * A canonical that is relative, or that points at a different host.
- *
- * A cross-host canonical is not always wrong, which is why it is reported
- * rather than assumed broken: syndicated content points home on purpose. What
- * it always means is that this URL asked not to be the one cited.
+ * A cross-host canonical is not always wrong, which is why it is reported rather
+ * than assumed broken: syndicated content points home on purpose. What it always
+ * means is that this URL asked not to be the one cited.
  */
 function canonicalProblems(page: PageDocument, canonical: string | null): CiteFinding[] {
   if (canonical === null) return [];
@@ -174,14 +169,9 @@ function canonicalProblems(page: PageDocument, canonical: string | null): CiteFi
   const targetDomain = registrableDomain(resolved.host);
 
   /**
-   * A canonical to a DIFFERENT page on the same host, graded by TARGET.
-   *
-   * Pointing a duplicate at its original is what the tag is for, so the bare
-   * fact of a mismatch is not a defect: a filtered listing, a sorted one and a
-   * `?utm_source` variant all do it correctly. Lighthouse charges one case, and
-   * so does this: a canonical at the domain ROOT from a page that is not the
-   * root, which is the template hard-coding the home page and consolidating an
-   * entire site onto one URL. Anything else is reported and left cheap.
+   * Graded by TARGET. Pointing a duplicate at its original is what the tag is
+   * for; the one case charged, as in Lighthouse, is a canonical at the domain
+   * ROOT from a page that is not, the template hard-coding the home page.
    */
   const atTheRoot = resolved.pathname.replace(/\/+$/, '') === '';
 
@@ -202,10 +192,9 @@ function canonicalProblems(page: PageDocument, canonical: string | null): CiteFi
       }),
     ),
     /**
-     * Another SUBDOMAIN of the same site is ordinary consolidation, not a
-     * giveaway. edition.cnn.com canonicalises to www.cnn.com on purpose, and
-     * calling that a blocker put a working news front page in the top band.
-     * Still worth a line: it means this hostname is not the one cited.
+     * Another SUBDOMAIN of the same site is ordinary consolidation:
+     * edition.cnn.com canonicalises to www.cnn.com on purpose, and calling that
+     * a blocker put a working news front page in the top band.
      */
     ...when(resolved.host !== page.host && targetDomain === ownDomain, () =>
       finding({
@@ -235,8 +224,6 @@ function canonicalProblems(page: PageDocument, canonical: string | null): CiteFi
 }
 
 /**
- * More than one `rel=canonical`.
- *
  * Google's documented behaviour is to ignore ALL of them when a page declares
  * several, so two tags that each name a sensible URL together achieve exactly
  * what none would. Usually a theme and a plugin both adding one.
@@ -258,12 +245,9 @@ export function checkCanonicalCount(page: PageDocument): CiteFinding[] {
 }
 
 /**
- * Suffixes where the registrable domain is three labels rather than two.
- *
  * Not the full public suffix list, which is thousands of entries and a
- * dependency this package will not take. A miss reads one label too shallow,
- * which makes the comparison more cautious rather than less: two hosts are
- * called the same site slightly too readily, never a stranger too readily.
+ * dependency this package will not take. A miss reads one label too shallow, so
+ * two hosts are called the same site too readily, never a stranger too readily.
  */
 const MULTI_LABEL_SUFFIX = new Set([
   'co.uk',

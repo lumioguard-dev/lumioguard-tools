@@ -2,11 +2,8 @@ import { describe, expect, it } from 'vitest';
 import { CATALOGUE, SCAN_SLUG, pageForPath, toolCopy } from '../catalogue.js';
 import { TOOLS } from '../index.js';
 
-/**
- * The descriptors spread their entry from the catalogue, so a label or a
- * summary cannot differ. ORDER is the one thing that still could: the registry
- * decides what a visitor sees first, the catalogue what a crawler reads first.
- */
+// Descriptors spread their catalogue entry, so a label cannot differ. ORDER is the
+// one thing that still could: the registry decides what a visitor sees first.
 
 describe('CATALOGUE', () => {
   it('holds every tool the registry offers, in the order it offers them', () => {
@@ -56,8 +53,8 @@ describe('tool pages', () => {
   });
 
   it('pins nothing on the start page or an unknown path', () => {
-    // The start page is where the picker lives; a path that pinned a tool
-    // there would hide it and read something nobody chose.
+    // The start page is where the picker lives; a path pinning a tool there would
+    // hide it and read something nobody chose.
     for (const path of ['/', '/tools/', '/tools/index.html', '/tools/how-the-scores-work']) {
       expect(pageForPath(path).kind, path).not.toBe('tool');
     }
@@ -66,8 +63,7 @@ describe('tool pages', () => {
 
 describe('the chooser', () => {
   it('is the index, and anything unrecognised', () => {
-    // An unknown path lands on the page that offers a choice rather than on a
-    // scanner with no reading behind it.
+    // An unknown path offers a choice rather than scanning with no reading behind it.
     for (const path of ['/', '/tools/', '/tools/index.html', '/tools/nothing-here']) {
       expect(pageForPath(path).kind, path).toBe('choose');
     }

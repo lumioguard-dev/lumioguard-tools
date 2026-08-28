@@ -23,9 +23,8 @@ export interface Container {
 }
 
 /**
- * Composition root. Built once per isolate: the registry and analyzer are
- * stateless, so rebuilding them per request would re-run rule construction on
- * every scan.
+ * Built once per isolate: the registry and analyzer are stateless, so rebuilding
+ * them per request would re-run rule construction on every scan.
  */
 let cached: Container | null = null;
 

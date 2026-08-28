@@ -6,12 +6,9 @@ export interface CaptureSink {
 }
 
 /**
- * Where an event goes, which may be nowhere.
- *
- * The sink arrives as a PROMISE because loading PostHog is a network round
- * trip that a click can beat. Resolving through it rather than queueing by
- * hand keeps the order events were captured in and makes "analytics is off" a
- * promise of null rather than a second code path.
+ * Where an event goes, which may be nowhere. The sink arrives as a PROMISE
+ * because loading PostHog is a round trip a click can beat: resolving through it
+ * keeps capture order and makes "analytics is off" a null, not a second path.
  */
 export class Analytics {
   constructor(private readonly sink: Promise<CaptureSink | null>) {}

@@ -17,12 +17,9 @@ interface Frontier {
 }
 
 /**
- * Walks a site breadth-first AND by depth, scoring every page it reaches.
- *
- * The frontier is drained level by level, so `maxPages` buys width across a
- * level and `depth` buys levels. A competitor that strips the path and only
- * scans a domain root cannot see anything one click deep, which is exactly
- * where unfinished pages live.
+ * Walks a site breadth-first AND by depth: the frontier drains level by level,
+ * so `maxPages` buys width across a level and `depth` buys levels. Scanning only
+ * a domain root sees nothing one click deep, which is where unfinished pages live.
  */
 export class SiteCrawler {
   private readonly analyzer: SlopAnalyzer;

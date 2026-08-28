@@ -2,12 +2,8 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { PageDocument } from '../read/PageDocument.js';
 
 /**
- * How the page was delivered, and the classic technical-SEO defects in it.
- *
- * These are the checks a search audit opens with and a citation audit does not
- * think about: a redirect chain, a canonical that consolidates the wrong way,
- * assets loaded over http on an https page. They cost ranking rather than
- * readability, which is why most of them weigh on the search axis only.
+ * The classic technical-SEO defects a citation audit does not think about. They
+ * cost ranking rather than readability, so most weigh on the search axis only.
  */
 
 /** What the api observed getting to the page. */
@@ -44,8 +40,6 @@ export function checkDelivery(page: PageDocument, delivery: Delivery | null): Ci
   ];
 }
 /**
- * Assets fetched over http by a page served over https.
- *
  * No `script` here: `markup` has had every `<script>` element cut out of it, so
  * this pattern could never match one. Insecure scripts are read off
  * `scriptSources`, which is taken from the raw HTML.
@@ -55,11 +49,8 @@ const INSECURE_ASSET =
 
 /**
  * A `<link>` counts only when its `rel` actually FETCHES something.
- *
  * `<link rel="profile" href="http://gmpg.org/xfn/11">` is WordPress boilerplate
- * naming a specification, and no browser ever requests it. Counting every http
- * `<link href>` reported mixed content on bbcgoodfood.com over a semantic
- * reference that loads nothing.
+ * no browser requests, and it reported mixed content on bbcgoodfood.com.
  */
 const INSECURE_LINK =
   /<link\b[^>]*\brel\s*=\s*["']?(?:stylesheet|preload|modulepreload|prefetch|icon|apple-touch-icon|manifest|mask-icon)["']?[^>]*\bhref\s*=\s*["']?(http:\/\/[^"'\s>]+)/gi;
@@ -94,10 +85,9 @@ export function checkTransport(page: PageDocument): CiteFinding[] {
   ];
 
   /**
-   * Graded by WHAT is blocked. A browser refuses an insecure script or
-   * stylesheet on a secure page outright, so the page may not work; it only
-   * declines to paint an insecure image. healthline.com's is a comScore
-   * tracking pixel, which costs the page nothing it needed.
+   * Graded by WHAT is blocked: a browser refuses an insecure script or
+   * stylesheet outright, and only declines to paint an insecure image.
+   * healthline.com's is a comScore pixel, which costs the page nothing.
    */
   const breaksThePage = insecureScripts.length > 0 || INSECURE_STYLESHEET.test(page.markup);
 

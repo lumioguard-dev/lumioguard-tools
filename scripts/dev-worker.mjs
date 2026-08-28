@@ -1,17 +1,6 @@
-// Start a tool's Worker on its allocated port.
-//
-//   node ../../scripts/dev-worker.mjs slopmeter
-//
-// Exists so the Worker's port and the web app's proxy target come from one row
-// in ports.json rather than from two literals in two files. `--port` used to be
-// written into each api package.json, where it silently disagreed with the
-// proxy the day either moved.
-//
-// Binds the same loopback address the web servers do. wrangler defaults to
-// 127.0.0.1 and Vite defaults to ::1, so the two halves of one tool listened on
-// different IP stacks: `127.0.0.1:<web>` refused connections while
-// `localhost:<web>` worked, and anything resolving localhost the other way lost
-// the API instead. Same host for both, stated once, in ports.json.
+// The Worker's port and the web app's proxy target come from one row in
+// ports.json, and both bind the host stated there: wrangler defaults to 127.0.0.1
+// and Vite to ::1, which left the two halves of one tool on different IP stacks.
 
 import { spawn } from 'node:child_process';
 import { HOST, portsFor } from './ports.mjs';
@@ -33,13 +22,9 @@ try {
 
 console.log(`[ports] ${tool} api → http://${HOST}:${port} (inspector ${inspector})`);
 
-// `shell: true` so this resolves wrangler from the package's own node_modules
-// bin on Windows, where the bin is a .cmd shim rather than an executable.
-// `--inspector-port` is NOT optional here. wrangler defaults every Worker to
-// 9229, so the second one to start fails to bind it and dies, taking the whole
-// `pnpm dev` down with it. Three tools running at once is the normal case in
-// this repo, and the failure reads as "the API is down" with the real reason
-// buried in a runtime stack trace about a socket.
+// `shell: true` resolves wrangler from the package's own node_modules on Windows,
+// where the bin is a .cmd shim. `--inspector-port` is NOT optional: wrangler
+// defaults every Worker to 9229, so the second to start fails to bind and dies.
 const child = spawn(
   'wrangler',
   ['dev', '--ip', HOST, '--port', String(port), '--inspector-port', String(inspector)],

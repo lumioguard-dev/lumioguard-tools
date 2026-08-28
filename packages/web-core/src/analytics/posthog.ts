@@ -15,11 +15,7 @@ export interface AnalyticsConfig {
 
 /**
  * PostHog, configured EXACTLY as the marketing site configures it in
- * `assets/consent.js`: capture starts cookielessly from the first pageview and
- * an accepted banner upgrades it, so a visitor is counted whether or not they
- * have ever been asked. The two halves of one site must not count differently,
- * so every option here is answered there too.
- *
+ * `assets/consent.js`: the two halves of one site must not count differently.
  * Loaded on its own chunk, so a build with no key configured never fetches it.
  */
 export async function loadPostHog(

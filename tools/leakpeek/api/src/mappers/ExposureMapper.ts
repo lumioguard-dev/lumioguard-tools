@@ -8,12 +8,6 @@ import {
 } from '@lumioguard/leakpeek-core';
 import type { DetectedStackDto, ExposureFindingDto, ExposureResponse } from '@lumioguard/shared';
 
-/**
- * Findings → the wire response. The internal `code` is dropped and each finding
- * gets an opaque, position-based id: the id exists so a list can be keyed, and
- * carries nothing about the detector. Score, tier and headline are derived here
- * from the ordered set so the number and the top line always agree with the list.
- */
 export interface ScanInputs {
   readonly url: string;
   readonly host: string;
@@ -25,6 +19,7 @@ export interface ScanInputs {
   readonly scannedAt: string;
 }
 
+/** Score, tier and headline are all derived from the ordered set, so the three agree. */
 export function toExposureResponse(inputs: ScanInputs): ExposureResponse {
   const ordered = orderFindings(inputs.findings);
   const scored: ScoredExposure = scoreExposure(ordered);

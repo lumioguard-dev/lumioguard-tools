@@ -1,15 +1,13 @@
 import { type RefObject, useEffect, useRef, useState } from 'react';
 
 /**
- * `closing` the needle is locking on, meter still full width. `opening` the
- * meter contracts and the figure is written into the space. `done` the stamp
- * comes down. Split out because each beat has to wait for the one before it.
+ * `closing` the needle locks on, `opening` the meter contracts and the figure is
+ * written in, `done` the stamp comes down. Each beat waits for the one before it.
  */
 type VerdictPhase = 'waiting' | 'closing' | 'opening' | 'done';
 
 interface VerdictSequence {
   readonly phase: VerdictPhase;
-  /** The figure to show, or null while there is not one yet. */
   readonly shown: number | null;
   /** True once the figure has a column of its own to sit in. */
   readonly open: boolean;
@@ -48,9 +46,8 @@ function currentTranslate(element: Element): number {
 }
 
 /**
- * The needle is the progress indicator and never stops being one: it hunts
- * in wide passes for as long as the read takes, then closes on the answer
- * and locks.
+ * The needle IS the progress indicator: it hunts in wide passes for as long as the
+ * read takes, then closes on the answer and locks.
  */
 export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSequence {
   const [phase, setPhase] = useState<VerdictPhase>(isWaiting ? 'waiting' : 'done');
@@ -71,12 +68,9 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
       if (reduce || el === null || width <= 0) return;
 
       /*
-       * No easing, on the effect or on a pass. `easing` in the options eases
-       * the whole iteration rather than each pass, so an infinite loop of it
-       * ran the middle passes fast, the outer ones slow, and brought the
-       * needle to a dead stop at the seam every 5.2 seconds: the hunt visibly
-       * hesitating at one end of the band on a cycle. Linear at a distance-paced
-       * tempo, the loop has no seam to see.
+       * NO easing here: `easing` in the options eases the whole iteration rather
+       * than each pass, bringing the needle to a dead stop at the seam every 5.2s.
+       * Linear at a distance-paced tempo, the loop has no seam to see.
        */
       const sweep = HUNT.map((p) => (p / 100) * width);
       const at = byDistance(sweep);
@@ -103,9 +97,8 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
 
     setPhase('closing');
 
-    // The marker's resting place moved to the score the moment it arrived, so
-    // the first keyframe cancels that shift out and the needle stays exactly
-    // where the hunt left it.
+    // The marker's resting place moved to the score the moment it arrived, so the
+    // first keyframe cancels that shift out and the needle stays where the hunt left it.
     const base = (score / 100) * width;
     const frames = [
       carry.current * width - base,
@@ -114,16 +107,9 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
     ];
 
     /*
-     * Paced the same way, so the hand does not change the moment the answer
-     * arrives: the settle picks the needle up at the speed the hunt was
-     * running it. The convergence is carried by the passes getting shorter
-     * rather than by the needle slowing on each one, which is also what makes
-     * the first pass right whatever the hunt was doing when the read landed:
-     * its length is whatever distance is left, and it is given exactly that
-     * share of the time.
-     *
-     * Only the last pass eases. A lock that decelerates onto the score reads as
-     * landing on it; linear to the end reads as the animation simply stopping.
+     * Paced by DISTANCE, so the settle picks the needle up at the speed the hunt was
+     * running it and the first pass is right whatever the hunt was doing. Only the
+     * last pass eases: linear to the end reads as the animation simply stopping.
      */
     const settleAt = byDistance(frames);
     const closing = frames.length - 2;
@@ -141,8 +127,8 @@ export function useVerdictSequence(score: number, isWaiting: boolean): VerdictSe
       settle.cancel();
       if (cancelled) return;
 
-      // The needle has locked. Now the meter makes room and the figure is
-      // written into it; the stamp waits until that space actually exists.
+      // The needle has locked: the meter makes room, and the stamp waits until that
+      // space actually exists.
       setPhase('opening');
 
       // the figure catches up to where the needle already is

@@ -1,27 +1,20 @@
 /**
- * What each reading is called and what it does, as plain data. Split out of the
- * descriptors so the BUILD can read it: a descriptor is a `.tsx` and the Vite
- * config runs in Node. Descriptors spread their entry, so the words cannot drift.
+ * Split out of the descriptors so the BUILD can read it: a descriptor is a `.tsx`
+ * and the Vite config runs in Node. Descriptors spread their entry from here, so
+ * the words cannot drift.
  */
 export interface ToolCopy {
   /** Stable, lower-case, and the segment its dev proxy is mounted at. */
   readonly id: string;
-  /**
-   * What this reading IS, never what built it. A visitor picking what to read
-   * is choosing between concerns, not between Slopmeter, Leakpeek and Citecheck.
-   */
+  /** What this reading IS, never what built it: a visitor chooses between concerns. */
   readonly label: string;
-  /** What this tool does, in ONE sentence. It is a tooltip, not a paragraph. */
+  /** ONE sentence. It is a tooltip, not a paragraph. */
   readonly summary: string;
-  /**
-   * Its own page, where this reading runs alone. Named for what a person would
-   * search rather than for the engine behind it, and the file the build emits
-   * takes its name from here.
-   */
+  /** Named for what a person would search, and the emitted file takes its name. */
   readonly slug: string;
   /** The question that page asks, standing in for the home page's own. */
   readonly headline: string;
-  /** What this reading looks for: the middle beat of how it works, on its own page. */
+  /** The middle beat of how it works, on this reading's own page. */
   readonly checks: string;
   /** What a search result shows for that page. Under 160 characters. */
   readonly description: string;
@@ -61,17 +54,17 @@ export const CATALOGUE: readonly ToolCopy[] = [
   },
 ];
 
-/** The entry for one tool, or a throw: a descriptor naming nothing is a defect. */
+/** Throws: a descriptor naming nothing is a defect. */
 export function toolCopy(id: string): ToolCopy {
   const found = CATALOGUE.find((tool) => tool.id === id);
   if (found === undefined) throw new Error(`No catalogue entry for tool "${id}"`);
   return found;
 }
 
-/** Every reading at once, which is a page rather than a reading of its own. */
+/** A page rather than a reading of its own. */
 export const SCAN_SLUG = 'scan';
 
-/** What has been read, ranked. Also a page rather than a reading. */
+/** A page rather than a reading too. */
 export const LEADERBOARD_SLUG = 'leaderboard';
 
 /**
@@ -81,9 +74,9 @@ export const LEADERBOARD_SLUG = 'leaderboard';
 export const LEADERBOARD_TOOL = 'slopmeter';
 
 /**
- * Which of the three documents a path is. The build reads it to know what to
- * prerender and the app to know what to run, and answered separately in each
- * they would disagree about a path and scan something the heading never offered.
+ * The build reads this to know what to prerender and the app to know what to run.
+ * Answered separately in each, they would disagree about a path and scan something
+ * the heading never offered.
  */
 export type ConsolePage =
   | { readonly kind: 'tool'; readonly tool: ToolCopy }
@@ -91,7 +84,7 @@ export type ConsolePage =
   | { readonly kind: 'leaderboard' }
   | { readonly kind: 'choose' };
 
-/** The last path segment, however the app is mounted and whether or not `.html`. */
+/** However the app is mounted, and whether or not `.html`. */
 function segment(pathname: string): string {
   const last = pathname.replace(/\/+$/, '').split('/').pop() ?? '';
   return last.replace(/\.html$/, '');
@@ -107,11 +100,7 @@ export function pageForPath(pathname: string): ConsolePage {
   return { kind: 'choose' };
 }
 
-/**
- * What a page is called where a name is wanted rather than a route: analytics,
- * chiefly. A `Record` rather than a `switch`, so a fourth kind of page fails to
- * compile here instead of reporting itself as `undefined`.
- */
+/** A `Record`, not a `switch`: a fourth kind of page fails to compile here. */
 const PAGE_NAME: Record<Exclude<ConsolePage['kind'], 'tool'>, string> = {
   scan: SCAN_SLUG,
   leaderboard: LEADERBOARD_SLUG,

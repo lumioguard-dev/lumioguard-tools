@@ -29,11 +29,9 @@ export type BoardTransport = (
 ) => Promise<{ readonly ok: boolean; readonly json: () => Promise<unknown> }>;
 
 /**
- * The board, read from LumioGuard.
- *
- * Proxied through this Worker rather than fetched by the browser: the console
- * is open source and carries no LumioGuard address, and going direct would bake
- * one into the bundle and need a CORS entry on an API this repo does not own.
+ * The board, read from LumioGuard. Proxied through this Worker rather than the
+ * browser: the console is open source and carries no LumioGuard address, so going
+ * direct would bake one into the bundle and need CORS on an API we do not own.
  */
 export class LeaderboardReader {
   private readonly send: BoardTransport;

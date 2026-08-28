@@ -2,16 +2,9 @@ import { AnalyticsEvent, type EventProperties, useAnalytics } from '@lumioguard/
 import { useEffect, useRef } from 'react';
 
 /**
- * A finished report, reported ONCE.
- *
- * Latched rather than fired from a dependency edge: each reading lands on its
- * own and re-runs the effect, and without the latch a slow third tool would
- * report the same page again and double the denominator every hand-off rate is
- * measured against.
- *
- * The properties are read from a ref rather than depended on, so rebuilding
- * that object on a render cannot re-arm an effect whose only trigger is the
- * moment the readings settled.
+ * Reported ONCE, latched rather than fired from a dependency edge: each reading
+ * re-runs the effect, and a slow third tool would double the denominator every
+ * hand-off rate is measured against. The properties are read from a ref for that.
  */
 export function useReportView(settled: boolean, properties: EventProperties): void {
   const analytics = useAnalytics();

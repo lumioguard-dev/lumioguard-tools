@@ -52,16 +52,9 @@ function repeated(
 }
 
 /**
- * The same title or description on more than one page.
- *
- * THE flagship finding of every crawl-based search audit, and one no
- * single-page tool can produce. Two pages sharing a title are two pages
- * competing for one query with half the evidence each, and a template emitting
- * one title for a whole section does it silently: every page looks correct on
- * its own, and only reading them together shows it.
- *
- * SEARCH ONLY. Sharing a title costs a page nothing in being read or quoted;
- * what it costs is the ranking signal split between them.
+ * Two pages sharing a title are two pages competing for one query with half the
+ * evidence each, and only reading them together shows it. SEARCH ONLY: sharing
+ * a title costs nothing in being read or quoted, only the split ranking signal.
  */
 export function checkDuplicates(pages: readonly PageIdentity[]): CiteFinding[] {
   if (pages.length < DUPLICATE_THRESHOLD) return [];
@@ -119,23 +112,16 @@ export interface BrokenLink {
 }
 
 /**
- * Statuses that mean REFUSED, not missing.
- *
- * A bot filter turning the reader away is not a broken link, and conflating
- * them reported apple.com as having ten internal links leading nowhere. Every
- * one of those pages loads perfectly; Apple answers 403 to a crawler it does
- * not recognise. What that is worth saying about lives in the access checks,
- * which measure it against a real crawler token rather than ours.
+ * REFUSED, not missing: a bot filter turning the reader away is not a broken
+ * link, and conflating them reported apple.com as having ten internal links
+ * leading nowhere. Apple answers 403 to a crawler it does not recognise.
  */
 const REFUSED = new Set([401, 403, 429]);
 
 /**
- * Links the site makes to itself that do not load.
- *
  * Reported against the SITE rather than the page carrying them, because a crawl
  * reaches one broken URL once however many pages point at it. A search finding:
- * a dead internal link spends crawl budget on a dead end and takes a visitor to
- * one, and nothing on the linking page shows that it is broken.
+ * nothing on the linking page shows that the link is broken.
  */
 export function checkBrokenLinks(errors: readonly BrokenLink[]): CiteFinding[] {
   const broken = errors.filter((item) => item.status === null || !REFUSED.has(item.status));

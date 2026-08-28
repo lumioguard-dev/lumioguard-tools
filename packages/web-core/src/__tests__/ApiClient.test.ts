@@ -4,11 +4,9 @@ import { z } from 'zod';
 import { ApiClient, ScanApiError } from '../api/ApiClient.js';
 
 /**
- * The one place a response crosses from the network into the app.
- *
- * Everything here guards the same failure: a shape nobody checked becoming
- * `undefined` three components deep, where the cause is invisible. Validation
- * belongs at this boundary and never below it.
+ * The one place a response crosses from the network into the app. Everything
+ * here guards the same failure: a shape nobody checked becoming `undefined`
+ * three components deep. Validation belongs at this boundary and never below it.
  */
 
 const bodySchema = z.object({ score: z.number(), tier: z.string() });

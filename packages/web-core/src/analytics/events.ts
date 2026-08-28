@@ -1,11 +1,7 @@
 /**
- * Every event this console sends, named once.
- *
- * `cta_click` IS THE MARKETING SITE'S OWN EVENT, with its three property names
- * kept exactly, so one insight covers a click on either half and the console's
- * extra properties ride along beside them. The rest are this console's own
- * funnel and have no counterpart there. See `assets/consent.js` in the website
- * repo, which is where the shared name is captured on the other side.
+ * Every event this console sends, named once. `cta_click` IS THE MARKETING
+ * SITE'S OWN EVENT, its three property names kept exactly, so one insight covers
+ * a click on either half. See `assets/consent.js` in the website repo.
  */
 export const AnalyticsEvent = {
   CtaClick: 'cta_click',

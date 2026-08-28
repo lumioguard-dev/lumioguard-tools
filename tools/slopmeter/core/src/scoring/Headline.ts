@@ -15,7 +15,7 @@ function asList(items: readonly string[]): string {
   return `${items.slice(0, -1).join(', ')}, and ${items.at(-1)}`;
 }
 
-/** The one line a reader would repeat, composed from the three heaviest tells. */
+/** The one line a reader would repeat, composed from the heaviest tells. */
 export function headlineFrom(tells: readonly Tellable[]): string | null {
   const phrases = tells
     .filter((tell) => tell.weight > 0 && tell.phrase !== null)

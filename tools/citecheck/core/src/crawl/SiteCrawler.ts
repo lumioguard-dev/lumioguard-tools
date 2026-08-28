@@ -18,13 +18,9 @@ interface Frontier {
 }
 
 /**
- * Walks a site breadth-first AND by depth, reading every page it reaches.
- *
  * The frontier is drained level by level, so `maxPages` buys width across a
- * level and `depth` buys levels. It matters more here than for a homepage
- * audit: the pages worth citing are almost never the front door, and a tool
- * that only reads the root reports on the one page nobody asks a question
- * about.
+ * level and `depth` buys levels. The pages worth citing are almost never the
+ * front door, so a tool reading only the root reports on the wrong page.
  */
 export class SiteCrawler {
   private readonly loader: PageLoader;
@@ -62,14 +58,9 @@ export class SiteCrawler {
     const entry = this.normalizer.normalizeToString(startUrl);
     const seen = new Set<string>([entry]);
     /**
-     * The addresses actually READ, after redirects.
-     *
-     * `seen` holds what was queued, which is what was asked for. Two different
-     * links can redirect to one page, and tailwindcss.com does exactly that:
-     * `/docs` and `/docs/installation` both land on
-     * `/docs/installation/using-vite`. Recorded twice, the page became its own
-     * duplicate, and the crawl reported two pages sharing a title when there
-     * was one page reached two ways.
+     * The addresses actually READ, after redirects, where `seen` holds what was
+     * queued. Two links can redirect to one page, as tailwindcss.com's do, and
+     * recorded twice that page became its own duplicate title.
      */
     const readUrls = new Set<string>();
     const read: ReadPage[] = [];
@@ -131,8 +122,6 @@ export class SiteCrawler {
 }
 
 /**
- * The upstream status off a thrown loader error, where it carries one.
- *
  * Narrowed rather than cast: the port does not name the api's error type, and
  * anything the adapter throws may or may not have reached a server at all.
  */

@@ -6,7 +6,6 @@ export const SITE_KEY_LENGTH = 6;
 /** The shape LumioGuard validates a key against, and the DB constraint mirrors. */
 export const SITE_KEY_PATTERN = new RegExp(`^[${ALPHABET}]{${SITE_KEY_LENGTH}}$`);
 
-/** A fresh candidate key. */
 export function newSiteKey(): string {
   const limit = 256 - (256 % ALPHABET.length);
   let out = '';
