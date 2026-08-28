@@ -1,14 +1,9 @@
 import type { DetectedStackDto } from '@lumioguard/shared';
 
 /**
- * What a site's response reveals about the platforms behind it. Reported to
- * choose probes and name the funnel: never scored.
- *
- * Every signal is one the platform EMITS ABOUT ITSELF. Anything weaker is
- * dropped rather than hedged: a reader takes "Cloudflare (a guess)" as
- * "probably Cloudflare", which on a Vercel app behind that CDN is false.
- *
- * `headers` is lower-cased keys; `sources` is the HTML plus script bodies.
+ * Reported to choose probes and name the funnel, never scored. Every signal is
+ * one the platform EMITS ABOUT ITSELF, and anything weaker is dropped rather
+ * than hedged: a reader takes "Cloudflare (a guess)" as "probably Cloudflare".
  */
 
 export interface Fingerprint {
@@ -19,7 +14,6 @@ export interface Fingerprint {
 
 /**
  * Where the app is SERVED FROM, and only when the platform says so itself.
- *
  * `cf-ray` is deliberately not enough: it means the request crossed Cloudflare's
  * CDN, which any origin can sit behind. Only `.pages.dev` proves Pages serves it.
  */
@@ -50,9 +44,11 @@ function detectBuilder(sources: string, host: string): string | null {
 function detectBackend(sources: string): string | null {
   // The actual project endpoint, not the word: the 20-char ref is the tell.
   if (/https?:\/\/[a-z0-9]{20}\.supabase\.co/i.test(sources)) return 'Supabase';
-  if (/[a-z0-9-]+\.firebaseio\.com|[a-z0-9-]+\.firebaseapp\.com/i.test(sources)) return 'Firebase';
-  if (/[a-z0-9-]+\.pocketbase\.io/i.test(sources)) return 'PocketBase';
-  if (/[a-z0-9-]+\.appwrite\.io/i.test(sources)) return 'Appwrite';
+  // ONE label character, not a run: `[a-z0-9-]+` before a literal backtracks
+  // quadratically through minified script, and `sources` is megabytes of it.
+  if (/[a-z0-9-]\.firebase(?:io|app)\.com/i.test(sources)) return 'Firebase';
+  if (/[a-z0-9-]\.pocketbase\.io/i.test(sources)) return 'PocketBase';
+  if (/[a-z0-9-]\.appwrite\.io/i.test(sources)) return 'Appwrite';
   return null;
 }
 

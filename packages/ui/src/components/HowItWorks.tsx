@@ -1,10 +1,8 @@
-/** The three beats of a reading, drawn. */
 interface Step {
   readonly label: string;
   readonly art: JSX.Element;
 }
 
-/** Every stroke on this page is a curve with round ends; these are no exception. */
 const PEN = {
   fill: 'none',
   strokeWidth: 1.7,
@@ -13,13 +11,11 @@ const PEN = {
 } as const;
 
 /**
- * The line weight is the page's, not the icon's. These are drawn at 52 units
- * and set at 60 or 76, so without this every stroke would come out heavier than
- * the panel it sits in, and heavier on a wide screen than on a narrow one.
+ * The line weight is the page's, not the icon's: drawn at 52 units and set at 60 or
+ * 76, every stroke would otherwise be heavier on a wide screen than on a narrow one.
  */
 const NS = 'non-scaling-stroke';
 
-/** The field, with something typed in it and the caret still sitting there. */
 function ArtAddress(): JSX.Element {
   return (
     <svg
@@ -40,7 +36,6 @@ function ArtAddress(): JSX.Element {
   );
 }
 
-/** More than one sheet, and a charge found on the one in front. */
 function ArtRead(): JSX.Element {
   return (
     <svg
@@ -49,7 +44,6 @@ function ArtRead(): JSX.Element {
       aria-hidden="true"
       {...PEN}
     >
-      {/* the sheet behind, showing only where the front one does not cover it */}
       <path
         vectorEffect={NS}
         className="stroke-pen-700"
@@ -73,7 +67,6 @@ function ArtRead(): JSX.Element {
   );
 }
 
-/** The band the verdict is read off, with the marker standing on it. */
 function ArtScore(): JSX.Element {
   return (
     <svg
@@ -88,7 +81,7 @@ function ArtScore(): JSX.Element {
         <path vectorEffect={NS} d="M26 18.6c.3 1.8.2 3.6-.1 5.2" />
         <path vectorEffect={NS} d="M39 18.4c.3 1.8.2 3.6-.1 5.2" />
       </g>
-      {/* the marker, the one accent in the set: the reading is the payoff */}
+      {/* the one accent in the set: the reading is the payoff */}
       <path
         fill="var(--red-400)"
         stroke="none"
@@ -111,7 +104,6 @@ export interface HowItWorksLabels {
   readonly result: string;
 }
 
-/** Two dashes of a pen lifting between beats. */
 function Trail(): JSX.Element {
   return (
     <svg

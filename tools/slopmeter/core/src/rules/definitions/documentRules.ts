@@ -21,7 +21,15 @@ const TRACKERS = [
   'snap.licdn.com',
 ] as const;
 
-/** Written once and composed into the four patterns below. */
+/**
+ * Built once: lower-casing the page and scanning it per tracker was the
+ * heaviest rule in the pack. Dots stay literal, as `includes` had them.
+ */
+const TRACKER_PATTERN = new RegExp(
+  TRACKERS.map((name) => name.replace(/[.]/g, '\\.')).join('|'),
+  'gi',
+);
+
 const PLACEHOLDER_HOST = String.raw`(?:example|yourdomain|yourcompany|yoursite|domain)\.(?:com|org)`;
 
 const PLACEHOLDER_EMAIL = new RegExp(String.raw`\b[a-z0-9._-]+@${PLACEHOLDER_HOST}\b`, 'gi');
@@ -64,10 +72,10 @@ const STOCK_HERO_PATTERNS = [
   /\bwhere [a-z]{3,15} meets [a-z]{3,15}\b/i,
 ] as const;
 
-export const structureRules: readonly Rule[] = [
+export const documentRules: readonly Rule[] = [
   defineRule({
-    id: 'leftover.todo-in-production',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.developer-note',
+    category: RuleCategory.Unfinished,
     weight: 9,
     label: 'A developer TODO left in the visible text',
     phrase: "a developer's TODO in the visible copy",
@@ -79,12 +87,11 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.placeholder-contact',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.contact-details',
+    category: RuleCategory.Unfinished,
     weight: 8,
     label: 'Fake contact details',
     phrase: 'contact details nobody answers',
-    /** The tell is not the address. */
     evaluate: (ctx) => {
       if (DEAD_MAILTO.test(ctx.html)) {
         return `${firstMatch(ctx.html, DEAD_MAILTO)?.replace(/^mailto:/i, '') ?? 'an example address'} is where the page says to write`;
@@ -100,8 +107,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.stock-hero',
-    category: RuleCategory.Copy,
+    id: 'voice.template-hero',
+    category: RuleCategory.Voice,
     weight: 8,
     label: 'A hero line straight from the template',
     phrase: "the template's own hero line",
@@ -115,8 +122,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.emoji-soup',
-    category: RuleCategory.Copy,
+    id: 'voice.emoji-decoration',
+    category: RuleCategory.Voice,
     weight: 5,
     label: 'Emoji used as decoration',
     evaluate: (ctx) => {
@@ -126,13 +133,18 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.nav-goes-nowhere',
-    category: RuleCategory.Structure,
+    id: 'document.no-navigation',
+    category: RuleCategory.Document,
     weight: 7,
     label: 'Navigation links that go nowhere',
     phrase: 'navigation that leads nowhere',
     evaluate: (ctx) => {
       const { anchors } = ctx.document;
+      // A whole page that links nowhere. Checked in a real browser on the page that
+      // prompted it: the nav renders as plain boxes, so this is not missing JavaScript.
+      if (anchors.length < 3) {
+        return evidence(ctx.html.length >= 20_000, `${anchors.length} links in the whole page`);
+      }
       if (anchors.length < 8) return null;
       const dead = anchors.filter((a) => {
         const href = a.href.trim();
@@ -143,8 +155,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.thin-shell',
-    category: RuleCategory.Structure,
+    id: 'document.thin-shell',
+    category: RuleCategory.Document,
     weight: 6,
     label: 'Almost no text in the page itself',
     phrase: 'almost no text in the page itself',
@@ -155,8 +167,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.oversized-payload',
-    category: RuleCategory.Structure,
+    id: 'document.heavy-payload',
+    category: RuleCategory.Document,
     weight: 8,
     label: 'A very heavy page',
     phrase: 'megabytes of page for a screenful',
@@ -167,21 +179,23 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.tracker-pileup',
-    category: RuleCategory.Structure,
+    id: 'document.tracker-pileup',
+    category: RuleCategory.Document,
     weight: 6,
     label: 'A pile-up of third-party trackers',
     phrase: 'more trackers than sections',
     evaluate: (ctx) => {
-      const lower = ctx.html.toLowerCase();
-      const hits = TRACKERS.filter((tracker) => lower.includes(tracker));
+      const seen = new Set(
+        [...ctx.html.matchAll(TRACKER_PATTERN)].map((match) => match[0].toLowerCase()),
+      );
+      const hits = TRACKERS.filter((tracker) => seen.has(tracker));
       return evidence(hits.length >= 4, `${hits.length} trackers: ${hits.slice(0, 3).join(', ')}`);
     },
   }),
 
   defineRule({
-    id: 'structure.div-soup',
-    category: RuleCategory.Structure,
+    id: 'document.generic-boxes',
+    category: RuleCategory.Document,
     weight: 5,
     label: 'Generic boxes instead of real structure',
     evaluate: (ctx) => {
@@ -195,8 +209,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.no-viewport',
-    category: RuleCategory.Structure,
+    id: 'document.no-viewport',
+    category: RuleCategory.Document,
     weight: 6,
     label: 'Not set up for phones',
     phrase: 'nothing set up for a phone',
@@ -205,8 +219,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.no-h1',
-    category: RuleCategory.Structure,
+    id: 'document.no-title-heading',
+    category: RuleCategory.Document,
     weight: 5,
     label: 'No main heading',
     evaluate: (ctx) =>
@@ -217,8 +231,8 @@ export const structureRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'structure.no-canonical',
-    category: RuleCategory.Structure,
+    id: 'document.no-canonical',
+    category: RuleCategory.Document,
     weight: 3,
     label: 'No canonical address',
     evaluate: (ctx) =>

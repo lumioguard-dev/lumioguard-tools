@@ -4,10 +4,25 @@ import type { BoardState } from './useBoard.js';
 
 const LINE = 'mt-4 text-body';
 
+/** The ONE way the board says it could not be read; the preview once had its own. */
+export function BoardFailure({ onRetry }: { readonly onRetry: () => void }): JSX.Element {
+  return (
+    <p className={`${LINE} text-ink-2`}>
+      The board could not be read.{' '}
+      <button
+        type="button"
+        className="underline underline-offset-2 hover:text-hand"
+        onClick={onRetry}
+      >
+        Try again
+      </button>
+    </p>
+  );
+}
+
 /**
- * A band's rows, or the reason there are none. Written once because the board
- * and its preview must answer alike: the preview read a dropped request as a
- * band nobody had landed in, and said so under a live 502.
+ * Written once because the board and its preview must answer alike: the preview
+ * read a dropped request as a band nobody had landed in, under a live 502.
  */
 export function BoardBody({
   board,
@@ -15,7 +30,6 @@ export function BoardBody({
   onOpen,
 }: {
   readonly board: BoardState;
-  /** The preview shows the head of the band; the board shows the page. */
   readonly limit?: number;
   /** Given, a row reads its site in place rather than loading the page. */
   readonly onOpen?: (host: string) => void;
@@ -24,20 +38,7 @@ export function BoardBody({
 
   if (data === null) {
     if (reading) return <p className={`${LINE} text-ink-3`}>Reading the board…</p>;
-    if (failed) {
-      return (
-        <p className={`${LINE} text-ink-2`}>
-          The board could not be read.{' '}
-          <button
-            type="button"
-            className="underline underline-offset-2 hover:text-hand"
-            onClick={retry}
-          >
-            Try again
-          </button>
-        </p>
-      );
-    }
+    if (failed) return <BoardFailure onRetry={retry} />;
   }
 
   if (data === null || data.rows.length === 0) {

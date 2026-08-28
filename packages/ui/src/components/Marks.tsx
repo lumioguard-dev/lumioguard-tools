@@ -1,10 +1,7 @@
 /**
- * Axis marks and the reel, drawn rather than borrowed.
- *
- * Every path here is an irregular curve with round joins: a geometric icon set
- * would sit on this surface as the one machine-made thing on a page of drawn
- * boxes. Each axis carries its own mark so the four never blur together, which
- * is the whole point of keeping them apart.
+ * Irregular curves with round joins: a geometric icon set would be the one
+ * machine-made thing on a page of drawn boxes. A mark per axis, so the four never
+ * blur together.
  */
 type MarkProps = { readonly className?: string };
 
@@ -29,7 +26,7 @@ function Frame({
   );
 }
 
-/** Scored: the only axis allowed to move the number. */
+/** The only axis allowed to move the number. */
 export function MarkScored({ className }: MarkProps): JSX.Element {
   return (
     <Frame {...(className === undefined ? {} : { className })}>
@@ -42,21 +39,17 @@ export function MarkScored({ className }: MarkProps): JSX.Element {
 }
 
 /**
- * The picker's box, ticked or empty.
- *
- * A drawn box rather than the browser's checkbox, which is the one machine-made
- * control on a page of drawn frames. The real `<input>` is still there and still
- * does the work; this is what is seen. Both states draw the box, so the chips
- * hold their width and the tick is the only thing that moves.
+ * Drawn rather than the browser's checkbox; the real `<input>` is still there and
+ * still does the work. BOTH states draw the box, so the chips hold their width and
+ * the tick is the only thing that moves.
  */
 export function MarkTick({ on }: { readonly on: boolean }): JSX.Element {
   return (
     <svg
       viewBox="0 0 20 20"
-      // NO opacity modifier on the stroke. `stroke-pen-700/60` computed to
-      // `stroke: none` and the empty box vanished: these tokens are `var()`
-      // strings, and an alpha applied to one paints nothing at all rather than
-      // failing. The faint state is a lighter pen, not a faded one.
+      // NO opacity modifier on the stroke: these tokens are `var()` strings, so
+      // `stroke-pen-700/60` computed to `stroke: none` and the empty box vanished.
+      // The faint state is a lighter pen, not a faded one.
       className={`h-[15px] w-[15px] shrink-0 ${on ? 'stroke-pen-300' : 'stroke-pen-700'}`}
       aria-hidden="true"
       {...STROKE}
@@ -73,28 +66,9 @@ export function MarkTick({ on }: { readonly on: boolean }): JSX.Element {
   );
 }
 
-/** The reel, for the rail. */
-export function MarkReel(): JSX.Element {
-  return (
-    <svg
-      viewBox="0 0 30 22"
-      className="h-[22px] w-[30px] stroke-red-400"
-      aria-hidden="true"
-      {...STROKE}
-    >
-      <path d="M2 3.4c8-1 18-1.2 26 .2 1 .1 1.4 1 1.3 2-.3 3.6-.4 8.2-.2 12.6.1 1.3-.4 2-1.6 2.1-8 .9-17 .9-25 .1-1.1-.1-1.7-.7-1.7-1.9C1 14 .9 9 1.2 4.6 1.3 3.8 1.5 3.5 2 3.4Z" />
-      <path d="M9.6 11.4a2.6 2.6 0 1 1-.1-.2M21.4 11.3a2.6 2.6 0 1 1-.1-.2" strokeWidth={1.5} />
-      <path d="M11.8 11.6c2-.3 4.2-.3 6.3 0" strokeWidth={1.5} />
-    </svg>
-  );
-}
-
 /**
- * The rule under the rail: one pen stroke, ruled.
- *
- * It used to bow: three shallow curves across the width, so the stroke was
- * never quite level. Straight by decision; the frames it sits above keep their
- * hands, and this one line does not.
+ * Straight by decision. It used to bow across the width and was never quite level;
+ * the frames above it keep their hands, and this one line does not.
  */
 export function DrawnRule(): JSX.Element {
   return (

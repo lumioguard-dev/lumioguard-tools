@@ -22,7 +22,6 @@ export function discoverSupabase(sources: string): SupabaseTarget | null {
     if (jwtRole(token) === 'anon') return { url, ref, apiKey: token };
   }
 
-  // Otherwise the modern publishable key, which serves the same role.
   const publishable = sources.match(PUBLISHABLE);
   if (publishable) return { url, ref, apiKey: publishable[0] };
 

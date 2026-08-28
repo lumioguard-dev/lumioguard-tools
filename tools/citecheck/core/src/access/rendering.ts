@@ -21,14 +21,9 @@ const FRAMEWORK_MARKERS: readonly RegExp[] = [
 ];
 
 /**
- * Below this, the whole document carries no prose at all.
- *
- * The WHOLE BODY, not the content region, and a floor low enough that the
- * finding is definitional rather than a judgement. It was 40 words of the
- * content region, which trusts `<main>`: canva.com marks a `<main>` holding
- * seventeen words of a 1,114-word page, and any rule reading that measure calls
- * a working marketing site empty. This one is a blocker, so it has to be
- * unarguable.
+ * Below this the whole document carries no prose at all. The WHOLE BODY, not the
+ * content region: at 40 words of the content region, canva.com's `<main>` of
+ * seventeen words in a 1,114-word page read as empty. A blocker must be unarguable.
  */
 const SHELL_WORD_FLOOR = 12;
 

@@ -2,22 +2,14 @@ import type { ExposureFinding } from '../domain/ExposureFinding.js';
 import type { SupabaseTarget } from '../passive/supabaseDiscovery.js';
 
 /**
- * The Supabase RLS probe, as pure pieces: the api runs the reads, this module
- * decides what a response MEANS. Keeping interpretation here keeps the
- * dangerous half, the actual network read, in one place in the api, and keeps
- * the judgement testable without a network.
- *
- * The probe is the CVE-2025-48757 test, done exactly as the app's own client
- * would: read a table as the anonymous user with the anon key from the bundle.
- * Rows back unauthenticated means Row Level Security is missing. It is a READ;
- * the engine never writes (the read-only guarantee).
+ * The api runs the reads; this module decides what a response MEANS, which keeps
+ * the network in one place and the judgement testable without one. The probe is
+ * the CVE-2025-48757 test, and it is a READ: the engine never writes.
  */
 
 /**
- * Tables an AI builder tends to create by name. Not exhaustive and not a
- * dictionary attack: a short, common set so the probe stays a handful of reads,
- * not a sweep. The engine reports what it can confirm and never implies the
- * absence of a finding means the whole database is safe.
+ * Tables an AI builder tends to create by name. Not a dictionary attack: a
+ * short, common set so the probe stays a handful of reads, not a sweep.
  */
 export const COMMON_TABLES: readonly string[] = Object.freeze([
   'users',
@@ -76,16 +68,9 @@ const SENSITIVE_WORDS: readonly string[] = [
 const SENSITIVE_PHRASES: readonly string[] = ['api_key', 'date_of_birth'];
 
 /**
- * Matched per NAME SEGMENT, never as a bare substring.
- *
- * As one alternation over the whole column name it called `discard_count`,
- * `wildcard_rules`, `cardinality`, `scorecard_id` and `adobe_id` personal:
- * `card` and `dob` sit inside all of them. The finding fires either way, since
- * rows came back to an anonymous request, but the sentence claimed the table
- * holds personal data when it holds a counter.
- *
- * Phrases are matched against the normalised name because `api_key` and
- * `apiKey` are two segments, and a per-segment test alone would miss both.
+ * Matched per NAME SEGMENT, never as a bare substring: `card` sits inside
+ * `discard_count` and `dob` inside `adobe_id`, and the sentence then claimed a
+ * counter held personal data. Phrases match the normalised name (`api_key`).
  */
 function looksSensitive(column: string): boolean {
   const segments = column
@@ -99,13 +84,9 @@ function looksSensitive(column: string): boolean {
 }
 
 /**
- * What one table read means. `status` is the HTTP status; `rows` is the parsed
- * body when it was a JSON array, else null.
- *
- * Only a 200 that returns rows is reported: that is unambiguous: RLS is off and
- * data came out. A 200 with an empty array is ambiguous (empty table, or a
- * policy that correctly returns nothing to anon) and is deliberately NOT
- * reported, so the tool never cries wolf. 401/403/404 mean protected or absent.
+ * Only a 200 that RETURNS ROWS is reported: RLS is off and data came out. An
+ * empty array is ambiguous (an empty table, or a policy correctly returning
+ * nothing to anon) and is deliberately not reported, so the tool never cries wolf.
  */
 export function interpretTableRead(
   table: string,

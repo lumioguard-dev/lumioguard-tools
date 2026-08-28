@@ -5,18 +5,9 @@ import { type CiteFinding, orderFindings } from '../domain/CiteFinding.js';
 import { scoreCitation } from '../scoring/CiteScore.js';
 
 /**
- * What the score is calibrated against.
- *
- * The weights were set by reading pages that answer engines demonstrably quote
- * every day: Wikipedia, MDN, and the Python, React, nginx and Postgres
- * references. The rule is that such a page must come out Legible, because it
- * manifestly is one. At the first cut of the weights the nginx reference scored
- * 68, "Invisible: nothing here survives without a browser", about a served HTML
- * page that is cited constantly.
- *
- * The fixtures below are not those pages. They are minimal documents carrying
- * the same absences, measured from them, so the calibration survives in the
- * repository without depending on a corpus outside it.
+ * The weights are set by pages answer engines demonstrably quote every day, and
+ * such a page must come out Legible. The fixtures are not those pages but
+ * minimal documents carrying the same absences, so the calibration lives here.
  */
 function read(html: string): { score: number; tier: string; codes: string[] } {
   const result = analyzePage({ url: 'https://example.test/page', html }, NO_SITE_CONTEXT);
@@ -29,13 +20,8 @@ const PROSE = 'A paragraph of real explanation about the subject of this page. '
 
 /**
  * Modelled on the nginx reference, the worst-scoring page in the cited corpus:
- * no JSON-LD, no meta description, no canonical, no OpenGraph, no `lang`, its
- * only `h1` inside the site nav, and long prose under two headings. Every one
- * of those is real, and the page is quoted daily.
- *
- * It DOES carry a viewport, as nginx.org does. Across both corpora the only
- * pages without one were bot-block pages; all twenty-four real pages had it,
- * which is why a missing viewport stays a major finding.
+ * no JSON-LD, description, canonical, OpenGraph or `lang`, and its only `h1` in
+ * the nav. It DOES carry a viewport, as all twenty-four real pages read did.
  */
 const LIKE_NGINX_DOCS = `<!doctype html><html><head><title>Module ngx_http_core_module</title>
   <meta name="viewport" content="width=device-width, initial-scale=1"></head>
@@ -72,10 +58,9 @@ describe('a page the world already cites', () => {
   });
 
   /**
-   * The specific claim the corpus overturned. Five of six cited references ship
-   * no JSON-LD; four carry no meta description; two have no `h1`. None of those
-   * can be a barrier to citation, so none of them may cost the page anything:
-   * they are flagged as not found and weigh nothing at all.
+   * The claim the corpus overturned. Five of six cited references ship no
+   * JSON-LD, four carry no meta description, two have no `h1`: none of those can
+   * be a barrier to citation, so none of them may cost the page anything.
    */
   it.each([
     ['structured.absent', LIKE_NGINX_DOCS],
@@ -105,10 +90,9 @@ describe('a page the world already cites', () => {
 });
 
 /**
- * The other half, and the reason the tool exists. These are definitional
- * rather than measured: a page that says noindex, or serves no text, cannot be
- * quoted whatever else is true of it. The corpus does not move them, and no
- * amount of good markup underneath may pull one back out of the top band.
+ * Definitional rather than measured: a page that says noindex, or serves no
+ * text, cannot be quoted whatever else is true of it. The corpus does not move
+ * them, and no markup underneath pulls one back out of the band it lands in.
  */
 describe('a page that genuinely cannot be quoted', () => {
   const wrap = (head: string, body: string): string =>
@@ -150,11 +134,9 @@ describe('a page that genuinely cannot be quoted', () => {
   });
 
   /**
-   * `answer.empty` is gone with the rest of the answerability measures. It
-   * counted words inside `contentRegion`, which trusts `<main>` absolutely, and
-   * canva.com marks a `<main>` holding seventeen words of a 1,114-word page: a
-   * working marketing site was called empty, at blocker severity. The provable
-   * case survives as `access.shell`.
+   * `answer.empty` counted words inside `contentRegion`, which trusts `<main>`,
+   * and canva.com marks one holding seventeen words of a 1,114-word page: a
+   * working site called empty, at blocker severity. `access.shell` survives.
    */
   it('does not call a page with a small <main> empty', () => {
     const html = `<!doctype html><html lang="en"><head><title>A page about a subject</title>

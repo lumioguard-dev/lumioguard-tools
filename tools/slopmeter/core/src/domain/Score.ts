@@ -24,13 +24,8 @@ export class Score {
 
   /**
    * Credits cap at half the penalty total: craft can soften a verdict, never
-   * erase it.
-   *
-   * The penalty is subtracted from the top, ONCE, here. The rules produce a
-   * cost, because that is what a rule can say; the scale the reader sees runs
-   * the other way, and this is the only line that knows it. Everything above
-   * counts against the page, everything below reads a number where 100 is a
-   * page with nothing stock in it.
+   * erase it. The penalty is subtracted from the top ONCE, here, the only line
+   * that knows the reader's scale runs the other way from the cost a rule says.
    */
   public static from(penalties: number, credits: number): Score {
     const creditCap = Math.floor(penalties / 2);

@@ -13,12 +13,12 @@ export interface RuleFilter {
  */
 export class RuleRegistry {
   private readonly rules: Rule[] = [];
+  private readonly ids = new Set<string>();
 
   public register(...rules: readonly Rule[]): this {
     for (const rule of rules) {
-      if (this.rules.some((existing) => existing.id === rule.id)) {
-        throw new Error(`Duplicate rule id: ${rule.id}`);
-      }
+      if (this.ids.has(rule.id)) throw new Error(`Duplicate rule id: ${rule.id}`);
+      this.ids.add(rule.id);
       this.rules.push(rule);
     }
     return this;

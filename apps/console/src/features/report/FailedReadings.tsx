@@ -2,16 +2,31 @@ import { Panel } from '@lumioguard/ui';
 import type { Reading } from '../scan/useReadings.js';
 
 /**
- * The readings that could not be run, named.
- *
+ * Shared with the panel shown when NOTHING could be read: two lists of the same
+ * failures would let one start naming tools the other did not.
+ */
+export function FailureList({
+  readings,
+  className,
+}: {
+  readonly readings: readonly Reading[];
+  readonly className: string;
+}): JSX.Element {
+  return (
+    <ul className={`flex list-none flex-col gap-1 p-0 ${className}`}>
+      {readings.map((reading) => (
+        <li key={reading.tool.id} className="text-13 leading-[1.5] text-ink-3">
+          <span className="font-semibold text-ink-2">{reading.tool.label}</span>: {reading.error}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+/**
  * Each tool answers its own origin, so one being refused says nothing about the
- * others: a site behind a bot challenge turned two away today while the third
- * read it fine. Without this the verdict would be drawn from whatever landed
- * and the reader would have no way to know it was partial, which is the same
- * failure as scoring a site nothing could read.
- *
- * A line, not a panel each. It is context for the verdict above rather than a
- * finding, and it disappears entirely when everything ran.
+ * others. Without this the verdict is drawn from whatever landed and the reader
+ * has no way to know it was partial.
  */
 export function FailedReadings({
   readings,
@@ -31,13 +46,7 @@ export function FailedReadings({
         </b>{' '}
         The verdict above is drawn from the rest.
       </p>
-      <ul className="mt-3 flex list-none flex-col gap-1 p-0">
-        {failed.map((reading) => (
-          <li key={reading.tool.id} className="text-13 leading-[1.5] text-ink-3">
-            <span className="font-semibold text-ink-2">{reading.tool.label}</span>: {reading.error}
-          </li>
-        ))}
-      </ul>
+      <FailureList readings={failed} className="mt-3" />
     </Panel>
   );
 }

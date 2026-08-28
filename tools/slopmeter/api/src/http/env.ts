@@ -6,13 +6,9 @@ export interface Env {
   /** Where completed readings are recorded. */
   LUMIOGUARD_API_BASE_URL?: string;
   /**
-   * Keys the HMAC over the recorded reading's body. Must match the value
-   * LumioGuard holds as `SLOPMETER_INGEST_SECRET`; that endpoint is public, so
-   * the signature is the only thing that distinguishes a real reading from
-   * anyone who can spell the URL. 32-byte hex.
-   *
-   * Unset disables recording entirely: the scan still runs and still answers.
-   * Recording is a side effect of a reading, never a precondition for one.
+   * 32-byte hex keying the HMAC over a recorded reading. The ingest endpoint is
+   * public, so the signature is all that separates a real reading from anyone who
+   * can spell the URL. Unset disables recording; the scan still runs and answers.
    */
   SLOPMETER_INGEST_SECRET?: string;
   SCAN_RATE_LIMITER?: RateLimiter;

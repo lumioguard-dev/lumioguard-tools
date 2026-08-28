@@ -1,17 +1,15 @@
 import { describe, expect, it } from 'vitest';
-import { AUDIT_ORIGIN, LUMIOGUARD_ENABLED, auditOrigin, fullAuditUrl } from '../lumioguard.js';
+import {
+  AUDIT_ORIGIN,
+  LUMIOGUARD_ENABLED,
+  auditOrigin,
+  fullAuditUrl,
+  parentSiteHref,
+} from '../lumioguard.js';
 
-/**
- * The one switch behind every mention of LumioGuard. Three failures this
- * guards, all of which shipped once:
- *
- *   - the hand-off pointed at `/login`, a route the other app has never had, so
- *     the one button the report offers landed every visitor on a 404;
- *   - the key was derived from the address, so everyone who scanned the same
- *     host got the same key and the link carried them to a stranger's verdict;
- *   - it defaulted to the production app, so a fork with no LumioGuard at all
- *     still advertised one.
- */
+// Three failures this guards, all of which shipped: a hand-off pointing at a
+// `/login` the other app never had, a key derived from the address so strangers
+// shared one verdict, and a default that made a fork advertise a LumioGuard it lacks.
 describe('auditOrigin', () => {
   // OPTIONAL by default: the tool stands alone unless an app is configured.
   it('is off when nothing is configured', () => {
@@ -24,15 +22,13 @@ describe('auditOrigin', () => {
     expect(auditOrigin('http://localhost:5173')).toBe('http://localhost:5173');
   });
 
-  // `new URL('/', base)` tolerates it, but the trailing slash would survive
-  // into anything that concatenates instead.
+  // `new URL('/', base)` tolerates it, but a concatenation would keep the slash.
   it('drops a trailing slash rather than doubling it', () => {
     expect(auditOrigin('http://localhost:5173/')).toBe('http://localhost:5173');
   });
 });
 
-// Every case below needs a configured app; with none there is no link at all,
-// which is the first assertion here.
+// Every case below needs a configured app; with none there is no link at all.
 describe.skipIf(AUDIT_ORIGIN === null)('fullAuditUrl, with an app configured', () => {
   const href = (key: string | null): URL => {
     const value = fullAuditUrl(key);
@@ -50,8 +46,8 @@ describe.skipIf(AUDIT_ORIGIN === null)('fullAuditUrl, with an app configured', (
     expect(href('K7M2XQ').searchParams.get('sitekey')).toBe('K7M2XQ');
   });
 
-  // A reading that could not be recorded has no key. The link still works; it
-  // simply arrives without one, and the app asks for a site the ordinary way.
+  // A reading that could not be recorded has no key. The link still works, and the
+  // app asks for a site the ordinary way.
   it('omits the parameter entirely when there is no key', () => {
     const url = href(null);
     expect(url.searchParams.has('sitekey')).toBe(false);
@@ -62,27 +58,20 @@ describe.skipIf(AUDIT_ORIGIN === null)('fullAuditUrl, with an app configured', (
     expect(fullAuditUrl('AAAAAA')).not.toBe(fullAuditUrl('BBBBBB'));
   });
 
-  /**
-   * Every key, in ONE parameter, from a reading that ran several tools.
-   *
-   * A repeated parameter was tried. The app parses its search with zod, where
-   * `sitekey` is a `string`, so `?sitekey=A&sitekey=B` arrived as an array,
-   * threw a SearchParamError before any route matched, and rendered a blank
-   * page. Joining keeps the value a string on every surface that reads it, and
-   * the separator is outside the key alphabet so it can only split one way.
-   */
+  // ONE parameter, never repeated: `sitekey` is a string in the app's zod schema, so
+  // `?sitekey=A&sitekey=B` arrived as an array and threw before any route matched.
   it('carries every key of a multi-tool reading in one parameter', () => {
     const url = new URL(fullAuditUrl(['AAAAAA', 'BBBBBB', 'CCCCCC']) ?? '');
     expect(url.searchParams.getAll('sitekey')).toEqual(['AAAAAA_BBBBBB_CCCCCC']);
   });
 
-  /** The caller orders them, so the reading that set the verdict leads. */
+  // The caller orders them, so the reading that set the verdict leads.
   it('puts the caller’s worst reading first', () => {
     const url = new URL(fullAuditUrl(['WORST1', 'BBBBBB']) ?? '');
     expect(url.searchParams.get('sitekey')).toBe('WORST1_BBBBBB');
   });
 
-  /** A tool whose recording failed contributes nothing rather than an empty slot. */
+  // A tool whose recording failed contributes nothing rather than an empty slot.
   it('skips the tools that could not be recorded', () => {
     const url = new URL(fullAuditUrl([null, 'BBBBBB', null]) ?? '');
     expect(url.searchParams.getAll('sitekey')).toEqual(['BBBBBB']);
@@ -102,11 +91,8 @@ describe('fullAuditUrl, with no app configured', () => {
   });
 });
 
-/**
- * The wordmark and the credit read this rather than a second condition of their
- * own. Two switches for one integration is how a fork ends up shipping a tool
- * with no button and the parent's name still on the masthead.
- */
+// Two switches for one integration is how a fork ships a tool with no button and
+// the parent's name still on the masthead.
 describe('LUMIOGUARD_ENABLED', () => {
   it('is the same switch the hand-off link answers to', () => {
     expect(LUMIOGUARD_ENABLED).toBe(AUDIT_ORIGIN !== null);
@@ -116,5 +102,24 @@ describe('LUMIOGUARD_ENABLED', () => {
   it('is off in a run that configures nothing, which is the default', () => {
     if (AUDIT_ORIGIN !== null) return;
     expect(LUMIOGUARD_ENABLED).toBe(false);
+  });
+});
+
+// The wordmark and the colophon's legal links answer to ONE switch: read apart, the
+// legal row vanished on a deployment setting the app URL and not the site URL.
+describe('parentSiteHref', () => {
+  it('is off when the integration is off, whatever the site url says', () => {
+    expect(parentSiteHref(null, null)).toBeNull();
+    expect(parentSiteHref(null, 'https://lumioguard.dev')).toBeNull();
+  });
+
+  it('falls back to the app when no site url is set', () => {
+    expect(parentSiteHref('https://app.example.test', null)).toBe('https://app.example.test');
+  });
+
+  it('prefers the site url, which is where a credit belongs', () => {
+    expect(parentSiteHref('https://app.example.test', 'https://lumioguard.dev')).toBe(
+      'https://lumioguard.dev',
+    );
   });
 });

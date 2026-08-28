@@ -1,4 +1,4 @@
-import { PageFetchError, SafeFetcher, readText } from '@lumioguard/api-core';
+import { PageFetchError, SafeFetcher, readText, upstreamStatusMessage } from '@lumioguard/api-core';
 import type { FetchedScript } from '@lumioguard/leakpeek-core';
 
 const USER_AGENT =
@@ -52,7 +52,7 @@ export class PageFetcher {
     const fetched = await this.request(target.toString(), { accept: 'text/html,*/*' });
     const response = fetched.response;
     if (!response.ok) {
-      throw new PageFetchError('upstream_error', `Upstream responded ${response.status}`);
+      throw new PageFetchError('upstream_error', upstreamStatusMessage(response.status));
     }
 
     const html = (await readText(response, MAX_HTML_BYTES)).text;

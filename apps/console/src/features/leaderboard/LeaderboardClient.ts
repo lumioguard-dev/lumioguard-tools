@@ -4,19 +4,17 @@ import {
   leaderboardResponseSchema,
 } from '@lumioguard/shared';
 import { apiBase } from '../../tools/apiBase.js';
+import { LEADERBOARD_TOOL } from '../../tools/catalogue.js';
 
 /**
- * The board, read through Slopmeter's Worker.
- *
- * Not from LumioGuard directly: this bundle is open source and carries no
- * LumioGuard address, and the Worker already holds one. Where a reading returns
- * an error the visitor must act on, an unreadable board is just an empty panel,
- * so this answers null rather than throwing.
+ * Read through Slopmeter's Worker, never LumioGuard directly: this bundle is open
+ * source and carries no LumioGuard address. An unreadable board is an empty panel
+ * rather than an error, so this answers null rather than throwing.
  */
 export class LeaderboardClient {
   private readonly base: string;
 
-  public constructor(base: string = apiBase('slopmeter')) {
+  public constructor(base: string = apiBase(LEADERBOARD_TOOL)) {
     this.base = base;
   }
 
@@ -30,8 +28,7 @@ export class LeaderboardClient {
         signal,
       });
       if (!response.ok) return null;
-      // Validated, not cast: a shape change should surface here rather than as
-      // an undefined inside a table row.
+      // Validated, not cast: a shape change surfaces here, not as an undefined in a row.
       const parsed = leaderboardResponseSchema.safeParse(await response.json());
       return parsed.success ? parsed.data : null;
     } catch {

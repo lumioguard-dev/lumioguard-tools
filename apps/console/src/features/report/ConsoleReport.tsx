@@ -1,38 +1,36 @@
 import { ReadingTier, consolidatedScore, readingBandFor } from '@lumioguard/shared';
 import { NextSteps, Panel, PanelGrid, ReadingState, Verdict } from '@lumioguard/ui';
+import type { EventProperties } from '@lumioguard/web-core';
 import { useState } from 'react';
 import { VERDICT_SCALE } from '../../theme/reading.js';
 import type { ToolDescriptor } from '../../tools/registry.js';
 import { type Reading, useReadings } from '../scan/useReadings.js';
 import { Culprits } from './Culprits.js';
-import { FailedReadings } from './FailedReadings.js';
+import { FailedReadings, FailureList } from './FailedReadings.js';
 import { PageList } from './PageList.js';
 import { PageLists } from './PageLists.js';
 import { ReadingSection } from './ReadingSection.js';
 import { SiteShot } from './SiteShot.js';
+import { useReportView } from './useReportView.js';
 
 const HANDOFF_OFFER =
   "This is what's visible to the public. Log in to perform code level check for free.";
 
 /**
- * Every reading of one site, under one verdict.
- *
- * The verdict panel is mounted once and stays mounted through the wait and out
- * the other side, so the needle hunts for as long as the readings take and then
- * closes on the answer, rather than one component animating and a different one
- * appearing already finished.
- *
- * Sections appear as their own tool lands. Holding them all back until the
- * slowest finished would make a crawl decide when a single page scan is allowed
- * on screen.
+ * The verdict panel is mounted once and stays mounted across the wait, so the
+ * needle hunts and then closes rather than one component animating and a second
+ * appearing finished. Sections appear as their own tool lands.
  */
 export function ConsoleReport({
   address,
   tools,
+  pageName,
   onNewSite,
 }: {
   readonly address: string;
   readonly tools: readonly ToolDescriptor[];
+  /** Which document this report is being read on, for the events it sends. */
+  readonly pageName: string;
   readonly onNewSite: () => void;
 }): JSX.Element {
   const { readings, isReading } = useReadings(address, tools);
@@ -50,12 +48,8 @@ export function ConsoleReport({
     null,
   );
 
-  /**
-   * The worst reading's key first. Each API mints its own and the hand-off
-   * carries them all, but a reader on the far side that takes only the first
-   * should get the reading that produced the verdict rather than whichever tool
-   * happened to be listed first.
-   */
+  // The worst reading's key FIRST: the hand-off carries them all, and a far side
+  // taking only the first should get the reading that produced the verdict.
   const siteKeys = [
     ...(worst === null ? [] : [worst.outcome.siteKey]),
     ...landed.filter((reading) => reading !== worst).map((reading) => reading.outcome.siteKey),
@@ -63,14 +57,35 @@ export function ConsoleReport({
 
   const everyOneFailed = readings.length > 0 && !isReading && landed.length === 0;
 
-  /**
-   * Nothing read means NO VERDICT, not a clean one.
-   *
-   * The meter used to be drawn whatever happened, and with no reading behind it
-   * the needle rested at zero and the seal stamped CLEAN in green over a site
-   * that had refused every request. A score is a claim about evidence; with
-   * none there is nothing to claim, and the panel says so instead.
-   */
+  // One tool speaks in its own words; several compare only on the shared ladder.
+  // Scale and tier both read `sole`, so the band drawn is a band OF the ladder
+  // drawn: decided apart, a single-tool read stamped Clean on a scale with none.
+  const sole = tools.length === 1 ? (tools[0] ?? null) : null;
+  const scale = sole === null ? VERDICT_SCALE : sole.scale;
+  const soleTier = sole === null ? null : (landed[0]?.outcome.tier ?? null);
+  const tier =
+    soleTier ??
+    (landed.length === 0
+      ? (scale.bands.at(-1)?.tier ?? ReadingTier.Clean)
+      : readingBandFor(score).tier);
+
+  // ONE object rather than a bag written out at each call: a property added to the
+  // hand-off and not the report leaves the rate measured between them wrong.
+  const readingContext: EventProperties = {
+    tool_page: pageName,
+    tools: landed.map((reading) => reading.tool.id).join(','),
+    score,
+    tier,
+    worst_tool: worst?.tool.id ?? null,
+  };
+
+  useReportView(!isReading && landed.length > 0, {
+    ...readingContext,
+    failed_count: readings.length - landed.length,
+  });
+
+  // Nothing read means NO VERDICT, not a clean one. Drawn whatever happened, the
+  // seal stamped CLEAN in green over a site that had refused every request.
   if (everyOneFailed) {
     return (
       <PanelGrid fills>
@@ -79,14 +94,7 @@ export function ConsoleReport({
           <p role="alert" className="mt-3 max-w-[62ch] text-body text-ink-2">
             Every reading of {address} failed, so there is no verdict to give.
           </p>
-          <ul className="mt-4 flex list-none flex-col gap-1 p-0">
-            {readings.map((reading) => (
-              <li key={reading.tool.id} className="text-13 leading-[1.5] text-ink-3">
-                <span className="font-semibold text-ink-2">{reading.tool.label}</span>:{' '}
-                {reading.error}
-              </li>
-            ))}
-          </ul>
+          <FailureList readings={readings} className="mt-4" />
           <button
             type="button"
             onClick={onNewSite}
@@ -99,11 +107,8 @@ export function ConsoleReport({
     );
   }
 
-  /**
-   * The page list REPLACES the report rather than expanding inside it. It is a
-   * reference you open, and unfolded in place it pushed everything below it off
-   * the screen with no way back to where the reader was.
-   */
+  // The page list REPLACES the report rather than expanding inside it: unfolded in
+  // place it pushed everything below off screen with no way back.
   if (showPages) {
     return (
       <PanelGrid>
@@ -115,27 +120,32 @@ export function ConsoleReport({
   return (
     <PanelGrid>
       <Verdict
-        scale={VERDICT_SCALE}
+        scale={scale}
         subject={address}
         score={score}
-        tier={landed.length === 0 ? ReadingTier.Clean : readingBandFor(score).tier}
+        tier={tier}
         waiting={isReading ? <ReadingState /> : undefined}
         onNewSite={onNewSite}
         actions={
-          landed.length === 0 ? undefined : <NextSteps offer={HANDOFF_OFFER} siteKey={siteKeys} />
+          landed.length === 0 ? undefined : (
+            <NextSteps
+              offer={HANDOFF_OFFER}
+              siteKey={siteKeys}
+              context={{ ...readingContext, cta_location: 'report_verdict' }}
+            />
+          )
         }
       />
 
       {!isReading && landed.length > 0 && <FailedReadings readings={readings} />}
 
-      {/* Mounted from the first frame and kept mounted, so the render samples
-          up and the culprits rule while the needle hunts. Held back until the
-          last tool landed, both arrived after the wait they exist to fill. */}
+      {/* Mounted from the first frame. Held back until the last tool landed, both
+          arrived after the wait they exist to fill. */}
       <SiteShot address={address} resolving={isReading} />
       <Culprits readings={readings} pending={isReading} />
 
       {landed.map((reading) => (
-        <ReadingSection key={reading.tool.id} reading={reading} />
+        <ReadingSection key={reading.tool.id} outcome={reading.outcome} />
       ))}
 
       <PageLists readings={readings} onOpen={() => setShowPages(true)} />

@@ -1,7 +1,7 @@
 import { pen } from '@lumioguard/design-tokens';
 import type { VerdictScale } from './scale.js';
 
-/** The band: a drawn timeline, not a progress bar and not a segmented control. */
+/** A drawn timeline, not a progress bar and not a segmented control. */
 export function Band({
   score,
   tier,
@@ -40,9 +40,8 @@ export function Band({
               style={{
                 left: `${left}%`,
                 width: `${width}%`,
-                // Both through color-mix: the inks are CSS variables now, so
-                // appending a hex alpha would produce `var(--x)16` and paint
-                // nothing at all.
+                // color-mix, never a hex alpha: the inks are `var()` strings, and
+                // `var(--x)16` paints nothing at all.
                 background: `color-mix(in srgb, ${b.ink} ${isLive ? 24 : 9}%, transparent)`,
               }}
             />
@@ -125,17 +124,9 @@ export function Band({
         ))}
       </div>
 
-      {/* Every station in the same hand: colour and size carry which one is
-          tuned, never the typeface. 14px is the ceiling: at 16px the two centre
-          names collide.
-
-          The end stations are anchored to the ends of the track rather than
-          centred on their zones, exactly as the scale above them is. A name is
-          wider than a fifth of a narrow track: centred, an end name hung 9px off
-          the left end of the instrument it labels once the meter gave up a
-          column to the figure at 768px. Anchored, no width can put a station
-          past the track, and the outer names line up with the 0 and the 100
-          they stand over. */}
+      {/* 14px is the ceiling: at 16px the two centre names collide. The end stations
+          are ANCHORED to the ends of the track, not centred on their zones: a name is
+          wider than a fifth of a narrow track and hung 9px off the left end. */}
       <div className="relative mt-[36px] h-[26px]">
         {BANDS.map((b, index) => {
           const { left, width } = b.track;

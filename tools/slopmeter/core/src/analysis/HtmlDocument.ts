@@ -1,12 +1,14 @@
-import { countTagMatches, decodeEntities, readAttribute, readOpenTags } from './TagReader.js';
+import { parseHTML } from 'linkedom';
+
+/** linkedom's own types: this package compiles without the DOM lib. */
+type ParsedDocument = ReturnType<typeof parseHTML>['document'];
+type ParsedElement = NonNullable<ReturnType<ParsedDocument['querySelector']>>;
 
 interface AnchorRef {
-  readonly tag: string;
   readonly href: string;
 }
 
 interface ImageRef {
-  readonly tag: string;
   readonly src: string;
   readonly alt: string | null;
 }
@@ -27,18 +29,44 @@ interface HtmlDocumentData {
   readonly scriptSources: readonly string[];
   readonly headings: readonly HeadingRef[];
   readonly classAttrs: readonly string[];
+  readonly styleAttrs: readonly string[];
   readonly elementCount: number;
   readonly divCount: number;
   readonly semanticCount: number;
-  readonly inlineStyleCount: number;
   readonly assetRefs: string;
   readonly internalPaths: ReadonlySet<string>;
+  /** Every element, walked once, for rules that filter rather than select. */
+  readonly elements: readonly ParsedElement[];
+  readonly root: ParsedDocument;
 }
 
+const SEMANTIC = new Set([
+  'HEADER',
+  'NAV',
+  'MAIN',
+  'FOOTER',
+  'ARTICLE',
+  'SECTION',
+  'ASIDE',
+  'FIGURE',
+  'H1',
+  'H2',
+  'H3',
+  'H4',
+  'H5',
+  'H6',
+  'P',
+  'UL',
+  'OL',
+  'LI',
+  'TABLE',
+]);
+
+const HEADING = new Set(['H1', 'H2', 'H3', 'H4', 'H5', 'H6']);
+
 /**
- * `<link>` rels that actually fetch something. `rel=canonical` points at the
- * page's own URL, so counting it would fingerprint every site as built by
- * whatever its own domain is named after.
+ * `<link>` rels that actually fetch something. Counting `rel=canonical` would
+ * fingerprint every site as built by whatever its own domain is named after.
  */
 const LOADING_RELS =
   /\b(?:stylesheet|preload|modulepreload|prefetch|preconnect|dns-prefetch|icon|apple-touch-icon|manifest|mask-icon)\b/i;
@@ -53,16 +81,25 @@ export class HtmlDocument {
   public readonly images: readonly ImageRef[];
   public readonly scriptSources: readonly string[];
   public readonly headings: readonly HeadingRef[];
-  /** One entry per `class="…"` attribute, kept separate so pairing rules can
-   *  require both utilities on ONE element. */
+  /** Kept per attribute so pairing rules can require both utilities on ONE element. */
   public readonly classAttrs: readonly string[];
+  public readonly styleAttrs: readonly string[];
+  /** Every class attribute joined; use `hasSameClassAttr` for pairing rules. */
+  public readonly classText: string;
+  /**
+   * Every inline `style` attribute joined. A page built by Framer, Webflow or
+   * any CSS-in-JS tool carries its layout here rather than in class names, so a
+   * rule that reads only `classText` is blind to it.
+   */
+  public readonly styleText: string;
   public readonly elementCount: number;
   public readonly divCount: number;
   public readonly semanticCount: number;
-  public readonly inlineStyleCount: number;
   /** Resources the page actually LOADS. */
   public readonly assetRefs: string;
   public readonly internalPaths: ReadonlySet<string>;
+  public readonly elements: readonly ParsedElement[];
+  public readonly root: ParsedDocument;
 
   private constructor(data: HtmlDocumentData) {
     this.title = data.title;
@@ -75,85 +112,112 @@ export class HtmlDocument {
     this.scriptSources = Object.freeze([...data.scriptSources]);
     this.headings = Object.freeze([...data.headings]);
     this.classAttrs = Object.freeze([...data.classAttrs]);
+    this.styleAttrs = Object.freeze([...data.styleAttrs]);
+    this.classText = data.classAttrs.join(' ');
+    this.styleText = data.styleAttrs.join(';');
     this.elementCount = data.elementCount;
     this.divCount = data.divCount;
     this.semanticCount = data.semanticCount;
-    this.inlineStyleCount = data.inlineStyleCount;
     this.assetRefs = data.assetRefs;
     this.internalPaths = data.internalPaths;
+    this.elements = Object.freeze([...data.elements]);
+    this.root = data.root;
     Object.freeze(this);
   }
 
+  /**
+   * Parsed with a real HTML parser, never regexes: a regex cannot tell markup
+   * from a string inside a `<script>`, and the attribute patterns missed
+   * unquoted values, which let a builder's own page read as having no navigation.
+   */
   public static from(html: string, pageUrl: URL | null): HtmlDocument {
-    const titleMatch = html.match(/<title\b[^>]*>([\s\S]*?)<\/title>/i);
+    const { document } = parseHTML(html);
+    const all = [...document.querySelectorAll('*')];
+    const text = (el: ParsedElement | null): string =>
+      (el?.textContent ?? '').replace(/\s+/g, ' ').trim();
+
     const meta: Record<string, string> = {};
-    for (const tag of readOpenTags(html, 'meta')) {
-      const key = (
-        readAttribute(tag, 'name') ??
-        readAttribute(tag, 'property') ??
-        readAttribute(tag, 'http-equiv') ??
-        ''
-      ).toLowerCase();
-      if (key !== '' && !(key in meta)) meta[key] = readAttribute(tag, 'content') ?? '';
+    const links: ParsedElement[] = [];
+    const anchors: AnchorRef[] = [];
+    const images: ImageRef[] = [];
+    const scriptSources: string[] = [];
+    const headings: HeadingRef[] = [];
+    const classAttrs: string[] = [];
+    const styleAttrs: string[] = [];
+    const assets: string[] = [];
+    let divCount = 0;
+    let semanticCount = 0;
+
+    // One pass. Twelve separate walks of the same tree cost 68ms on a 431KB
+    // page where this costs 27ms, and linkedom recompiles every selector.
+    for (const el of all) {
+      const tag = el.tagName;
+      const className = el.getAttribute('class');
+      if (className !== null && className !== '') classAttrs.push(className);
+      const style = el.getAttribute('style');
+      if (style !== null && style !== '') styleAttrs.push(style);
+      const src = el.getAttribute('src');
+      if (src !== null && src !== '') assets.push(src);
+      const srcset = el.getAttribute('srcset');
+      if (srcset !== null && srcset !== '') assets.push(srcset);
+
+      if (tag === 'DIV') divCount += 1;
+      if (SEMANTIC.has(tag)) semanticCount += 1;
+
+      switch (tag) {
+        case 'META': {
+          const key = (
+            el.getAttribute('name') ??
+            el.getAttribute('property') ??
+            el.getAttribute('http-equiv') ??
+            ''
+          ).toLowerCase();
+          if (key !== '' && !(key in meta)) meta[key] = el.getAttribute('content') ?? '';
+          break;
+        }
+        case 'LINK':
+          links.push(el);
+          break;
+        case 'A':
+          anchors.push({ href: el.getAttribute('href') ?? '' });
+          break;
+        case 'IMG':
+          images.push({ src: src ?? '', alt: el.getAttribute('alt') });
+          break;
+        case 'SCRIPT':
+          if (src !== null && src !== '') scriptSources.push(src);
+          break;
+        default:
+          if (HEADING.has(tag)) headings.push({ level: Number(tag.slice(1)), text: text(el) });
+      }
     }
 
-    const htmlTag = (html.match(/<html\b[^>]*>/i) ?? [''])[0] ?? '';
-    const linkTags = readOpenTags(html, 'link');
-    const anchors: AnchorRef[] = readOpenTags(html, 'a').map((tag) => ({
-      tag,
-      href: readAttribute(tag, 'href') ?? '',
-    }));
-    const attrValues = (pattern: RegExp): string[] =>
-      [...html.matchAll(pattern)].map((m) => m[2] ?? m[3] ?? '');
-    const generatorTag = html.match(/<meta[^>]+name=["']generator["'][^>]*>/i);
-
     return new HtmlDocument({
-      title:
-        titleMatch === null
-          ? ''
-          : decodeEntities(titleMatch[1] ?? '')
-              .replace(/\s+/g, ' ')
-              .trim(),
-      lang: readAttribute(htmlTag, 'lang'),
+      title: text(document.querySelector('title')),
+      lang: document.documentElement?.getAttribute('lang') ?? null,
       meta,
-      generator:
-        generatorTag === null
-          ? ''
-          : (readAttribute(generatorTag[0], 'content') ?? '').toLowerCase(),
-      hasIcon: linkTags.some((tag) => /\brel\s*=\s*["']?[^"'>]*\bicon\b/i.test(tag)),
+      generator: (meta.generator ?? '').toLowerCase(),
+      hasIcon: links.some((el) => /\bicon\b/i.test(el.getAttribute('rel') ?? '')),
       anchors,
-      images: readOpenTags(html, 'img').map((tag) => ({
-        tag,
-        src: readAttribute(tag, 'src') ?? '',
-        alt: readAttribute(tag, 'alt'),
-      })),
-      scriptSources: readOpenTags(html, 'script')
-        .map((tag) => readAttribute(tag, 'src') ?? '')
-        .filter((src) => src !== ''),
-      headings: [...html.matchAll(/<h([1-6])\b[^>]*>([\s\S]*?)<\/h\1>/gi)].map((m) => ({
-        level: Number(m[1]),
-        text: decodeEntities((m[2] ?? '').replace(/<[^>]+>/g, ' '))
-          .replace(/\s+/g, ' ')
-          .trim(),
-      })),
-      classAttrs: attrValues(/\bclass\s*=\s*("([^"]*)"|'([^']*)')/gi),
-      elementCount: countTagMatches(html, /<[a-z][a-z0-9-]*[\s>]/gi),
-      divCount: countTagMatches(html, /<div[\s>]/gi),
-      semanticCount: countTagMatches(
-        html,
-        /<(?:header|nav|main|footer|article|section|aside|figure|h[1-6]|p|ul|ol|li|table)[\s>]/gi,
-      ),
-      inlineStyleCount: countTagMatches(html, /\bstyle\s*=\s*["']/gi),
+      images,
+      scriptSources,
+      headings,
+      classAttrs,
+      styleAttrs,
+      elementCount: all.length,
+      divCount,
+      semanticCount,
       assetRefs: [
-        ...attrValues(/\bsrc\s*=\s*("([^"]*)"|'([^']*)')/gi),
-        ...linkTags
-          .filter((tag) => LOADING_RELS.test(readAttribute(tag, 'rel') ?? ''))
-          .map((tag) => readAttribute(tag, 'href') ?? ''),
-        ...attrValues(/\bsrcset\s*=\s*("([^"]*)"|'([^']*)')/gi),
+        ...assets,
+        ...links
+          .filter((el) => LOADING_RELS.test(el.getAttribute('rel') ?? ''))
+          .map((el) => el.getAttribute('href') ?? ''),
       ]
         .join('\n')
         .toLowerCase(),
       internalPaths: HtmlDocument.collectInternalPaths(anchors, pageUrl),
+      elements: all,
+      root: document,
     });
   }
 
@@ -178,9 +242,17 @@ export class HtmlDocument {
     return paths;
   }
 
-  /** Every class attribute joined; use `hasSameClassAttr` for pairing rules. */
-  public get classText(): string {
-    return this.classAttrs.join(' ');
+  public get inlineStyleCount(): number {
+    return this.styleAttrs.length;
+  }
+
+  /** Every pattern on ONE element's inline style. See `hasSameClassAttr`. */
+  public hasSameStyleAttr(...patterns: readonly RegExp[]): boolean {
+    return this.styleAttrs.some((attr) => patterns.every((pattern) => pattern.test(attr)));
+  }
+
+  public countStyleAttr(...patterns: readonly RegExp[]): number {
+    return this.styleAttrs.filter((attr) => patterns.every((pattern) => pattern.test(attr))).length;
   }
 
   /**

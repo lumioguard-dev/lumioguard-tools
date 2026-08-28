@@ -46,10 +46,6 @@ export class ScanResult {
     Object.freeze(this);
   }
 
-  /**
-   * The one line worth repeating about this page, taken from the heaviest tell
-   * that has something to say. Null when nothing scored does.
-   */
   public get headline(): string | null {
     return headlineFor(this.findings);
   }

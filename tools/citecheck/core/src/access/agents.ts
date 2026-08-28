@@ -1,14 +1,7 @@
 /**
- * The crawlers whose posture a reading reports.
- *
  * Every token here is a public string published by its operator, so unlike a
- * detection rule there is nothing here to keep off the wire: the value of the
- * report is the posture, not the roster.
- *
- * The list is deliberately short. An agent earns a row by being one whose
- * operator answers questions from what it fetched, because that is the whole
- * subject of this tool. A search crawler that only indexes is somebody else's
- * report.
+ * detection rule there is nothing to keep off the wire. An agent earns a row by
+ * answering questions from what it fetched; one that only indexes does not.
  */
 export interface KnownAgent {
   /** The token as robots.txt spells it. Matched case-insensitively. */

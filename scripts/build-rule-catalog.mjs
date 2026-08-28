@@ -1,9 +1,7 @@
 /**
- * Writes .documentation/RULES.md from the rule sources themselves.
- *
- * Hand-listing ~180 checks across three engines is a list that is wrong by the
- * next commit, so this reads the definitions instead. `pnpm rules:check` fails
- * when the committed file stops matching them.
+ * Writes .documentation/RULES.md from the rule sources themselves: hand-listing
+ * every check across three engines is a list that is wrong by the next commit.
+ * `pnpm rules:check` fails when the committed file stops matching them.
  */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
@@ -74,7 +72,6 @@ function firstStr(block, names) {
   return null;
 }
 
-/** The numeric value of `name:`, or null. */
 function num(block, name) {
   const at = block.indexOf(`${name}:`);
   if (at === -1) return null;
@@ -86,7 +83,7 @@ function num(block, name) {
   return /^-?[0-9]+$/.test(token) ? Number(token) : null;
 }
 
-/** `category: RuleCategory.Copy` reads as `Copy`. */
+/** `category: RuleCategory.Voice` reads as `Voice`. */
 function member(block, name) {
   const at = block.indexOf(`${name}:`);
   if (at === -1) return null;
@@ -186,11 +183,9 @@ const TOOLS = [
 ];
 
 /**
- * One line per check, in plain words, with nothing repeated.
- *
- * A title that interpolates a count reads as "has … … a crawler cannot read"
- * once the hole is empty, so those fall back to the first sentence of the
- * finding's own detail, which is written as static prose.
+ * One line per check, in plain words, with nothing repeated. A title that
+ * interpolates a count reads as "has … … a crawler cannot read" once the hole
+ * is empty, so those fall back to the first sentence of the finding's detail.
  */
 function lines(tool) {
   const seen = new Set();

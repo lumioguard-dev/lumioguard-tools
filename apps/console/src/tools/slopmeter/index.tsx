@@ -1,16 +1,19 @@
 import { MarkTemplate } from '@lumioguard/ui';
+import { LeaderboardPreview } from '../../features/leaderboard/LeaderboardPreview.js';
 import { apiBase } from '../apiBase.js';
 import { toolCopy } from '../catalogue.js';
 import type { ToolDescriptor } from '../registry.js';
 import { ScanClient } from './ScanClient.js';
 import { SiteReport } from './report/SiteReport.js';
-import { tierInk } from './theme.js';
+import { VERDICT_SCALE, tierInk } from './theme.js';
 
 const client = new ScanClient(apiBase('slopmeter'));
 
 export const slopmeter: ToolDescriptor = {
   ...toolCopy('slopmeter'),
   mark: MarkTemplate,
+  scale: VERDICT_SCALE,
+  belowAsk: (onScan) => <LeaderboardPreview onScan={onScan} />,
   async run(address, signal) {
     const result = await client.crawl(address, {}, signal);
     return {

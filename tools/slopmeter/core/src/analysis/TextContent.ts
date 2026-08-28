@@ -1,11 +1,8 @@
-import { decodeEntities } from './TagReader.js';
+import { decodeEntities } from './entities.js';
 
 const CONTAINER_TAGS = ['script', 'style', 'noscript', 'svg'] as const;
 
-/**
- * Truncation ignores element boundaries, so a cut page can end inside a
- * `<script>`.
- */
+/** Truncation ignores element boundaries, so a cut page can end inside a `<script>`. */
 function cutUnterminatedTail(html: string): string {
   const lower = html.toLowerCase();
   let cut = html.length;
@@ -23,9 +20,9 @@ export class TextContent {
   /** The same text with code samples taken out. */
   public readonly prose: string;
   /**
-   * The body is built client-side, so what was fetched is a shell.
-   * instagram.com ships 9 characters of text in 595KB of HTML: "no h1" then
-   * describes the fetch, not the page.
+   * The body is built client-side, so what was fetched is a shell. instagram.com
+   * ships 9 characters of text in 595KB of HTML, where "no h1" would describe
+   * the fetch rather than the page.
    */
   public readonly isClientRendered: boolean;
 

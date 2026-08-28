@@ -34,6 +34,9 @@ export function readingFrom(report: CrawlResponse, host: string): Record<string,
     })),
     payload: {
       pagesScanned: report.pagesScanned,
+      // Without it a thin reading is stored indistinguishable from a full one,
+      // and every later query reads the band as if it had been earned.
+      confidence: report.confidence,
       screenshotUrl: report.screenshotUrl,
       // The Slop page plots these; the envelope above has no room for a weight.
       signals: signals.map((signal) => ({

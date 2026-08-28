@@ -1,30 +1,13 @@
-import type { RecorderConfig } from '@lumioguard/api-core';
+import { type RecorderConfig, recorderConfigFor } from '@lumioguard/api-core';
 import type { ExposureResponse } from '@lumioguard/shared';
 import type { Env } from '../http/env.js';
 
 /**
- * What is Leakpeek's about recording a reading. The signing, the transport and
- * the response handling are one implementation in `@lumioguard/api-core`,
- * because they were written twice and the two copies were the signing code.
- */
-
-/**
- * Read per request: bindings arrive with the request, the container does not.
- *
- * Both halves are required and neither has a default: a fork that sets a secret
- * but no address must not post its readings to somebody else's API.
+ * Read per request rather than baked into the container: bindings arrive with
+ * the request in Workers, and the container is built once per isolate.
  */
 export function recorderConfigFrom(env: Env): RecorderConfig | null {
-  const secret = env.LEAKPEEK_INGEST_SECRET;
-  const base = env.LUMIOGUARD_API_BASE_URL?.replace(/\/$/, '');
-  if (!secret || !base) return null;
-  return {
-    // One intake for every reading tool; the tool is named in the path.
-    endpoint: `${base}/api/external/leakpeek/readings`,
-    secret,
-    signatureHeader: 'x-leakpeek-signature',
-    timestampHeader: 'x-leakpeek-timestamp',
-  };
+  return recorderConfigFor('leakpeek', env.LEAKPEEK_INGEST_SECRET, env.LUMIOGUARD_API_BASE_URL);
 }
 
 /**
@@ -59,10 +42,10 @@ export interface ReadingPayload {
  * finding's opaque `id` across a boundary with no use for them, and would
  * forward whatever is added to the wire later.
  */
-export function readingFrom(report: ExposureResponse): ReadingPayload {
+export function readingFrom(report: ExposureResponse, host: string): ReadingPayload {
   return {
     entryUrl: report.url,
-    host: report.host,
+    host,
     score: report.score,
     tier: report.tier,
     tierDescription: report.tierDescription,

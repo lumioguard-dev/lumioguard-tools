@@ -21,11 +21,8 @@ const MAX_SITEMAP_TRIES = 3;
 
 /**
  * The fetches that describe a SITE rather than a page: robots.txt, the sitemap,
- * llms.txt, and the one crawler-identity request.
- *
- * Four extra GETs per reading, and that ceiling is the whole budget: it is
- * stated here as the list it is, so a number in the README or in the UI can be
- * derived from this rather than typed beside it.
+ * llms.txt, and the one crawler-identity request. This list is the whole budget,
+ * so a number in the README or the UI comes from it rather than typed beside it.
  */
 export interface SiteRead {
   readonly context: SiteContext;
@@ -80,13 +77,9 @@ export class SiteContextReader {
   }
 
   /**
-   * The first sitemap robots.txt names that actually answers, else the
-   * conventional path.
-   *
-   * EACH candidate in turn, not only the first. apple.com names five, and its
-   * CDN refuses the first of them to this reader, so a site publishing five
-   * sitemaps was reported as having none at all. Capped, because bbc.com names
-   * thirty-five and a reading is not a sitemap crawl.
+   * EACH candidate in turn, not only the first: apple.com names five and its CDN
+   * refuses the first to this reader, so a site publishing five sitemaps was
+   * reported as having none. Capped, because bbc.com names thirty-five.
    */
   private async readSitemap(
     robots: RobotsTxt,
@@ -108,8 +101,6 @@ export class SiteContextReader {
 }
 
 /**
- * A crawler's own view, measured the same way the browser's was.
- *
  * The word count is taken through `PageDocument` rather than from the raw
  * length, so the two sides of the comparison are counted identically. Comparing
  * bytes against words made a minified page look like a stripped one.

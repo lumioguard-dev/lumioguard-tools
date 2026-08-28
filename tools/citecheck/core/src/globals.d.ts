@@ -1,7 +1,6 @@
-// `URL` is a WHATWG global present in both Workers and Node, but TypeScript
-// ships it only in the `DOM` lib. Pulling in `DOM` would also hand this package
-// a `document` and `window` it must never touch, so the globals it genuinely
-// needs are declared here instead.
+// `URL` exists in both Workers and Node, but TypeScript ships it only in the
+// `DOM` lib, which would also hand this package a `document` and a `window` it
+// must never touch.
 
 declare class URLSearchParams {
   keys(): IterableIterator<string>;

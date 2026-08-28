@@ -3,13 +3,9 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ProbeRunner } from '../services/ProbeRunner.js';
 
 /**
- * The read-only guarantee, held to account.
- *
- * This class is the only thing in Leakpeek that touches a target's backend, so
- * "it only ever reads" has to be checkable rather than asserted. Every request
- * it makes is captured here and inspected: a `POST` appearing in this list is
- * the difference between assessing a hole and exploiting one, and no screen
- * would look wrong if it happened.
+ * The read-only guarantee, held to account. Every request this class makes is
+ * captured here and inspected: a `POST` in the list is the difference between
+ * assessing a hole and exploiting one, and no screen would look wrong for it.
  */
 
 interface Sent {

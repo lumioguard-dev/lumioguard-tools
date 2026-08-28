@@ -1,21 +1,17 @@
 import { RuleCategory } from '../../domain/RuleCategory.js';
 import { type Rule, defineRule } from '../Rule.js';
+import { overusedFontHere } from '../fonts.js';
 import { evidence } from '../support.js';
 
 /**
- * Negative weights: evidence of deliberate work, which is what protects a
- * well-built site from its own stock choices.
- *
- * The total is deliberately capped near -16. `Score` already caps credits at
- * half the penalty total, which protects clean pages where penalties are small.
- * Letting this pile grow only ends up excusing genuinely templated sites,
- * because big slop sites are also the ones with real footers, GitHub links and
- * long copy.
+ * Negative weights: evidence of deliberate work. The pile is capped near -16 on
+ * purpose, because big templated sites also have real footers, GitHub links and
+ * long copy, so letting it grow ends up excusing them. `Score` caps it again.
  */
-export const humanRules: readonly Rule[] = [
+export const handworkRules: readonly Rule[] = [
   defineRule({
-    id: 'human.real-pages',
-    category: RuleCategory.Human,
+    id: 'handwork.pages-behind',
+    category: RuleCategory.Handwork,
     weight: -4,
     label: 'Real pages behind the front door',
     evaluate: (ctx) => {
@@ -25,8 +21,8 @@ export const humanRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'human.github',
-    category: RuleCategory.Human,
+    id: 'handwork.findable-source',
+    category: RuleCategory.Handwork,
     weight: -3,
     label: 'Links to its own source',
     evaluate: (ctx) =>
@@ -34,8 +30,8 @@ export const humanRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'human.deep-content',
-    category: RuleCategory.Human,
+    id: 'handwork.written-copy',
+    category: RuleCategory.Handwork,
     weight: -3,
     label: 'Someone actually wrote this',
     evaluate: (ctx) =>
@@ -46,8 +42,8 @@ export const humanRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'human.rich-meta',
-    category: RuleCategory.Human,
+    id: 'handwork.considered-meta',
+    category: RuleCategory.Handwork,
     weight: -2,
     label: 'Metadata that was thought about',
     evaluate: (ctx) => {
@@ -60,20 +56,23 @@ export const humanRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'human.custom-fonts',
-    category: RuleCategory.Human,
+    id: 'handwork.chosen-type',
+    category: RuleCategory.Handwork,
     weight: -2,
     label: 'Type chosen, not inherited',
-    evaluate: (ctx) =>
-      evidence(
-        /@font-face/i.test(ctx.styles.allCss) || /\.woff2?\b/i.test(ctx.document.assetRefs),
-        'a typeface was loaded on purpose',
-      ),
+    evaluate: (ctx) => {
+      const loaded =
+        /@font-face/i.test(ctx.styles.allCss) || /\.woff2?\b/i.test(ctx.document.assetRefs);
+      if (!loaded) return null;
+      // Reaching for the face everyone reaches for is not choosing one, and
+      // crediting it here contradicted the penalty the same page just took.
+      return evidence(overusedFontHere(ctx) === null, 'a typeface was loaded on purpose');
+    },
   }),
 
   defineRule({
-    id: 'human.custom-favicon',
-    category: RuleCategory.Human,
+    id: 'handwork.drawn-icon',
+    category: RuleCategory.Handwork,
     weight: -2,
     label: 'A favicon of its own',
     evaluate: (ctx) => evidence(ctx.document.hasIcon, 'someone drew an icon for the tab'),

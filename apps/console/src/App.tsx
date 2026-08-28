@@ -10,17 +10,16 @@ import {
   ThemeToggle,
   useTheme,
 } from '@lumioguard/ui';
+import { AnalyticsEvent, type EventProperties, useAnalytics } from '@lumioguard/web-core';
 import type { ReactNode } from 'react';
 import { EXAMPLES, HEADLINE, PUBLISHER, beats } from './copy.js';
-import { LeaderboardPreview } from './features/leaderboard/LeaderboardPreview.js';
 import { LeaderboardView } from './features/leaderboard/LeaderboardView.js';
 import { ConsoleReport } from './features/report/ConsoleReport.js';
 import { useConsoleRoute } from './features/scan/useConsoleRoute.js';
 import { ToolPicker } from './features/select/ToolPicker.js';
-import { LEADERBOARD_TOOL, type ToolCopy } from './tools/catalogue.js';
-import { WhyItMatters } from './tools/citecheck/WhyItMatters.js';
+import { href } from './mount.js';
+import type { ToolCopy } from './tools/catalogue.js';
 import { TOOLS } from './tools/index.js';
-import { CommonIssues } from './tools/leakpeek/CommonIssues.js';
 import { type ToolDescriptor, toolsById } from './tools/registry.js';
 
 function Masthead(): JSX.Element {
@@ -39,17 +38,6 @@ function Masthead(): JSX.Element {
   );
 }
 
-/** Vite's asset base, without its trailing slash. `''` when served at a root. */
-const BASE = import.meta.env.BASE_URL.replace(/\/$/, '');
-
-/** What sits under the address field, which is the pinned reading's business. */
-function belowAsk(pinned: string | undefined, onScan: (address: string) => void): ReactNode {
-  if (pinned === LEADERBOARD_TOOL) return <LeaderboardPreview onScan={onScan} />;
-  if (pinned === 'leakpeek') return <CommonIssues />;
-  if (pinned === 'citecheck') return <WhyItMatters />;
-  return undefined;
-}
-
 /** The h1 is the one place set in Archivo: the hand was hard to read at 48px. */
 const H1 =
   'm-0 max-w-[20ch] text-balance font-headline text-36 leading-[1.12] text-hand lg:text-48';
@@ -63,10 +51,7 @@ function SiteQuestion(): JSX.Element {
   );
 }
 
-/**
- * One reading, offered. The arrow is the affordance: a bordered box on a page
- * full of bordered boxes does not read as somewhere to go.
- */
+/** The arrow is the affordance: on a page of bordered boxes, one more is not a door. */
 function ReadingLink({
   tool,
   radius,
@@ -78,7 +63,7 @@ function ReadingLink({
 
   return (
     <a
-      href={`${BASE}/${tool.slug}`}
+      href={href(`/${tool.slug}`)}
       className="group flex items-center gap-[15px] border-2 border-pen-700/50 bg-transparent px-[17px] py-[15px] transition-colors hover:border-pen-300 hover:bg-paper-high"
       style={{ borderRadius: radius }}
     >
@@ -99,11 +84,7 @@ function ReadingLink({
   );
 }
 
-/**
- * The page that scans nothing: it asks which reading, then sends you to the one
- * that runs it. No address field, because a reader who has not chosen yet has
- * nothing to type one for.
- */
+/** No address field: a reader who has not chosen a reading has nothing to type one for. */
 function ChooseView(): JSX.Element {
   return (
     <PanelGrid fills>
@@ -123,10 +104,6 @@ function ChooseView(): JSX.Element {
   );
 }
 
-/**
- * The task on the left in the order it is worked; what a reading is, drawn
- * beside it and braced off as a note about the work rather than part of it.
- */
 function AskView({
   onScan,
   toolIds,
@@ -146,9 +123,8 @@ function AskView({
       <Panel hand="a" span={12}>
         <div className="grid gap-x-[46px] lg:grid-cols-[minmax(0,7fr)_minmax(0,4fr)]">
           <div className="flex flex-col lg:self-center">
-            {/* A tool page asks its own question. The picker goes with it: the
-                URL already answered what to read, and a control that could
-                change it would contradict the heading above it. */}
+            {/* The picker goes with a tool page: the URL already answered what to
+                read, and a control that could change it contradicts the heading. */}
             <h1 className={H1}>{pinned === null ? <SiteQuestion /> : pinned.headline}</h1>
 
             <ScanBar examples={EXAMPLES} onScan={onScan} />
@@ -176,9 +152,8 @@ function Colophon(): JSX.Element {
       <DrawnRule />
       <div className="mt-5 flex flex-wrap items-center justify-between gap-x-10 gap-y-4">
         <ParentCredit />
-        {/* Printed, not written: a legal notice is the one string here that is
-            neither the product's voice nor its wordmark. The year is read, so
-            the line cannot go stale every January. */}
+        {/* Printed, not written: a legal notice is neither the product's voice nor
+            its wordmark. The year is read, so the line cannot go stale in January. */}
         <p className="m-0 text-13 font-normal leading-[1.5] text-ink-3">
           © {new Date().getFullYear()} {PUBLISHER}. All rights reserved.
         </p>
@@ -188,8 +163,31 @@ function Colophon(): JSX.Element {
 }
 
 export function App(): JSX.Element {
-  const { address, toolIds, pinned, chooser, board, open, select, clear } = useConsoleRoute();
+  const { address, toolIds, pinned, chooser, board, pageName, open, select, clear } =
+    useConsoleRoute();
   const tools = toolsById(TOOLS, toolIds);
+  const pinnedTool = pinned === null ? null : (toolsById(TOOLS, [pinned.id])[0] ?? null);
+  const analytics = useAnalytics();
+
+  // Which readings are in play, as BOTH events below say it. Written out at each
+  // call, a property added to one would leave the two describing the choice apart.
+  const chosen = (ids: readonly string[]): EventProperties => ({
+    tool_page: pageName,
+    tools: ids.join(','),
+    tool_count: ids.length,
+  });
+
+  // Reported with what they chose, never with what they typed: the address is
+  // somebody's site, and sending it is a decision to take deliberately.
+  const scan = (next: string): void => {
+    analytics.capture(AnalyticsEvent.ScanSubmit, chosen(toolIds));
+    open(next);
+  };
+
+  const choose = (ids: readonly string[]): void => {
+    analytics.capture(AnalyticsEvent.ToolsSelect, chosen(ids));
+    select(ids);
+  };
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -200,19 +198,22 @@ export function App(): JSX.Element {
         <ChooseView />
       ) : address === null ? (
         <AskView
-          onScan={open}
+          onScan={scan}
           toolIds={toolIds}
-          onSelect={select}
+          onSelect={choose}
           pinned={pinned}
-          // Each reading's own panel under the ask: the board is Slopmeter's,
-          // the common issues are Leakpeek's, and the third has neither.
-          below={belowAsk(pinned?.id, open)}
+          below={pinnedTool?.belowAsk?.(scan)}
         />
       ) : (
-        // No picker here. What to read is asked once, before the reading; on the
-        // report it was a control at the end of a page nobody scrolls to, for a
-        // choice already made. `Read another site` is the way back to it.
-        <ConsoleReport key={address} address={address} tools={tools} onNewSite={clear} />
+        // No picker: what to read is asked once, before the reading. Here it was a
+        // control at the foot of a page nobody scrolls to, for a choice already made.
+        <ConsoleReport
+          key={address}
+          address={address}
+          tools={tools}
+          pageName={pageName}
+          onNewSite={clear}
+        />
       )}
       <Colophon />
     </div>

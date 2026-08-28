@@ -14,14 +14,9 @@ export interface ScanServiceDeps {
 }
 
 /**
- * One page, end to end: resolve the target, read the page as a browser and
- * again as a crawler, read what the site says about itself, then run the four
- * areas over both.
- *
- * The crawler request goes out ALONGSIDE the browser one rather than after it.
- * Run in sequence, a site that rate-limits sees two requests seconds apart and
- * the second is throttled, which the cloaking check would then report as a
- * refusal the site never meant.
+ * One page end to end. The crawler request goes out ALONGSIDE the browser one:
+ * run in sequence, a site that rate-limits throttles the second, and the
+ * cloaking check would then report a refusal the site never meant.
  */
 export class ScanService {
   private readonly resolver: TargetResolver;

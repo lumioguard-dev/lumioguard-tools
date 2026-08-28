@@ -5,17 +5,13 @@ import { ScanResult } from './domain/ScanResult.js';
 import { ScoreAxis } from './domain/ScoreAxis.js';
 import { AxisPolicy, type AxisPolicyOptions } from './rules/AxisPolicy.js';
 import type { RuleFilter, RuleRegistry } from './rules/RuleRegistry.js';
+import { withoutAmbiguousMaker } from './rules/definitions/makerRules.js';
 import { ScoreCalculator } from './scoring/ScoreCalculator.js';
 import { TierResolver } from './scoring/TierResolver.js';
 
 export interface AnalyzeOptions extends RuleFilter, AxisPolicyOptions {}
 
-/**
- * Runs the registry against one snapshot and assembles the result.
- *
- * Collaborators are injected rather than constructed so the harness can swap
- * a registry or a tier scale without touching this class.
- */
+/** Collaborators are injected so the eval harness can swap a registry or a tier scale. */
 export class SlopAnalyzer {
   private readonly registry: RuleRegistry;
   private readonly contextFactory: PageContextFactory;
@@ -75,7 +71,9 @@ export class SlopAnalyzer {
 
     findings.sort((a, b) => b.weight - a.weight);
 
-    const byAxis = (axis: string): Finding[] => findings.filter((f) => f.axis === axis);
+    const kept = withoutAmbiguousMaker(findings);
+
+    const byAxis = (axis: string): Finding[] => kept.filter((f) => f.axis === axis);
     const scored = byAxis(ScoreAxis.Slop);
     const score = this.scoreCalculator.calculate(scored);
 

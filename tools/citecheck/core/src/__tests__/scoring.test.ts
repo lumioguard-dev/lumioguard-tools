@@ -27,7 +27,7 @@ describe('the answer gap', () => {
   /**
    * The promise the product makes: a page that cannot be quoted at all lands in
    * the top band on the strength of that one finding, however tidy the rest of
-   * it is. Asserted against the derived floor, never against a copy of 60.
+   * it is. Asserted against the derived ceiling, never against a copy of it.
    */
   it('pins any blocking finding down into the worst band', () => {
     const scored = scoreCitation([at('blocker')]);

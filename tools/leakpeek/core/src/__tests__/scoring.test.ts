@@ -12,10 +12,9 @@ import { scoreExposure } from '../scoring/ExposureScore.js';
 import { headlineFor } from '../scoring/headline.js';
 
 /**
- * The exposure ladder. These are the claims a reader is shown, so they are
- * pinned here rather than left to whatever the weights currently add up to:
- * the numbers are a first cut and expected to move, but the SHAPE below is the
- * product and must not.
+ * The claims a reader is shown, pinned here rather than left to whatever the
+ * weights add up to: the numbers are a first cut and expected to move, the
+ * SHAPE below is the product and must not.
  */
 
 function finding(severity: ExposureFinding['severity'], code = 'x'): ExposureFinding {
@@ -38,20 +37,18 @@ describe('scoreExposure', () => {
   });
 
   // The one rule that carries the product: a single readable user table is the
-  // whole story, however tidy everything else is. Without the floor, one
-  // critical finding on an otherwise clean site scores 40 and renders as
-  // "Cracked", which reads as "some work to do" rather than "your data is
-  // readable right now".
+  // whole story, however tidy everything else is. Unpinned it lands a band
+  // higher, reading as "some work to do" rather than "readable right now".
   it('pins any single critical into Wide Open, alone on an otherwise clean site', () => {
     const result = scoreExposure([finding('critical')]);
-    expect(result.score).toBeGreaterThanOrEqual(EXPOSURE_CRITICAL_CEILING);
+    // A CEILING: the pin is an upper bound, so the assertion must be too.
+    expect(result.score).toBeLessThanOrEqual(EXPOSURE_CRITICAL_CEILING);
     expect(result.tier).toBe(ExposureTier.WideOpen);
   });
 
   // The ceiling and the band it names must be ONE number. As two literals they
-  // could not fail together: retuning the ladder would move the band and leave
-  // the ceiling behind, and a critical would quietly land a tier above the one
-  // the README promises.
+  // could not fail together: retuning the ladder would move the band, leave the
+  // ceiling behind, and land a critical a tier above the one the README promises.
   it('takes its ceiling from the worst band rather than repeating the number', () => {
     const worst = EXPOSURE_BANDS[0];
     expect(EXPOSURE_CRITICAL_CEILING).toBe(worst?.to);

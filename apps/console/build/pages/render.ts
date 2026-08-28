@@ -1,24 +1,30 @@
-import { NAME, PUBLISHER } from '../../src/copy.js';
+import { PUBLISHER } from '../../src/copy.js';
 import type { PageLink } from '../../src/pages.js';
 import { headTags } from '../head.js';
 import { escapeHtml } from '../html.js';
 import type { Site } from '../site.js';
+import {
+  CSS_HAND,
+  CSS_INK_1,
+  CSS_INK_2,
+  CSS_INK_3,
+  CSS_LINE_BASE,
+  CSS_PAPER_BASE,
+} from '../tokens.js';
 import { CONTENT_PAGES, type ContentPage, type Section, type Table } from './content.js';
 
-/**
- * An explainer as a complete document, no React. A real file at a real path
- * rather than a route, so a static host never rewrites an unknown path.
- */
+// A real file at a real path rather than a route, so a static host never has to
+// rewrite an unknown path.
 
 const STYLE = [
   ':root{color-scheme:light dark}',
-  'body{margin:0;background:var(--paper-base,#f5f2e8)}',
-  '.doc{max-width:44rem;margin:0 auto;padding:2.5rem 1.5rem 4rem;color:var(--ink-1,#151b28);font-family:Archivo,system-ui,sans-serif;font-size:1.02rem;line-height:1.62}',
-  '.doc a{color:var(--hand,#2f4fb5)}',
+  `body{margin:0;background:${CSS_PAPER_BASE}}`,
+  `.doc{max-width:44rem;margin:0 auto;padding:2.5rem 1.5rem 4rem;color:${CSS_INK_1};font-family:Archivo,system-ui,sans-serif;font-size:1.02rem;line-height:1.62}`,
+  `.doc a{color:${CSS_HAND}}`,
   '.doc nav.top{display:flex;gap:1rem;font-family:"Architects Daughter",cursive;font-size:1.3rem;margin-bottom:2.5rem}',
-  '.doc h1{font-family:"Architects Daughter",cursive;font-size:2.3rem;line-height:1.12;color:var(--hand,#2f4fb5);margin:0 0 1rem}',
-  '.doc .lead{font-size:1.16rem;line-height:1.5;color:var(--ink-2,#414b63);margin:0 0 2.5rem}',
-  '.doc h2{font-family:"Architects Daughter",cursive;font-size:1.5rem;font-weight:400;line-height:1.2;margin:2.75rem 0 .75rem;color:var(--ink-1,#151b28)}',
+  `.doc h1{font-family:"Architects Daughter",cursive;font-size:2.3rem;line-height:1.12;color:${CSS_HAND};margin:0 0 1rem}`,
+  `.doc .lead{font-size:1.16rem;line-height:1.5;color:${CSS_INK_2};margin:0 0 2.5rem}`,
+  `.doc h2{font-family:"Architects Daughter",cursive;font-size:1.5rem;font-weight:400;line-height:1.2;margin:2.75rem 0 .75rem;color:${CSS_INK_1}}`,
   '.doc p{margin:0 0 1rem}',
   '.doc ul{margin:0 0 1rem;padding-left:1.2rem}',
   '.doc li{margin:.4rem 0}',
@@ -26,11 +32,11 @@ const STYLE = [
   // a phone, so the scroll is the table's own.
   '.doc .scroll{overflow-x:auto;margin:0 0 1.25rem}',
   '.doc table{border-collapse:collapse;width:100%;font-size:.95rem}',
-  '.doc caption{text-align:left;font-family:"Architects Daughter",cursive;font-size:1.05rem;color:var(--ink-3,#545f78);padding-bottom:.4rem}',
-  '.doc th,.doc td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid var(--line-base,#dbe2f2);vertical-align:top}',
+  `.doc caption{text-align:left;font-family:"Architects Daughter",cursive;font-size:1.05rem;color:${CSS_INK_3};padding-bottom:.4rem}`,
+  `.doc th,.doc td{text-align:left;padding:.5rem .75rem;border-bottom:1px solid ${CSS_LINE_BASE};vertical-align:top}`,
   '.doc th{font-weight:600;white-space:nowrap}',
-  '.doc .cta{display:inline-block;margin:2.5rem 0 0;padding:.7rem 1.1rem;background:var(--hand,#2f4fb5);color:#fff;text-decoration:none;border-radius:3px 9px 4px 8px}',
-  '.doc footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid var(--line-base,#dbe2f2);color:var(--ink-3,#545f78);font-size:.87rem}',
+  `.doc .cta{display:inline-block;margin:2.5rem 0 0;padding:.7rem 1.1rem;background:${CSS_HAND};color:#fff;text-decoration:none;border-radius:3px 9px 4px 8px}`,
+  `.doc footer{margin-top:3.5rem;padding-top:1.25rem;border-top:1px solid ${CSS_LINE_BASE};color:${CSS_INK_3};font-size:.87rem}`,
   '.doc footer nav{display:flex;flex-wrap:wrap;gap:.9rem;margin-bottom:.75rem}',
 ].join('');
 
@@ -62,7 +68,6 @@ function sectionHtml(section: Section): string {
   return parts.join('\n        ');
 }
 
-/** Every other explainer, so each page is reachable from every other one. */
 function siblings(current: PageLink, mount: string): string {
   return CONTENT_PAGES.filter((page) => page.meta.path !== current.path)
     .map((page) => `<a href="${mount}${page.meta.path}">${escapeHtml(page.meta.title)}</a>`)
@@ -91,21 +96,21 @@ export function renderPage(page: ContentPage, where: Site | null, hasImage: bool
   </head>
   <body>
     <main class="doc">
-      <nav class="top"><a href="${mount}/">${escapeHtml(NAME.toLowerCase())}</a></nav>
+      <nav class="top"><a href="${mount}/">home</a></nav>
 
       <h1>${escapeHtml(page.meta.title)}</h1>
       <p class="lead">${escapeHtml(page.lead)}</p>
 
       ${sections}
 
-      <a class="cta" href="${mount}/">Read a site with ${escapeHtml(NAME)}</a>
+      <a class="cta" href="${mount}/">Read a site</a>
 
       <footer>
         <nav>
-          <a href="${mount}/">${escapeHtml(NAME)}</a>
+          <a href="${mount}/">Home</a>
           ${siblings(page.meta, mount)}
         </nav>
-        ${escapeHtml(NAME)} by ${escapeHtml(PUBLISHER)}
+        ${escapeHtml(PUBLISHER)}
       </footer>
     </main>
   </body>

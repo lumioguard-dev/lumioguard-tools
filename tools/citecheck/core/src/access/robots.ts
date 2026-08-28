@@ -18,12 +18,9 @@ export interface RobotsTxt {
   /** False when the file was absent or unreadable, which is not the same as empty. */
   readonly present: boolean;
   /**
-   * Lines that are neither blank, a comment, nor a recognised directive.
-   *
-   * Kept because a robots.txt is parsed by a machine that does not report back:
-   * a mistyped field is skipped in silence, and the rule its author meant to
-   * write was never in force. This is what Lighthouse's `robots-txt` audit
-   * checks, as distinct from whether the file exists at all.
+   * Neither blank, a comment, nor a recognised directive. A mistyped field is
+   * skipped in silence, so the rule its author wrote was never in force. This is
+   * Lighthouse's `robots-txt` audit, distinct from whether the file exists.
    */
   readonly invalidLines: readonly string[];
 }
@@ -50,11 +47,9 @@ const KNOWN_FIELDS = new Set([
 ]);
 
 /**
- * robots.txt, per RFC 9309.
- *
- * Consecutive `User-agent` lines share the group that follows them, which is
- * the part hand-rolled parsers get wrong: treating each `User-agent` as its own
- * group silently drops the rules for every agent but the last one named.
+ * robots.txt, per RFC 9309. Consecutive `User-agent` lines share the group that
+ * follows, which hand-rolled parsers get wrong: treating each as its own group
+ * silently drops the rules for every agent but the last one named.
  */
 export function parseRobots(text: string): RobotsTxt {
   const groups: RobotsGroup[] = [];
@@ -136,11 +131,9 @@ function groupFor(robots: RobotsTxt, token: string): RobotsGroup | null {
 }
 
 /**
- * Whether a group lets a path through.
- *
- * Longest match wins and a tie goes to `Allow`, which is the rule that makes
- * `Disallow: /` plus `Allow: /blog/` mean what its author intended. Comparing
- * in file order instead would block the blog.
+ * Longest match wins and a tie goes to `Allow`, which is what makes
+ * `Disallow: /` plus `Allow: /blog/` mean what its author intended. Comparing in
+ * file order instead would block the blog.
  */
 function allowsPath(group: RobotsGroup, path: string): boolean {
   let decision = true;
@@ -166,11 +159,8 @@ function ruleLabel(robots: RobotsTxt, token: string): string | null {
 }
 
 /**
- * Whether a crawler with no group of its own may fetch a path.
- *
- * This is what a general search crawler gets, and it is the one posture worth
- * scoring against, because a page disallowed here is one the site has asked
- * nobody at all to read.
+ * What a general search crawler gets, and the one posture worth scoring against:
+ * a page disallowed here is one the site has asked nobody at all to read.
  */
 export function allowedForAnyone(robots: RobotsTxt, path: string): boolean {
   const wildcard = robots.groups.find((group) => group.agents.includes('*'));
@@ -178,11 +168,9 @@ export function allowedForAnyone(robots: RobotsTxt, path: string): boolean {
 }
 
 /**
- * What robots.txt says to each known agent about one path.
- *
- * `unmentioned` is reported when nothing applies at all, which is a different
- * answer from `allowed`: the agent is free to read, but the site never said so
- * and the next edit to robots.txt could change that without anyone noticing.
+ * `unmentioned` is reported when nothing applies at all, a different answer from
+ * `allowed`: the agent is free to read, but the site never said so, and the next
+ * edit to robots.txt could change that without anyone noticing.
  */
 export function agentPostures(robots: RobotsTxt, path: string): AgentPostureDto[] {
   return KNOWN_AGENTS.map((agent) => {

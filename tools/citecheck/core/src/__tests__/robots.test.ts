@@ -12,8 +12,7 @@ describe('robots.txt', () => {
   /**
    * The failure this file exists for. Treating each `User-agent` line as its own
    * group silently drops the rules for every agent but the last one named, and
-   * nothing about the result looks wrong: the report simply says a blocked
-   * crawler may read.
+   * the report then simply says a blocked crawler may read.
    */
   it('shares one group across consecutive user-agent lines', () => {
     const text = ['User-agent: GPTBot', 'User-agent: CCBot', 'Disallow: /'].join('\n');

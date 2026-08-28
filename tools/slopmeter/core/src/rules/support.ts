@@ -1,5 +1,3 @@
-/** Shared helpers for rule predicates. */
-
 export function distinctHits(haystack: string, terms: readonly string[]): string[] {
   return terms.filter((term) => haystack.includes(term));
 }
@@ -8,7 +6,6 @@ export function countMatches(input: string, pattern: RegExp): number {
   return (input.match(pattern) ?? []).length;
 }
 
-/** Evidence when a rule fires, `null` when it does not. */
 export function evidence(condition: boolean, proof: string): string | null {
   return condition ? proof : null;
 }

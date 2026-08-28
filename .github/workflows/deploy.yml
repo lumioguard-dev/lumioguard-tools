@@ -119,6 +119,12 @@ jobs:
           # on stderr. That is right for a fork and wrong for us, so the
           # variable is set on this repo.
           VITE_PUBLIC_SITE_URL: ${{ vars.VITE_PUBLIC_SITE_URL }}
+          # Analytics, off unless VITE_POSTHOG_KEY is set, which is what a fork
+          # gets. The origin above is the second guard: a build answering
+          # anywhere else counts nothing, so a preview deploy stays out.
+          VITE_POSTHOG_KEY: ${{ vars.VITE_POSTHOG_KEY }}
+          VITE_POSTHOG_HOST: ${{ vars.VITE_POSTHOG_HOST }}
+          VITE_POSTHOG_UI_HOST: ${{ vars.VITE_POSTHOG_UI_HOST }}
         run: pnpm --filter @lumioguard/console run build
 
       - run: pnpm --filter @lumioguard/console run deploy

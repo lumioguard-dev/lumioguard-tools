@@ -4,7 +4,6 @@ export {
   TIER_BANDS,
   TIER_NAMES,
   Tier,
-  bandTrack,
   type TierBand,
   type TrackSegment,
 } from './domain/tier.js';
@@ -24,7 +23,6 @@ export {
   EXPOSURE_TIER_NAMES,
   ExposureTier,
   exposureBandFor,
-  exposureBandTrack,
   type ExposureBand,
   type ExposureTrackSegment,
 } from './domain/exposureTier.js';
@@ -36,11 +34,18 @@ export {
   CITATION_TIER_NAMES,
   CitationTier,
   citationBandFor,
-  citationBandTrack,
   type CitationBand,
   type CitationTrackSegment,
 } from './domain/citationTier.js';
 export { CRAWL_DEFAULTS, CRAWL_LIMITS } from './domain/crawl.js';
+export {
+  EVIDENCE_FLOOR_PAGES,
+  READING_CONFIDENCE_NAMES,
+  ReadingConfidence,
+  confidenceFor,
+  confidenceNote,
+} from './domain/evidence.js';
+export { decodeEntities } from './text/entities.js';
 export { SCREENSHOT_WIDTH, mshotsUrl } from './domain/screenshot.js';
 export { SITE_KEY_LENGTH, SITE_KEY_PATTERN, newSiteKey } from './domain/siteKey.js';
 
@@ -65,6 +70,7 @@ export {
   crawlRequestSchema,
   crawlResponseSchema,
   crawledPageSchema,
+  readingConfidenceSchema,
   siteSignalSchema,
   siteVerdictSchema,
   type CrawlRequest,
@@ -139,7 +145,6 @@ export {
   ReadingTier,
   consolidatedScore,
   readingBandFor,
-  readingBandTrack,
   type ReadingBand,
 } from './domain/readingTier.js';
 // `TrackSegment` is already re-exported by tier.js; one name, one export.

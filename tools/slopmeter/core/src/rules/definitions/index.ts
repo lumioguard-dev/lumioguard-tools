@@ -1,42 +1,28 @@
 import { RuleRegistry } from '../RuleRegistry.js';
-import { copyRules } from './copyRules.js';
-import { craftRules } from './craftRules.js';
-import { defaultStackRules } from './defaultRules.js';
-import { fingerprintRules } from './fingerprintRules.js';
-import { humanRules } from './humanRules.js';
+import { compositionRules } from './compositionRules.js';
+import { documentRules } from './documentRules.js';
+import { finishRules } from './finishRules.js';
+import { handworkRules } from './handworkRules.js';
 import { impeccableRules } from './impeccableRules.js';
-import { layoutRules } from './layoutRules.js';
-import { leftoverRules } from './leftoverRules.js';
+import { makerRules } from './makerRules.js';
+import { platformRules } from './platformRules.js';
 import { qualityRules } from './qualityRules.js';
-import { stackRules } from './stackRules.js';
-import { structureRules } from './structureRules.js';
+import { stockRules } from './stockRules.js';
+import { unfinishedRules } from './unfinishedRules.js';
+import { voiceRules } from './voiceRules.js';
 
 export function createDefaultRegistry(): RuleRegistry {
   return new RuleRegistry().register(
-    ...fingerprintRules,
-    ...leftoverRules,
-    ...defaultStackRules,
-    ...copyRules,
-    ...layoutRules,
-    ...stackRules,
+    ...makerRules,
+    ...unfinishedRules,
+    ...stockRules,
+    ...voiceRules,
+    ...compositionRules,
+    ...platformRules,
     ...qualityRules,
-    ...craftRules,
-    ...structureRules,
+    ...finishRules,
+    ...documentRules,
     ...impeccableRules,
-    ...humanRules,
+    ...handworkRules,
   );
 }
-
-export {
-  copyRules,
-  craftRules,
-  defaultStackRules,
-  fingerprintRules,
-  humanRules,
-  impeccableRules,
-  layoutRules,
-  leftoverRules,
-  qualityRules,
-  stackRules,
-  structureRules,
-};

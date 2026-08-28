@@ -1,10 +1,7 @@
 /**
- * The JSON-LD a page ships, parsed into something the checks can ask questions
- * of.
- *
- * A block that will not parse is kept as an error rather than dropped: invalid
- * JSON-LD is silently ignored by every consumer, which is exactly why the
- * author never finds out, and is worth a finding of its own.
+ * A block that will not parse is kept as an ERROR rather than dropped: invalid
+ * JSON-LD is silently ignored by every consumer, which is exactly why the author
+ * never finds out, and is worth a finding of its own.
  */
 
 /** A node's shape as far as this needs it: a bag of unknown values. */
@@ -23,12 +20,8 @@ function isNode(value: unknown): value is LdNode {
 
 /**
  * Every node in a block, with `@graph`, arrays and NESTED nodes flattened out.
- *
- * The nested case is the one that matters. An entity is usually published
- * inside the thing it belongs to, not beside it: Wikipedia's article carries
- * `author: { "@type": "Organization", … }` one level down. Descending only into
- * `@graph` missed it and reported the most-cited page on the web as never
- * saying who publishes it.
+ * An entity is usually published inside the thing it belongs to: descending only
+ * into `@graph` reported the most-cited page on the web as naming no publisher.
  */
 function collect(value: unknown, into: LdNode[], depth = 0): void {
   if (depth > 6) return;

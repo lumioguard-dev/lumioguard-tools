@@ -6,16 +6,12 @@ import { type ProxyOptions, type UserConfig, defineConfig } from 'vite';
 // part of the typechecked app.
 import { HOST, apiPorts, appPort } from '../../scripts/ports.mjs';
 import { seo } from './build/seo.js';
-import { CATALOGUE, SCAN_SLUG, leaderboardPath } from './src/tools/catalogue.js';
-
-const TOOL_PAGES = CATALOGUE.map((tool) => tool.slug);
 
 const source = (path: string): string => fileURLToPath(new URL(path, import.meta.url));
 
 /**
- * One proxy row per tool, built from `ports.json`. `/<tool>/api/...` is
- * rewritten to `/api/...` on that tool's port, so the Workers keep the routes
- * they already serve and a fourth tool is proxied with no edit here.
+ * `/<tool>/api/...` is rewritten to `/api/...` on that tool's port, so the Workers
+ * keep the routes they already serve and a fourth tool needs no edit here.
  */
 function toolProxies(): NonNullable<UserConfig['server']>['proxy'] {
   const rows: Record<string, ProxyOptions> = {};
@@ -32,23 +28,11 @@ function toolProxies(): NonNullable<UserConfig['server']>['proxy'] {
 export default defineConfig({
   plugins: [react(), seo()],
   build: {
-    // Explicit, not inherited: a source map would publish this app's readable
-    // source alongside the bundle. No detector reaches the client, but the
-    // client is still the half an attacker can read.
+    // Explicit, not inherited: a source map would publish this app's readable source
+    // alongside the bundle.
     sourcemap: false,
-    // One document per reading, each booting the same bundle. Real files rather
-    // than a host rewrite: a rewrite serves one document at three URLs, so all
-    // three carry one title and one canonical and none of them can rank.
-    rollupOptions: {
-      input: {
-        index: source('index.html'),
-        [SCAN_SLUG]: source(`${SCAN_SLUG}.html`),
-        // Nested, so it is emitted at ai-slop-check/leaderboard.html and served
-        // at that path with a 200, the way every other document here is.
-        leaderboard: source(`.${leaderboardPath()}.html`),
-        ...Object.fromEntries(TOOL_PAGES.map((slug) => [slug, source(`${slug}.html`)])),
-      },
-    },
+    // ONE entry. Every reading's document is written from it in `build/seo.ts`,
+    // so the set follows the catalogue and no page can drift from the others.
   },
   resolve: {
     alias: {

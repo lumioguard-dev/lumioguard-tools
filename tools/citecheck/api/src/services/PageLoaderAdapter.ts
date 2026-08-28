@@ -3,8 +3,6 @@ import type { PageInput, PageLoader } from '@lumioguard/citecheck-core';
 import type { PageFetcher } from './PageFetcher.js';
 
 /**
- * Adapter joining the crawler's `PageLoader` port to the real fetcher.
- *
  * Every discovered link is re-validated through `TargetResolver`: links come
  * from a third-party page, so a crawl must not become a way to make the Worker
  * fetch a private address on someone else's behalf.

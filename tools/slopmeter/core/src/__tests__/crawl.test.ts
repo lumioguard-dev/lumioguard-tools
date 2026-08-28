@@ -155,7 +155,7 @@ describe('site verdict', () => {
     const report = await new SiteCrawler(analyzer, site).crawl('https://a.test/', { depth: 1 });
     const hidden = report.signals.filter((s) => s.weight > 0 && !s.onHomepage);
 
-    expect(hidden.some((s) => s.ruleId === 'leftover.lorem')).toBe(true);
+    expect(hidden.some((s) => s.ruleId === 'unfinished.lorem')).toBe(true);
     expect(report.site.hiddenSignals).toBe(hidden.length);
     // Reported, never charged: the score stays anchored to homepage and median.
     expect(report.site.score).toBe(
@@ -170,7 +170,7 @@ describe('site verdict', () => {
     });
 
     const report = await new SiteCrawler(analyzer, site).crawl('https://a.test/', { depth: 1 });
-    const lorem = report.signals.find((s) => s.ruleId === 'leftover.lorem');
+    const lorem = report.signals.find((s) => s.ruleId === 'unfinished.lorem');
     expect(lorem?.pages).toBe(2);
     expect(lorem?.onHomepage).toBe(true);
   });

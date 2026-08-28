@@ -6,11 +6,8 @@ import { llmsTxt, robotsTxt, sitemapXml } from '../wellKnown.js';
 const ORIGIN = 'https://example.test';
 const ROOT = { base: ORIGIN, path: '' };
 
-/**
- * Every field a robots.txt may carry, as the major crawlers document them. Held
- * here as well as in Citecheck's parser because the console may not import an
- * engine: a field outside this list is skipped in silence, never in force.
- */
+// Every field a robots.txt may carry. Held here as well as in Citecheck's parser
+// because the console may not import an engine.
 const KNOWN_FIELDS = new Set([
   'user-agent',
   'disallow',

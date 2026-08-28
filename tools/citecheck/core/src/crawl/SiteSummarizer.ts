@@ -94,12 +94,9 @@ const FALLBACK_PROFILE: PageProfileDto = Object.freeze({
 
 export class SiteSummarizer {
   /**
-   * Every page's findings unioned by code, with the site's own folded in once.
-   *
-   * The site-wide findings (no sitemap, robots.txt contradicting llms.txt, a
-   * title repeated across the crawl) are true of the site rather than of each
-   * page. Listing them per page would report one missing sitemap as many times
-   * as pages happened to be read.
+   * Every page's findings unioned by code, with the site's own folded in ONCE.
+   * Site-wide findings are true of the site rather than of each page: listed per
+   * page, one missing sitemap is reported as many times as pages were read.
    */
   public summarize(
     entry: string,
@@ -164,14 +161,9 @@ export class SiteSummarizer {
     const worst = pages.length === 0 ? null : pages.reduce((a, b) => (b.score < a.score ? b : a));
 
     /**
-     * The worst of three per axis, not a mean of anything.
-     *
-     * A site whose front door is clean and whose articles are shells is not
-     * half fine, so the entry page cannot carry the verdict alone and neither
-     * can an average that dilutes it. The site-wide findings are scored on
-     * their own rather than unioned into the page findings: unioned, a deeper
-     * crawl finds more distinct codes and scores worse for having looked
-     * harder, which would make the depth setting part of the verdict.
+     * The worst of three per axis, not a mean: a site whose front door is clean
+     * and whose articles are shells is not half fine. Site-wide findings score
+     * on their own, or a deeper crawl scores worse for having looked harder.
      */
     const siteOnly = scoreCitation([...siteFindings, ...crossPage]);
 

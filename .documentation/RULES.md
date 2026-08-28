@@ -10,13 +10,24 @@ when this file and the engines disagree.
 
 112 things it looks for, at [`/tools/ai-slop-check`](https://lumioguard.dev/tools/ai-slop-check). What they mean and how they score is in [`tools/slopmeter/README.md`](../tools/slopmeter/README.md).
 
-- Marketing buzzwords
-- Em-dashes on almost every line
-- The vocabulary chatbots reach for
-- Headings that start with an emoji
-- Filler phrases that say nothing
-- The it-is-not-just-X-it-is-Y construction
-- Stiff connectors: moreover, furthermore
+- A bento grid
+- A blurry coloured glow behind the page
+- The indigo-to-violet gradient every AI tool ships
+- A trusted-by logo row
+- Three feature cards side by side
+- Dark background with neon accents
+- A developer TODO left in the visible text
+- Fake contact details
+- A hero line straight from the template
+- Emoji used as decoration
+- Navigation links that go nowhere
+- Almost no text in the page itself
+- A very heavy page
+- A pile-up of third-party trackers
+- Generic boxes instead of real structure
+- Not set up for phones
+- No main heading
+- No canonical address
 - A thick coloured stripe down one edge
 - Text filled with a gradient
 - One of the handful of fonts everything uses
@@ -35,22 +46,6 @@ when this file and the engines disagree.
 - The italic serif headline of the moment
 - Copy written in clipped slogans
 - Cards inside cards
-- Tailwind loaded from the play CDN
-- Stock shadcn/ui theme values
-- Radix UI components
-- The default lucide icon set, untouched
-- A default Vite build
-- A stock Next.js scaffold
-- Built with v0
-- Built with Lovable
-- Built with Bolt
-- Built with Base44
-- Hosted on Replit
-- Made with Framer
-- Made with Webflow
-- Made with Wix
-- AI site-builder artifact
-- Builder attribution badge
 - Real pages behind the front door
 - Links to its own source
 - Someone actually wrote this
@@ -79,21 +74,22 @@ when this file and the engines disagree.
 - The same words repeated inside one card
 - Text too faint against its background
 - Grey text on a coloured background
-- A bento grid
-- A blurry coloured glow behind the page
-- The indigo-to-violet gradient every AI tool ships
-- A trusted-by logo row
-- Three feature cards side by side
-- Dark background with neon accents
-- Chatbot citation codes left in the text
-- A chatbot reply left in the copy
-- The scaffold own title, never changed
-- Lorem ipsum
-- A placeholder company name
-- An unfilled template slot
-- Raw markdown showing as text
-- Links that go nowhere
-- Placeholder images
+- Built with v0
+- Built with Lovable
+- Built with Bolt
+- Built with Base44
+- Hosted on Replit
+- Made with Framer
+- Made with Webflow
+- Made with Wix
+- AI site-builder artifact
+- Builder attribution badge
+- Hosted on Vercel
+- Hosted on Netlify
+- Supabase backend
+- AI-build-adjacent backend
+- Classic vibe-coding stack
+- Stock shadcn component stack
 - No description for search or sharing
 - Images with no alt text
 - No favicon of its own
@@ -104,24 +100,28 @@ when this file and the engines disagree.
 - An unusually complex page
 - Styles written inline all over the markup
 - The same heading repeated over and over
-- Hosted on Vercel
-- Hosted on Netlify
-- Supabase backend
-- AI-build-adjacent backend
-- Classic vibe-coding stack
-- Stock shadcn component stack
-- A developer TODO left in the visible text
-- Fake contact details
-- A hero line straight from the template
-- Emoji used as decoration
-- Navigation links that go nowhere
-- Almost no text in the page itself
-- A very heavy page
-- A pile-up of third-party trackers
-- Generic boxes instead of real structure
-- Not set up for phones
-- No main heading
-- No canonical address
+- Tailwind loaded from the play CDN
+- Stock shadcn/ui theme values
+- Radix UI components
+- The default lucide icon set, untouched
+- A default Vite build
+- A stock Next.js scaffold
+- Chatbot citation codes left in the text
+- A chatbot reply left in the copy
+- The scaffold own title, never changed
+- Lorem ipsum
+- A placeholder company name
+- An unfilled template slot
+- Raw markdown showing as text
+- Links that go nowhere
+- Placeholder images
+- Marketing buzzwords
+- Em-dashes on almost every line
+- The vocabulary chatbots reach for
+- Headings that start with an emoji
+- Filler phrases that say nothing
+- The it-is-not-just-X-it-is-Y construction
+- Stiff connectors: moreover, furthermore
 
 ## Security
 

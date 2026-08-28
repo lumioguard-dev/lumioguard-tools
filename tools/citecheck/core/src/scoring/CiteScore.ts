@@ -16,10 +16,9 @@ import type { CiteFinding } from '../domain/CiteFinding.js';
 const WEIGHT: Record<Impact, number> = { blocker: 34, major: 10, minor: 2, absent: 0 };
 
 /**
- * What one finding costs, for a surface that has to rank findings from several
- * tools against each other. Read FROM the scorer's own table rather than copied
- * beside it: a retuned weight that moved the score but not the ordering would
- * be invisible, because both lists would still look sorted.
+ * What one finding costs, for a surface ranking findings from several tools
+ * against each other. Read FROM the scorer's own table: a retuned weight that
+ * moved the score but not the ordering would be invisible, both lists sorted.
  */
 export function weightOf(impact: Impact): number {
   return WEIGHT[impact];
@@ -41,12 +40,9 @@ export function scoreCitation(findings: readonly CiteFinding[]): ScoredCitation 
   }
 
   /**
-   * The penalty is subtracted from the top, ONCE, here.
-   *
-   * The rules produce a cost, because that is what a rule can say. The scale
-   * the reader sees runs the other way, and this is the only line that knows
-   * it: everything above counts against the page, everything below reads a
-   * number where 100 is a page with nothing in its way.
+   * The penalty is subtracted from the top, ONCE, here. Rules produce a cost,
+   * because that is what a rule can say; the scale the reader sees runs the
+   * other way, and this is the only line that knows it.
    */
   const capped =
     counts.blocker > 0

@@ -1,22 +1,20 @@
-import { DESCRIPTION, EXAMPLES, NAME } from '../src/copy.js';
+import { DESCRIPTION, EXAMPLES, TITLE } from '../src/copy.js';
 import { CATALOGUE, SCAN_SLUG, leaderboardPath } from '../src/tools/catalogue.js';
 import { CONTENT_PAGES } from './pages/content.js';
 import { type Site, absolute } from './site.js';
 
 /**
- * The files a crawler looks for before it looks at a page. Generated rather
- * than checked in: two carry absolute URLs and the third has to agree with
- * them, and a robots.txt naming a sitemap on the wrong host reports nothing.
+ * Generated rather than checked in: two of these carry absolute URLs and the third
+ * has to agree, and a robots.txt naming a sitemap on the wrong host reports nothing.
  */
 
 /**
- * `Disallow:` with an empty value is RFC 9309 for "all of it is yours", and no
- * agent is blocked: a site whose subject is machine legibility turning machines
- * away is the `access.llms-contradiction` pair with llms.txt below.
+ * `Disallow:` with an empty value is RFC 9309 for "all of it is yours". A site whose
+ * subject is machine legibility turning machines away is `access.llms-contradiction`.
  */
 export function robotsTxt(where: Site | null): string {
   const lines = [
-    `# ${NAME}. Every page here is meant to be found, by people and by agents.`,
+    `# ${TITLE} Every page here is meant to be found, by people and by agents.`,
     '',
     'User-agent: *',
     'Disallow:',
@@ -28,9 +26,9 @@ export function robotsTxt(where: Site | null): string {
 }
 
 /**
- * The app, then every explainer. Readings are not listed: they live at `?site=…`
- * and canonicalise back, so each would be one document under another name. No
- * `lastmod`, which could only be the build time and would change for nothing.
+ * Readings are not listed: they live at `?site=…` and canonicalise back, so each
+ * would be one document under another name. No `lastmod`: it could only be the
+ * build time, and would change when nothing about the page did.
  */
 export function sitemapXml(where: Site): string {
   const paths = [
@@ -54,9 +52,8 @@ export function sitemapXml(where: Site): string {
 }
 
 /**
- * The same page for something that will read rather than render it. Format per
- * llmstxt.org: one H1, a blockquote summary, then sections of links. Readings
- * come from the catalogue, so this cannot describe tools the app does not offer.
+ * Format per llmstxt.org: one H1, a blockquote summary, then sections of links.
+ * Readings come from the catalogue, so this cannot describe tools the app lacks.
  */
 export function llmsTxt(where: Site | null): string {
   const link = (path: string): string => (where === null ? path : absolute(where.base, path));
@@ -70,7 +67,7 @@ export function llmsTxt(where: Site | null): string {
   );
 
   return [
-    `# ${NAME}`,
+    `# ${TITLE}`,
     '',
     `> ${DESCRIPTION}`,
     '',

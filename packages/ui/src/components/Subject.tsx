@@ -1,6 +1,5 @@
 import { parseAddress } from '@lumioguard/shared';
 
-/** The address the reading is about, sitting in the panel's own title. */
 export function Subject({ address }: { readonly address: string }): JSX.Element {
   const parsed = parseAddress(address);
 

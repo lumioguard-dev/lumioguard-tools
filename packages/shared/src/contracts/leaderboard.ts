@@ -5,10 +5,8 @@ export const leaderboardSideSchema = z.enum(['best', 'worst']);
 export type LeaderboardSide = z.infer<typeof leaderboardSideSchema>;
 
 /**
- * One host, as the board ranks it.
- *
- * No site key and no findings: a key resolves to a whole reading, and this list
- * is public. What a site was charged for stays in that site's own report.
+ * One host, as the board ranks it. No site key and no findings: a key resolves
+ * to a whole reading, and this list is public.
  */
 export const leaderboardRowSchema = z.object({
   host: z.string().min(1),

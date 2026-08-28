@@ -1,5 +1,3 @@
-// Deploy a tool's Worker: node ../../scripts/deploy-worker.mjs slopmeter
-//
 // The vars below name hosts only this deployment owns, and the repo is public,
 // so they come from the environment rather than wrangler.toml. Unset means not
 // passed, and production's own default blocks every origin.

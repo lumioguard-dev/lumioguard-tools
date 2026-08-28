@@ -3,11 +3,8 @@ import { DESCRIPTION, EXAMPLES, HEADLINE_TEXT, SCAN } from '../../src/copy.js';
 import { CATALOGUE } from '../../src/tools/catalogue.js';
 import { staticShell } from '../shell.js';
 
-/**
- * Asserted as properties of the markup, never by running Citecheck over it: the
- * console may not import a detection engine, and a test is still the console.
- * The rules these stand in for are named where they are not obvious.
- */
+// Asserted as properties of the markup, never by running Citecheck over it: the
+// console may not import a detection engine, and a test is still the console.
 
 describe('staticShell', () => {
   const shell = staticShell('');

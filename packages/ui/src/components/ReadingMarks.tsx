@@ -1,7 +1,6 @@
 /**
- * The drawn marks, in the same ballpoint hand as the page: authored paths,
- * never glyphs from a font with its own opinion about weight. Each is drawn at
- * 32 units and set smaller with a non-scaling stroke, so the weight is the page's.
+ * Authored paths, never glyphs from a font with its own opinion about weight. Drawn
+ * at 32 units and set smaller with a non-scaling stroke, so the weight is the page's.
  */
 
 const PEN = {
@@ -14,7 +13,6 @@ const PEN = {
 const NS = 'non-scaling-stroke';
 const SIZE = 'h-[30px] w-[30px] shrink-0 stroke-pen-600';
 
-/** The same page again: one sheet behind another, drawn identically. */
 export function MarkTemplate(): JSX.Element {
   return (
     <svg viewBox="0 0 32 32" className={SIZE} aria-hidden="true" {...PEN}>
@@ -35,7 +33,6 @@ export function MarkTemplate(): JSX.Element {
   );
 }
 
-/** A lock that never closed: the shackle is standing open. */
 export function MarkExposed(): JSX.Element {
   return (
     <svg viewBox="0 0 32 32" className={SIZE} aria-hidden="true" {...PEN}>
@@ -59,7 +56,6 @@ export function MarkExposed(): JSX.Element {
   );
 }
 
-/** A lens held over lines of text: what a crawler manages to make out. */
 export function MarkLegible(): JSX.Element {
   return (
     <svg viewBox="0 0 32 32" className={SIZE} aria-hidden="true" {...PEN}>

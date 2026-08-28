@@ -9,26 +9,26 @@ export interface CiteFinding {
   readonly title: string;
   readonly detail: string;
   /**
-   * What the page actually served, quoted back rather than paraphrased. A
-   * finding the author cannot locate in their own source is one they cannot
-   * act on. Null when the finding is the ABSENCE of something, which has no
-   * line to quote.
+   * Quoted back rather than paraphrased: a finding the author cannot locate in
+   * their own source is one they cannot act on. Null when the finding is the
+   * ABSENCE of something, which has no line to quote.
    */
   readonly evidence: string | null;
   /** The one change that closes it, written for whoever ships the site. */
   readonly fix: string | null;
 }
 
-/** Worst first, then by code so a report's order is stable across readings. */
-// `absent` sorts last: it is a flag, not a severity, so the things that cost
-// something are read first and the list of what is simply not there follows.
+/**
+ * Worst first, then by code so a report's order is stable across readings.
+ * `absent` sorts last: it is a flag, not a severity, so what costs something is
+ * read first and what is simply not there follows.
+ */
 const IMPACT_RANK: Record<Impact, number> = { blocker: 0, major: 1, minor: 2, absent: 3 };
 
 /**
  * Generic in the finding, so a crawl's rolled-up signals keep the fields the
- * roll-up added to them. Typed to `CiteFinding` it silently widened them back,
- * and the extra fields survived at runtime while the compiler denied they were
- * there.
+ * roll-up added. Typed to `CiteFinding` it silently widened them back, and the
+ * extra fields survived at runtime while the compiler denied they were there.
  */
 export function orderFindings<T extends CiteFinding>(findings: readonly T[]): T[] {
   return [...findings].sort((a, b) => {
@@ -37,16 +37,13 @@ export function orderFindings<T extends CiteFinding>(findings: readonly T[]): T[
   });
 }
 
-/** Builds a finding, so a detector states the facts and nothing else. */
 export function finding(init: CiteFinding): CiteFinding {
   return init;
 }
 
 /**
- * The finding, or nothing.
- *
- * Every detector returns a list, and most of them return one item or none. This
- * keeps that shape at the call site without an `if` around every `push`.
+ * Every detector returns a list, and most return one item or none. This keeps
+ * that shape at the call site without an `if` around every `push`.
  */
 export function when(condition: boolean, produce: () => CiteFinding): CiteFinding[] {
   return condition ? [produce()] : [];

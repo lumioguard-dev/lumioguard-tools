@@ -23,17 +23,9 @@ function datedKind(ld: LdRead): boolean {
 }
 
 /**
- * Whether a page that calls itself an article says when it was written.
- *
  * The only check left in this file, and it survived because it asks the page
- * about its OWN claim: the schema it declares has a date field and the page
- * left it empty. Two neighbours were deleted for guessing instead.
- * `answer.unsourced-figures` could not tell a statistic from a price and fired
- * on tailwindcss.com over `$99 · $99 · $99`. `answer.no-structure` asserted
- * that prose without a list is harder to quote, which nothing here can show.
- *
- * Gated to article types because ungated it fired on six of seven marketing
- * homepages, which are evergreen by design and no worse for carrying no date.
+ * about its OWN claim: the type it declares has a date field and left it empty.
+ * Gated to article types; ungated it fired on six of seven marketing homepages.
  */
 export function checkEvidence(page: PageDocument, ld: LdRead): CiteFinding[] {
   const structuredDate = ld.nodes.some(

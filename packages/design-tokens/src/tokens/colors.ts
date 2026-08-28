@@ -1,12 +1,6 @@
-// Ballpoint in two grounds.
-//
-// Two registers carry the whole system and the split is load-bearing: `pen`
-// blue is what was written by hand, `ink` greys are what was printed by a
-// machine, and `red` is the second pen: index rules, markers, charges, stamps.
-//
-// Every export here is a `var()` reference; the values live in palette.ts, one
-// set per theme. Import these anywhere, including inline styles, and the theme
-// follows. Never concatenate onto one of these strings.
+// The register split is load-bearing: `pen` blue was written by hand, `ink` greys
+// were printed by a machine, `red` is the second pen. Every export is a `var()`
+// reference resolved per theme, so never concatenate onto one of these strings.
 
 import { type Palette, tokenRefs } from './palette.js';
 

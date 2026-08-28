@@ -32,11 +32,9 @@ export function contrastRatio(a: Rgb, b: Rgb): number {
 }
 
 /**
- * Foreground/background pairs written in the SAME rule.
- *
- * Without computed styles inheritance cannot be resolved, so this only judges
- * colours declared together: a floor on what a real browser would see, not a
- * full audit.
+ * Foreground/background pairs written in the SAME rule. Without computed styles
+ * inheritance cannot be resolved, so this judges only colours declared together:
+ * a floor on what a real browser would see, not a full audit.
  */
 export function colorPairs(css: string): Array<readonly [Rgb, Rgb]> {
   const pairs: Array<readonly [Rgb, Rgb]> = [];

@@ -15,10 +15,9 @@ export interface CrawlInputs {
 }
 
 /**
- * A crawl to the wire. Field by field, never a spread of the domain object:
- * a spread would carry each signal's internal `code` and its `fix` across the
- * boundary, and would forward whatever the engine gains next without anyone
- * deciding it should be public.
+ * Field by field, never a spread of the domain object: a spread would carry each
+ * signal's internal `code` and its `fix` across the boundary, and would forward
+ * whatever the engine gains next without anyone deciding it should be public.
  */
 export function toCrawlResponse(inputs: CrawlInputs): CitationCrawlResponse {
   const { report } = inputs;

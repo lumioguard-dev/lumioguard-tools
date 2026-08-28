@@ -4,11 +4,8 @@ import type { ReactNode } from 'react';
 import { impactInk } from '../theme.js';
 
 /**
- * Three severities and one flag.
- *
  * "Not found" rather than "Missing": the report has no business calling a thing
- * missing that the page never owed anyone. It states what it looked for and
- * what was there, and leaves the judgement to the reader.
+ * missing that the page never owed anyone.
  */
 const IMPACT_LABEL: Record<Impact, string> = {
   blocker: 'Blocker',
@@ -17,7 +14,7 @@ const IMPACT_LABEL: Record<Impact, string> = {
   absent: 'Not found',
 };
 
-/** The area, in the words the report uses for it rather than the enum's. */
+/** The report's own words for the area, not the enum's. */
 const AREA_LABEL: Record<CiteArea, string> = {
   access: 'Access',
   structured: 'Claims',
@@ -38,12 +35,8 @@ function ImpactChip({ impact }: { readonly impact: Impact }): JSX.Element {
 }
 
 /**
- * How many pages a finding fired on, and whether the entry page was one of
- * them.
- *
  * "Behind the front door" is the whole reason this tool crawls: a finding that
- * never appears on the homepage is one the owner has never seen, because the
- * homepage is the only page they ever check.
+ * never reaches the homepage is one the owner has never seen.
  */
 function Reach({ signal }: { readonly signal: CitationSignalDto }): JSX.Element | null {
   if (signal.pages <= 1 && signal.onEntry) return null;
@@ -81,8 +74,7 @@ function SignalCard({ signal }: { readonly signal: CitationSignalDto }): JSX.Ele
 }
 
 /**
- * The findings, worst first, in the order the API already sorted them. Nothing
- * is re-ranked here: the meter's score and this list come from the same ordered
+ * Nothing is re-ranked here: the meter's score and this list come from one ordered
  * set upstream, so the number and the list can never disagree.
  */
 export function SignalList({
@@ -96,9 +88,8 @@ export function SignalList({
   readonly verdict: ReactNode;
 }): JSX.Element {
   const pages = pagesScanned === 1 ? 'one page' : `${pagesScanned} pages`;
-  // The heading counts what COSTS something. A `Not found` flag is listed with
-  // the rest and weighs nothing, so counting it would put a number in front of
-  // the words "in the way" that the score disagrees with.
+  // Counts what COSTS something: a `Not found` flag weighs nothing, so counting it
+  // would put a number in front of "in the way" that the score disagrees with.
   const inTheWay = signals.filter((signal) => signal.impact !== 'absent').length;
 
   if (signals.length === 0) {
@@ -116,9 +107,8 @@ export function SignalList({
 
   return (
     <Panel hand="b" span={12}>
-      {/* Named for what it costs the reader, not for its shape. "What is in the
-          way" said nothing about which of three readings it belonged to once
-          they shared a page. */}
+      {/* Named for what it costs the reader: on a page of three readings, a title
+          about its shape said nothing about which one it belonged to. */}
       <PanelHead
         title={
           inTheWay === 0

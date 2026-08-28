@@ -1,12 +1,9 @@
 import type { ThemeName } from '@lumioguard/design-tokens';
 
 /**
- * Drawn, like everything else that carries meaning here: a sun whose rays are
- * uneven strokes, a moon that is one bowed crescent. An icon font or an emoji
- * would be the one mark on the page nobody's hand made.
- *
- * It shows what you will get, not what you have, and says so in words to a
- * screen reader, because a lone glyph cannot be read either way round.
+ * Drawn, because an icon font or an emoji would be the one mark on the page nobody's
+ * hand made. It shows what you will GET, not what you have, and says so in words: a
+ * lone glyph cannot be read either way round.
  */
 export function ThemeToggle({
   theme,

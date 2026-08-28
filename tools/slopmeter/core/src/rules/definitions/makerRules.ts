@@ -1,3 +1,4 @@
+import type { Finding } from '../../domain/Finding.js';
 import { RuleCategory } from '../../domain/RuleCategory.js';
 import { type Rule, defineRule } from '../Rule.js';
 import { evidence } from '../support.js';
@@ -29,14 +30,34 @@ const BADGE =
   /\b(?:made|built|created|generated|powered)\s+(?:with|in|by)\s+(v0|lovable|bolt\.new|bolt|replit|framer|webflow|wix|base44|bubble|durable|softr|carrd|dorik)\b/i;
 
 /**
- * Every rule here is reported and scores ZERO. Building with a tool is not the
- * offence; shipping its untouched defaults is. Weights are retained only so the
- * catalogue stays comparable with the published scale it was ported from.
+ * Proof that only says the builder's name appears somewhere the page loads. A
+ * generator tag, an injected attribute or the builder's own subdomain is the
+ * page admitting what made it; a reference is not.
  */
-export const fingerprintRules: readonly Rule[] = [
+const WEAK_PROOF = /asset reference|asset host/i;
+
+/**
+ * No page was built by two builders. When the only evidence is two weak hits
+ * they are reading each other's marketing, so drop both rather than charge for
+ * both: base44.com collected Base44 AND Wix and scored 0.
+ */
+export function withoutAmbiguousMaker(findings: readonly Finding[]): Finding[] {
+  const weak = findings.filter(
+    (f) => f.category === RuleCategory.Maker && WEAK_PROOF.test(f.evidence ?? ''),
+  );
+  if (weak.length < 2) return [...findings];
+  return findings.filter((f) => !weak.includes(f));
+}
+
+/**
+ * These SCORE, reversed on 2026-08-28. A builder's own mark left in a published
+ * page is an untouched default like any other. Weights rise with how deliberate
+ * the mark is: an injected attribute outranks a name in an asset path.
+ */
+export const makerRules: readonly Rule[] = [
   defineRule({
-    id: 'fingerprint.v0',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.v0',
+    category: RuleCategory.Maker,
     weight: 35,
     label: 'Built with v0',
     phrase: "v0's own marker still in the source",
@@ -47,8 +68,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.lovable',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.lovable',
+    category: RuleCategory.Maker,
     weight: 35,
     label: 'Built with Lovable',
     phrase: "Lovable's marker left in place",
@@ -60,8 +81,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.bolt',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.bolt',
+    category: RuleCategory.Maker,
     weight: 35,
     label: 'Built with Bolt',
     phrase: "Bolt's fingerprint never taken off",
@@ -72,8 +93,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.base44',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.base44',
+    category: RuleCategory.Maker,
     weight: 32,
     label: 'Built with Base44',
     phrase: "Base44's fingerprint in the source",
@@ -85,8 +106,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.replit',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.replit',
+    category: RuleCategory.Maker,
     weight: 35,
     label: 'Hosted on Replit',
     phrase: 'a prototype still running where it was built',
@@ -95,8 +116,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.framer',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.framer',
+    category: RuleCategory.Maker,
     weight: 28,
     label: 'Made with Framer',
     phrase: 'Framer still saying it made this',
@@ -107,8 +128,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.webflow',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.webflow',
+    category: RuleCategory.Maker,
     weight: 26,
     label: 'Made with Webflow',
     phrase: "Webflow's signature never removed",
@@ -123,8 +144,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.wix',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.wix',
+    category: RuleCategory.Maker,
     weight: 24,
     label: 'Made with Wix',
     phrase: 'a Wix build that says so itself',
@@ -138,8 +159,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.ai-builder-misc',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.other-builder',
+    category: RuleCategory.Maker,
     weight: 22,
     label: 'AI site-builder artifact',
     phrase: "a site builder's artifact in the source",
@@ -153,8 +174,8 @@ export const fingerprintRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'fingerprint.made-with-badge',
-    category: RuleCategory.Fingerprint,
+    id: 'maker.attribution-badge',
+    category: RuleCategory.Maker,
     weight: 18,
     label: 'Builder attribution badge',
     phrase: "the builder's badge still doing its marketing",
