@@ -1,4 +1,4 @@
-import { BAND_EDGES, type ScoreBand, type TrackSegment, bandOf, trackOf } from './band.js';
+import { BAND_EDGES, type ScoreBand, type TrackSegment, bandOf } from './band.js';
 
 /**
  * The one citation ladder. Bands name HOW MUCH OF THE PAGE A MACHINE GETS, the
@@ -22,12 +22,8 @@ export interface CitationBand extends ScoreBand {
 }
 
 /**
- * Ordered low to high; the first band whose ceiling is not exceeded wins.
- *
- * Typed as a NON-EMPTY list, for the reason exposureTier.ts gives: a plain
- * `readonly CitationBand[]` would let the ladder be emptied without a compile
- * error, and every lookup over it then has to answer for a case that must
- * never exist.
+ * Ordered low to high; the first band whose ceiling is not exceeded wins. Typed
+ * as a NON-EMPTY list, for the reason exposureTier.ts gives.
  */
 export const CITATION_BANDS: readonly [CitationBand, ...CitationBand[]] = Object.freeze([
   {
@@ -56,16 +52,9 @@ export const CITATION_BANDS: readonly [CitationBand, ...CitationBand[]] = Object
 const WORST_CITATION_BAND: CitationBand = CITATION_BANDS[0];
 
 /**
- * The ceiling of the worst band, and the score any blocking finding is pinned DOWN to.
- *
- * A ceiling rather than a floor, because the scale runs higher-is-better: the
- * worst band is the bottom of the ladder now, and a blocker pins a score down
- * into it rather than up.
- *
- * Derived from the band rather than written down beside it. This was once a
- * separate literal, so retuning the ladder moved the band and left the number
- * behind: the finding landed one band away from the tier the README promises it
- * pins, and nothing failed.
+ * The ceiling of the worst band, and the score any blocking finding is pinned
+ * DOWN to. Derived from the band, never written beside it: as a separate literal
+ * a retuned ladder left it behind, pinning a band off from what the README promises.
  */
 export const CITATION_BLOCKING_CEILING: number = WORST_CITATION_BAND.to;
 
@@ -74,14 +63,6 @@ export const CITATION_TIER_NAMES: readonly CitationTier[] = Object.freeze(
 );
 
 export type CitationTrackSegment = TrackSegment;
-
-/**
- * A band's place on the 0-100 track, as percentages. The top band is unbounded
- * but the track is not, so its width is clipped to what is left.
- */
-export function citationBandTrack(band: CitationBand): CitationTrackSegment {
-  return trackOf(band, CITATION_MAX);
-}
 
 /** The band a score falls in: the first whose ceiling it does not exceed. */
 export function citationBandFor(score: number): CitationBand {

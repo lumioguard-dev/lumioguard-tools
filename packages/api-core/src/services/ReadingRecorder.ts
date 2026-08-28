@@ -15,6 +15,26 @@ export interface RecorderConfig {
   readonly timestampHeader: string;
 }
 
+/**
+ * The ingest's naming, derived from the tool id: three hand-written copies meant
+ * a fourth tool could misspell one and fail closed with nothing to see. Both
+ * halves are required and neither defaults, so a fork cannot post to another's API.
+ */
+export function recorderConfigFor(
+  toolId: string,
+  secret: string | undefined,
+  baseUrl: string | undefined,
+): RecorderConfig | null {
+  const base = baseUrl?.replace(/\/$/, '');
+  if (!secret || !base) return null;
+  return {
+    endpoint: `${base}/api/external/${toolId}/readings`,
+    secret,
+    signatureHeader: `x-${toolId}-signature`,
+    timestampHeader: `x-${toolId}-timestamp`,
+  };
+}
+
 /** The slice of `fetch` this needs, and no more. */
 export type ReadingTransport = (
   url: string,
@@ -43,10 +63,9 @@ export class ReadingRecorder {
   }
 
   /**
-   * The minted site key, or null when the reading could not be recorded.
-   *
-   * Never throws. Recording is the hand-off, not the reading: a failure here
-   * costs the site key and nothing else, and the report still renders.
+   * The minted site key, or null when the reading could not be recorded. Never
+   * throws: recording is the hand-off, not the reading, so a failure costs the
+   * site key and nothing else.
    */
   public async record(
     payload: unknown,
@@ -101,11 +120,9 @@ function siteKeyOf(payload: unknown): string | null {
 }
 
 /**
- * Hex HMAC-SHA256 of `data` keyed by the hex-encoded `keyHex`.
- *
- * The key is hex-DECODED before import, mirroring the verifier: keying with the
- * UTF-8 bytes of the hex string instead produces a signature that is stable,
- * plausible, and rejected by every ingest.
+ * Hex HMAC-SHA256 of `data` keyed by the hex-encoded `keyHex`. The key is hex
+ * DECODED before import, mirroring the verifier: keying with the UTF-8 bytes of
+ * the hex string produces a signature that is stable, plausible, and rejected.
  */
 async function hmacSha256Hex(keyHex: string, data: string): Promise<string> {
   const key = await crypto.subtle.importKey(

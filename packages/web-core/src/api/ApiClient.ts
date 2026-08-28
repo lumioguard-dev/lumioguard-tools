@@ -19,11 +19,8 @@ export class ScanApiError extends Error {
 export abstract class ApiClient {
   private readonly baseUrl: string;
 
-  /**
-   * Empty in development: Vite proxies `/api` to the local Worker, so a relative
-   * path is right. Production bakes the Worker's origin in at build time.
-   */
-  public constructor(baseUrl: string = import.meta.env.VITE_API_BASE_URL ?? '') {
+  /** Required: every caller builds it from the tool's id, see `apiBase`. */
+  public constructor(baseUrl: string) {
     this.baseUrl = baseUrl.replace(/\/$/, '');
   }
 
@@ -43,9 +40,8 @@ export abstract class ApiClient {
     const payload: unknown = await response.json().catch(() => null);
 
     // The failure envelope goes through its own schema for the same reason the
-    // success body does. Reading it behind a cast asserted a shape nothing had
-    // checked, so an error answered in some other shape became `undefined` and
-    // surfaced to the visitor as the generic fallback instead of its own message.
+    // success body does: read behind a cast, an error answered in some other
+    // shape became `undefined` and reached the visitor as the generic fallback.
     if (!response.ok) {
       const failure = errorResponseSchema.safeParse(payload);
       throw failure.success

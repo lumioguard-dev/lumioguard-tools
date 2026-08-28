@@ -1,10 +1,9 @@
+import { ink } from '@lumioguard/design-tokens';
+import { type ScoreBand, trackOf } from '@lumioguard/shared';
+
 /**
- * What a tool's ladder looks like on the instrument.
- *
- * Injected rather than imported, because the two things that vary between tools
- * are the bands themselves and the word struck into the seal: everything else
- * about drawing a verdict is the same. Passing this keeps the components free of
- * any one tool's vocabulary.
+ * INJECTED rather than imported: the bands are the only thing that varies between
+ * tools, and passing them keeps the components free of any one tool's vocabulary.
  */
 export interface InkedBand {
   readonly tier: string;
@@ -20,6 +19,29 @@ export interface VerdictScale {
   /** Top of the track. The needle is clamped to it. */
   readonly max: number;
   readonly inkFor: (tier: string) => string;
-  /** The wordmark struck into the die. */
-  readonly wordmark: string;
+}
+
+/** Written once: every tool wrote this `.map` out over its own `trackOf` wrapper. */
+export function inkedBands<T extends ScoreBand>(
+  bands: readonly T[],
+  max: number,
+  inkOf: (tier: T['tier']) => string,
+): readonly InkedBand[] {
+  return bands.map((band) => ({ ...band, ink: inkOf(band.tier), track: trackOf(band, max) }));
+}
+
+/**
+ * `inkFor` LOOKS UP rather than asserting: a cast hands the record a key it may
+ * not have, and the miss reaches an inline style and paints the seal no colour.
+ */
+export function verdictScale(
+  bands: readonly InkedBand[],
+  max: number,
+  fallbackInk: string = ink[2],
+): VerdictScale {
+  return {
+    bands,
+    max,
+    inkFor: (tier) => bands.find((candidate) => candidate.tier === tier)?.ink ?? fallbackInk,
+  };
 }

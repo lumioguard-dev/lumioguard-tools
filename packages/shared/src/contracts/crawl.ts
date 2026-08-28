@@ -1,6 +1,10 @@
 import { z } from 'zod';
 import { CRAWL_LIMITS } from '../domain/crawl.js';
+import { READING_CONFIDENCE_NAMES } from '../domain/evidence.js';
 import { tierSchema } from './finding.js';
+import { enumOf } from './zod.js';
+
+export const readingConfidenceSchema = enumOf(READING_CONFIDENCE_NAMES);
 
 export const crawledPageSchema = z.object({
   url: z.string(),
@@ -41,6 +45,11 @@ export const siteVerdictSchema = z.object({
 export const crawlResponseSchema = z.object({
   entry: z.string(),
   pagesScanned: z.number(),
+  /**
+   * Whether enough of the site was reached to stand behind the band. A thin
+   * crawl still reports its score; it just stops claiming to have placed it.
+   */
+  confidence: readingConfidenceSchema,
   maxDepthReached: z.number(),
   requestedDepth: z.number(),
   requestedMaxPages: z.number(),
@@ -50,13 +59,9 @@ export const crawlResponseSchema = z.object({
   errors: z.array(z.object({ url: z.string(), error: z.string() })),
   screenshotUrl: z.string().nullable(),
   /**
-   * The handle this reading was recorded under, for carrying it into
-   * LumioGuard. Minted by the recorder, not derived from the address: two
-   * people scanning one host are two readings and must not share a key.
-   *
-   * Null when the reading was not recorded: recording is switched off, or the
-   * recorder was unreachable. The report still renders; it simply has no
-   * reading to hand on, so the audit link goes to the app's front door.
+   * The handle this reading was recorded under. Minted by the recorder, never
+   * derived from the address: two people scanning one host are two readings and
+   * must not share a key. Null when recording is off or the recorder was down.
    */
   siteKey: z.string().nullable(),
   fetchedAt: z.string(),

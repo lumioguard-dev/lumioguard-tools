@@ -1,6 +1,5 @@
 import type { VerdictScale } from './scale.js';
 
-/** The verdict, struck rather than printed. */
 const BLOBS: readonly {
   readonly cx: number;
   readonly cy: number;
@@ -27,9 +26,8 @@ function linesOf(tier: string): readonly string[] {
 }
 
 /**
- * The inner ring leaves a chord of about 142 units for the tier, so the longest
- * word decides the size rather than every tier being set at the size that only
- * suits the shortest one.
+ * The inner ring leaves a chord of about 142 units, so the LONGEST word decides the
+ * size rather than every tier being set at the size that suits the shortest.
  */
 function tierSize(lines: readonly string[]): number {
   const longest = Math.max(...lines.map((word) => word.length));
@@ -39,7 +37,6 @@ function tierSize(lines: readonly string[]): number {
   return 20;
 }
 
-/** The die's footprint, in one place. */
 export const SEAL_W = 'w-[168px] lg:w-[176px]';
 export const SEAL_H = 'h-[168px] lg:h-[176px]';
 
@@ -112,11 +109,6 @@ export function Seal({
             </feComponentTransfer>
             <feComposite in="eroded" in2="holes" operator="out" />
           </filter>
-
-          {/* Caps rise outward at the top and inward at the bottom, so the two
-              baselines sit at different radii to leave the same clearance. */}
-          <path id="seal-arc-top" d="M 25 100 A 75 75 0 0 1 175 100" fill="none" />
-          <path id="seal-arc-bottom" d="M 12 100 A 88 88 0 0 0 188 100" fill="none" />
         </defs>
 
         <g filter="url(#seal-die)" fill={ink} stroke={ink}>
@@ -127,30 +119,8 @@ export function Seal({
           <circle cx={13} cy={100} r={4.2} stroke="none" />
           <circle cx={187} cy={100} r={4.2} stroke="none" />
 
-          <text
-            className="font-sans"
-            fontSize={15}
-            fontWeight={700}
-            letterSpacing={3.2}
-            stroke="none"
-          >
-            <textPath href="#seal-arc-top" startOffset="50%" textAnchor="middle">
-              {scale.wordmark}
-            </textPath>
-          </text>
-
-          <text
-            className="font-sans"
-            fontSize={15}
-            fontWeight={600}
-            letterSpacing={2.6}
-            stroke="none"
-          >
-            <textPath href="#seal-arc-bottom" startOffset="50%" textAnchor="middle">
-              VERDICT
-            </textPath>
-          </text>
-
+          {/* The die carries the band and NOTHING else: the tool's name and the word
+              VERDICT said twice what the page around it already says once. */}
           <text
             className="font-sans"
             x={100}

@@ -1,11 +1,9 @@
 import { useEffect, useState } from 'react';
 
 /**
- * The passes the instrument actually makes, in the order it makes them.
- *
- * Narration, not progress: nothing here reports how far along the read is,
- * because the API does not say. So the last line holds rather than the sequence
- * looping, which would keep promising work that has already been done.
+ * Narration, NOT progress: the API does not say how far along a read is. The last
+ * line holds rather than the sequence looping, which would keep promising work
+ * already done.
  */
 const PASSES: readonly string[] = [
   'Fetching the front page',
@@ -40,17 +38,16 @@ export function ReadingState(): JSX.Element {
   return (
     <div className="mt-8 flex flex-col items-center" aria-live="polite" aria-atomic="true">
       <p className="relative m-0 text-center font-hand text-20 leading-none text-hand lg:text-24">
-        {/* Keyed on the pass, so each line is laid down fresh rather than
-            cross-fading into the last one. Ink does not dissolve. */}
+        {/* Keyed on the pass, so each line is laid down fresh rather than cross-fading
+            into the last. Ink does not dissolve. */}
         <span key={line} className={still ? '' : 'writing inline-block'}>
           {line}
         </span>
         <span className="nib ml-[3px] inline-block h-[0.95em] w-[2px] translate-y-[2px] rounded-[1px] bg-hand align-baseline" />
       </p>
 
-      {/* The line it is being written on, centred under the meter. Ruled, not
-          a progress track: it does not fill, because there is nothing honest to
-          fill it with. */}
+      {/* Ruled, not a progress track: it does not fill, because there is nothing
+          honest to fill it with. */}
       <svg
         viewBox="0 0 260 6"
         preserveAspectRatio="none"
