@@ -1,91 +1,79 @@
 # Security
 
-## Reporting a vulnerability in these tools
+## Report a vulnerability
 
-**Do not open a public issue.** Use GitHub's private reporting on this
-repository (Security, then Report a vulnerability), or email
-**hello@lumioguard.dev**.
+Do not disclose a vulnerability in a public issue. Use GitHub's private
+vulnerability reporting for this repository, or email `hello@lumioguard.dev`.
 
-Please include what you did, what happened, and what you expected. A proof of
-concept helps enormously; a URL that reproduces it helps more.
+Include the steps you took, the result, and what you expected instead. A small
+reproduction or target URL is useful when it can be shared safely.
 
-You will get an acknowledgement within three working days and an assessment
-within ten. If a fix is warranted we will agree a disclosure date with you, and
-you will be credited unless you would rather not be.
+We aim to acknowledge reports within three working days and provide an initial
+assessment within ten. When a fix is needed, we will coordinate disclosure with
+you and offer credit unless you prefer to remain anonymous.
 
-These tools read other people's websites, so the findings we care most about are
-the ones that turn a reader into something else:
+High-priority reports include:
 
-- Anything that makes Leakpeek **write** to a target rather than read it
-- Anything that gets a target's data into a report, past the redaction
-- Server-side request forgery: persuading any tool to fetch something it should
-  not reach, such as a cloud metadata endpoint or a private address. Every
-  entry URL, redirect hop, page asset, sitemap and probe URL is re-validated
-- Forging an ingest signature, or replaying a captured reading
-- Recovering Slopmeter's rule pack, or Citecheck's, from what crosses the wire
+- a Leakpeek request that changes a target;
+- private target data appearing in a response or report;
+- a server-side request reaching loopback, a private network, cloud metadata, or
+  another forbidden destination;
+- a forged or replayed reading-ingest request;
+- a detector's private rule pack crossing the API boundary.
 
-## Scanning other people's sites
+## Permission to scan
 
-**Only scan a site you own, or one whose owner has asked you to.**
+Only scan a site you own or have permission to assess.
 
-This is not a formality. Leakpeek proves a finding by actually reading the
-target's backend: it asks a discovered table for rows and reports whether any
-came back. That is a real request against someone else's infrastructure, and
-whether it is welcome is not something a tool can decide for you. In several
-countries it is not merely rude.
+Leakpeek does more than inspect static markup. It follows public client
+configuration to a backend and may ask a discovered table whether rows are
+readable without signing in. The request is read-only, but it still reaches
+someone else's infrastructure. The software cannot supply consent on your
+behalf.
 
-The engine is built to stay on the right side of that line: `GET` only, one
-request primitive, no code path that writes, one URL per human action. The line
-it cannot draw is the one around consent.
+## Requests made to a target
 
-## What the tools do to a target
-
-So you can judge the above for yourself:
-
-| | |
+| Property | Behaviour |
 |---|---|
-| **Requests** | `GET` only. No `INSERT`/`UPDATE`/`DELETE`, no mutating RPC, no account creation, no writes to storage |
-| **Volume** | A handful of requests per scan. Slopmeter and Citecheck crawl a bounded number of pages; Leakpeek reads the page, its bundle, and a small set of probes |
-| **Identification** | Every request sends a User-Agent naming the tool, so a site owner can see what it was. **One exception, below** |
-| **Credentials** | Only what the site already published to every visitor, such as a Supabase anon key found in the bundle |
-| **Retention** | Nothing is stored unless you configure the optional LumioGuard integration, which is off by default |
+| Method | `GET` only. No account creation, mutating RPC, database write, or storage write |
+| Volume | Bounded crawls and a small set of supporting or verification requests |
+| Identity | The tool names itself in its User-Agent, apart from the Citecheck request described below |
+| Credentials | Only credentials already published to ordinary visitors, such as a Supabase anon key |
+| Retention | None unless the optional LumioGuard ingest is configured |
 
-Hosted Workers apply a per-client scan limit through Cloudflare's Rate Limiting
-binding. The repository config sets six expensive API calls per minute for each
-tool. Forks may tune that limit in the tool's `wrangler.toml`; do not remove it
-from an internet-facing deployment. Scan and crawl routes accept POST only so a
-cross-origin image or link cannot start work accidentally.
+Workers rate-limit expensive routes per client. The checked-in configuration
+allows six calls per minute for each tool. Keep the `SCAN_RATE_LIMITER` binding
+on public deployments. Scan and crawl endpoints accept `POST`, which prevents an
+image or ordinary link from starting a scan by accident.
 
-### The one request that does not name the tool
+## Citecheck's crawler request
 
-Citecheck exists partly to answer "does this site turn crawlers away without its
-owner realising", and the only way to find out is to ask as one. So exactly one
-request per reading, the second fetch of the entry page, carries a **crawler's
-user agent rather than Citecheck's**. Nothing else about it differs: same `GET`,
-same URL, no credentials, and the response is used only to compare how much text
-came back.
+Citecheck fetches the entry page a second time using a known crawler User-Agent.
+That is the only target request that does not name LumioGuard Citecheck.
 
-We are naming it here because it is the one place these tools do not identify
-themselves, and a site owner reading their logs deserves to know why. It cannot
-be done honestly and still work: a bot filter that has never heard of
-`LumioGuard-Citecheck` waves it through exactly as it waves a browser through,
-which would report every site as clean.
+The comparison detects sites that serve a browser normally but block or empty a
+response for answer-engine crawlers. Using Citecheck's own identity would make
+that check meaningless because most bot filters do not recognise it. The request
+uses the same URL and `GET` method as the first fetch, carries no credentials,
+and is used only to compare the returned content.
 
-If you would rather this did not happen to your site, the check is confined to
-`api/src/services/PageFetcher.ts` and a fork can remove it in one edit; the
-reading still runs and reports `agentFetch: false`.
+Forks that do not want this behaviour can remove the agent fetch in
+`tools/citecheck/api/src/services/PageFetcher.ts`. Citecheck will continue to
+run with `agentFetch: false`.
 
-## Evidence in reports
+## Evidence and redaction
 
-Reports are rendered on sites the reader does not own, so evidence is redacted
-where it is produced rather than on the way out: row counts and column names,
-never values; keys masked. A finding that could only be proven by writing is
-reported as unverified rather than proven.
+Evidence is reduced before it leaves the service that found it. Database probes
+may report that rows were returned, how many, and which columns exist. They do
+not return row values. Keys are masked.
 
-If you find a report that leaks a target's data, that is a vulnerability in
-these tools. Please report it as above.
+A weakness that can only be verified through a write is reported as unverified.
+The scanner does not perform the write to strengthen the claim.
+
+Treat any report that exposes target data as a vulnerability in this project and
+report it privately.
 
 ## Supported versions
 
-The tools are pre-1.0 and fixes land on `master`. There are no maintained
-release branches yet, so please report against the current `master`.
+The project is pre-1.0. Security fixes land on `master`; no older release branch
+is maintained. Test and report against the current `master` branch.

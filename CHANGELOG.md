@@ -1,11 +1,11 @@
 # Changelog
 
-Notable changes to both tools. Dates are the release date.
+Notable changes to the product. Dates are release dates.
 
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and
 this project uses [semantic versioning](https://semver.org/spec/v2.0.0.html).
-Both tools share the repository's version number, so a release names whatever
-moved in either.
+Every workspace shares the repository's version number, so a release covers
+whatever moved in any tool or shared package.
 
 **A changed score is a breaking change.** A rule whose weight moves, or a new
 rule that fires, changes the number a site was given yesterday. Those are called

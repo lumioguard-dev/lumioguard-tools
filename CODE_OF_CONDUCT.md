@@ -1,14 +1,16 @@
 # Code of Conduct
 
-LumioGuard Tools should be a place where people can disagree precisely and work
-together safely. Be respectful, assume good faith, criticise ideas rather than
-people, and do not harass, threaten, discriminate against, or expose private
-information about another contributor.
+Be direct about the work and considerate toward the person doing it. Disagreement
+is welcome when it is specific, evidence-based, and aimed at improving the
+project.
 
-Project maintainers may edit or remove contributions and restrict participation
-when conduct threatens that environment. Report conduct concerns privately to
-hello@lumioguard.dev. Reports will be handled confidentially to the extent
-possible, with the safety of affected people taking priority.
+Harassment, threats, discrimination, personal attacks, and disclosure of private
+information are not accepted. This applies in repository spaces and anywhere a
+participant is representing the project.
 
-This policy applies in project spaces and when someone is representing the
-project elsewhere.
+Maintainers may edit or remove contributions and restrict participation when
+conduct makes the project unsafe or prevents useful collaboration.
+
+Report conduct concerns privately to `hello@lumioguard.dev`. Reports will be
+shared only as needed to investigate and respond, with the safety of affected
+people taking priority.
