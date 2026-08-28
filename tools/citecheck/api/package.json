@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/citecheck-api",
-  "version": "0.1.0",
+  "version": "0.12.0",
   "private": true,
   "type": "module",
   "description": "Citecheck scan API: the page and well-known fetches, the crawler-agent comparison and the clock. Cloudflare Worker.",
