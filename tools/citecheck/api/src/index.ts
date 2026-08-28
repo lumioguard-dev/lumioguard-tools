@@ -12,6 +12,7 @@ import {
   type CrawlRequest,
   citationRequestSchema,
   crawlRequestSchema,
+  hostOf,
 } from '@lumioguard/shared';
 import { type Context, Hono } from 'hono';
 import { getContainer } from './container.js';
@@ -48,10 +49,11 @@ const scan = async (input: CitationRequest, context: Context<Bindings>): Promise
   const report = await container.scanService.scan(input.url);
 
   const config = recorderConfigFrom(context.env);
+  const host = hostOf(report.host);
   const siteKey =
     config === null
       ? null
-      : await container.recorder.record(readingFrom(report), config, report.host);
+      : await container.recorder.record(readingFrom(report, host), config, host);
 
   return { ...report, siteKey };
 };
@@ -65,10 +67,11 @@ const crawl = async (
   const report = await container.crawlService.crawlSite(url, options);
 
   const config = recorderConfigFrom(context.env);
+  const host = hostOf(report.host);
   const siteKey =
     config === null
       ? null
-      : await container.recorder.record(readingFromCrawl(report), config, report.host);
+      : await container.recorder.record(readingFromCrawl(report, host), config, host);
 
   return { ...report, siteKey };
 };

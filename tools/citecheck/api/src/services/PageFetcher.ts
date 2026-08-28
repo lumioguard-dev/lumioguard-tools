@@ -1,17 +1,13 @@
-import { PageFetchError, SafeFetcher, readText } from '@lumioguard/api-core';
+import { PageFetchError, SafeFetcher, readText, upstreamStatusMessage } from '@lumioguard/api-core';
 import type { PageInput } from '@lumioguard/citecheck-core';
 
 const USER_AGENT =
   'Mozilla/5.0 (compatible; LumioGuard-Citecheck/0.1; +https://lumioguard.dev/citecheck)';
 
 /**
- * The second identity, used once per reading to find out whether the site
- * treats a crawler differently.
- *
- * A REAL crawler token, not an invented one. The whole point of the comparison
- * is what a bot filter does when it recognises the caller, and a filter that
- * has never heard of `LumioGuard-Citecheck` waves it through exactly as it
- * waves a browser through, which would report every site as clean.
+ * A REAL crawler token, not an invented one: the point of the comparison is what
+ * a bot filter does when it RECOGNISES the caller, and a filter that never heard
+ * of `LumioGuard-Citecheck` waves it through exactly as it waves a browser.
  */
 const CRAWLER_USER_AGENT =
   'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko); compatible; GPTBot/1.1; +https://openai.com/gptbot';
@@ -61,12 +57,9 @@ export class PageFetcher {
   }
 
   /**
-   * The page, and what it took to get there.
-   *
    * Redirects are followed a hop at a time rather than by the runtime, because
-   * `redirect: 'follow'` reports only where it landed. How many hops, and
-   * whether any of them was temporary, are two of the first things a search
-   * audit asks and neither survives a followed redirect.
+   * `redirect: 'follow'` reports only where it landed: how many hops, and
+   * whether any was temporary, do not survive a followed redirect.
    */
   public async fetchPage(target: URL): Promise<FetchedPage> {
     const fetched = await this.request(target.toString(), USER_AGENT, { accept: 'text/html,*/*' });
@@ -75,7 +68,7 @@ export class PageFetcher {
     if (!response.ok) {
       throw new PageFetchError(
         'upstream_error',
-        `Upstream responded ${response.status}`,
+        upstreamStatusMessage(response.status),
         response.status,
       );
     }
@@ -110,12 +103,9 @@ export class PageFetcher {
   }
 
   /**
-   * The same URL asked for again as a crawler.
-   *
-   * Never throws: this is a comparison, and a failed comparison costs the one
-   * finding it would have produced rather than the whole reading. A `null`
-   * reaches the surface as `agentFetch: false`, which the report says out loud
-   * rather than presenting an unmade check as a passed one.
+   * Never throws: this is a comparison, and a failed one costs the finding it
+   * would have produced rather than the whole reading. A `null` reaches the
+   * surface as `agentFetch: false`, said out loud rather than shown as passed.
    */
   public async probeAsAgent(target: URL): Promise<AgentProbe | null> {
     try {

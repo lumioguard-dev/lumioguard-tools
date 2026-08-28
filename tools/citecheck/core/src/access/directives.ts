@@ -2,15 +2,9 @@ import { type CiteFinding, finding, quote, when } from '../domain/CiteFinding.js
 import type { PageDocument } from '../read/PageDocument.js';
 
 /**
- * `<meta name="robots">` and the `X-Robots-Tag` header, read together.
- *
- * They are one instruction delivered two ways, and either alone is the whole
- * answer, so both are collected before anything is decided. A page can carry a
- * clean `<meta>` and a `noindex` header, and reading only the markup calls that
- * page indexable.
- *
- * The `google` and `googlebot` names carry the same directives to one crawler
- * and are read for the same reason.
+ * One instruction delivered two ways: a page can carry a clean `<meta>` and a
+ * `noindex` header, and reading only the markup calls that page indexable.
+ * `google` and `googlebot` carry the same directives to one crawler.
  */
 const DIRECTIVE_META = ['robots', 'googlebot', 'google'] as const;
 
@@ -21,12 +15,9 @@ interface Directive {
 }
 
 /**
- * Every place the page states a robots directive, kept SEPARATE.
- *
- * Joined into one string, the evidence for a `noindex` on supabase.com read
- * `<meta name="googlebot" content="notranslate"> · X-Robots-Tag: noindex`: the
- * finding was right and the first half of its proof had nothing to do with it.
- * Evidence has to point at the thing that caused the finding.
+ * Kept SEPARATE. Joined into one string, the proof of a `noindex` on
+ * supabase.com opened with an unrelated `<meta name="googlebot">`: evidence has
+ * to point at the thing that caused the finding.
  */
 function directivesOf(page: PageDocument): Directive[] {
   const found: Directive[] = [];
@@ -72,6 +63,36 @@ function forbidsSnippets(token: string): boolean {
   return token === 'nosnippet' || /^max-snippet:\s*0$/.test(token);
 }
 
+/**
+ * Sign-in, sign-up and checkout, where `noindex` is the RIGHT call and charging
+ * it says a site is broken for doing the correct thing.
+ *
+ * ACTIONS and transaction steps only. A place that might hold public content is
+ * NOT here: `/profile/` and `/dashboard/` were, and on a marketplace a
+ * professional's profile is the content that most needs indexing. See the README.
+ */
+const ACCOUNT_PATH =
+  /(^|[/-])(auth|login|log-in|signin|sign-in|signup|sign-up|register|registrarse|logout|sign-out|password|forgot|reset|account|cart|basket|checkout|accedi|registrati|accesso|carrello|acceder|iniciar-sesion|cuenta|carrito|connexion|inscription|compte|panier|anmelden|registrieren|konto|warenkorb|entrar|cadastro)([/.]|$)/i;
+
+/** A field only a sign-in, sign-up or reset form has. */
+const PASSWORD_FIELD = /<input[^>]*type=["']?password/i;
+
+/**
+ * Two signals, because either alone misses: trovapro.it's register page serves
+ * no password field, and its sign-in page sits at a path that could be anything.
+ * A hyphen may PRECEDE the word, for `/my-account`, but the segment must end at
+ * a slash or a dot, so `/account-management-tips` stays prose.
+ */
+function isAccountSurface(page: PageDocument): boolean {
+  let path: string;
+  try {
+    path = new URL(page.url).pathname;
+  } catch {
+    return false;
+  }
+  return ACCOUNT_PATH.test(path) || PASSWORD_FIELD.test(page.markup);
+}
+
 export function checkDirectives(page: PageDocument): CiteFinding[] {
   const directives = directivesOf(page);
   if (directives.length === 0) return [];
@@ -80,17 +101,27 @@ export function checkDirectives(page: PageDocument): CiteFinding[] {
   const nosnippet = sourcesFor(directives, forbidsSnippets);
   const noarchive = sourcesFor(directives, (token) => token === 'noarchive');
 
+  // An account surface is FLAGGED, not charged: keeping a login out of an index
+  // is correct, and charging it made a site that got this right headline its own
+  // sign-in page. The blocker wording leads, so the catalogue documents the check.
+  const scored = !isAccountSurface(page);
+
   return [
     ...when(noindex !== null, () =>
       finding({
         code: 'access.noindex',
-        impact: 'blocker',
+        impact: scored ? 'blocker' : 'absent',
         area: 'access',
-        title: 'This page tells every engine not to index it',
-        detail:
-          'A noindex directive removes the page from search and from the retrieval sets answer engines draw on. Nothing else on this reading can matter while it stands.',
+        title: scored
+          ? 'This page tells every engine not to index it'
+          : 'This page keeps itself out of search, as an account page should',
+        detail: scored
+          ? 'A noindex directive removes the page from search and from the retrieval sets answer engines draw on. Nothing else on this reading can matter while it stands.'
+          : 'A noindex directive removes the page from search and from the retrieval sets answer engines draw on. On a sign-in, account or checkout page that is the right call, so this is noted and costs nothing.',
         evidence: quote(noindex ?? ''),
-        fix: 'Remove the noindex directive from the meta tag and the X-Robots-Tag header.',
+        fix: scored
+          ? 'Remove the noindex directive from the meta tag and the X-Robots-Tag header.'
+          : null,
       }),
     ),
     // Checked even when noindex already fired: they are removed separately, and
