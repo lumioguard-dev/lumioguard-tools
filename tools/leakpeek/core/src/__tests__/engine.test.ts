@@ -2,6 +2,7 @@ import { Buffer } from 'node:buffer';
 import { describe, expect, it } from 'vitest';
 import { analyzePassive } from '../ExposureAnalyzer.js';
 import { orderFindings } from '../domain/ExposureFinding.js';
+import { detectStack } from '../passive/fingerprint.js';
 import { checkSecurityHeaders } from '../passive/headers.js';
 import { checkPrivacy } from '../passive/privacy.js';
 import { maskSecret, scanForSecrets } from '../passive/secrets.js';
@@ -39,9 +40,8 @@ describe('secret scanning', () => {
   });
 
   // Verbatim from apple.com's carousel bundle. The rule accepted `-` inside a
-  // legacy key's body, so both of these were reported as leaked OpenAI keys on
-  // one of the most scrutinised sites on the web. Masked to `sk-d…ion` the
-  // claim looked entirely credible, which is what made it worth a test.
+  // legacy key's body, so both were reported as leaked OpenAI keys, and masked
+  // to `sk-d…ion` the claim looked entirely credible.
   it('does not read a hyphenated CSS custom property as an OpenAI key', () => {
     const bundle =
       'el.style.setProperty("--sk-dotnav-timed-duration",`${t}s`);' +
@@ -49,9 +49,9 @@ describe('secret scanning', () => {
     expect(scanForSecrets(bundle)).toEqual([]);
   });
 
-  // The same flaw as the OpenAI rule, found by auditing the rest of the pack:
-  // `` does not reject a neighbouring hyphen, so every credential shape still
-  // matched when embedded in a longer identifier. One case per rule.
+  // The same flaw as the OpenAI rule, across the rest of the pack: a word
+  // boundary does not reject a neighbouring hyphen, so every credential shape
+  // still matched when embedded in a longer identifier. One case per rule.
   it.each([
     ['openai', '--sk-dotnav-timed-duration'],
     ['stripe', `--sk_live_${'a'.repeat(25)}-tail`],
@@ -88,7 +88,7 @@ describe('what a readable table is said to hold', () => {
 
   // The finding fires either way: rows came back to an anonymous request. What
   // moves is the SENTENCE, and a substring match called ordinary counters
-  // personal — `card` sits inside `discard_count` and `dob` inside `adobe_id`.
+  // personal: `card` sits inside `discard_count`, `dob` inside `adobe_id`.
   it('does not call ordinary columns personal', () => {
     const finding = read({ discard_count: 1, cardinality: 2, adobe_id: 3, scorecard_id: 4 });
     expect(finding?.severity).toBe('critical');
@@ -317,5 +317,27 @@ describe('passive orchestration', () => {
       },
     ]);
     expect(ordered[0]?.severity).toBe('critical');
+  });
+});
+
+/**
+ * A hostile site controls `sources`: it is the HTML plus every script body, up
+ * to megabytes. An unbounded `[a-z0-9-]+` before a literal backtracks
+ * quadratically through minified code, which pinned the Worker's CPU.
+ */
+describe('reading the backend off a hostile bundle', () => {
+  const identifierRun = 'abcdefghijklmnopqrstuvwxyz0123456789-'.repeat(4000);
+
+  it('stays linear on a long run of identifier characters', () => {
+    const started = performance.now();
+    detectStack({ sources: identifierRun, host: 'example.test', headers: {} });
+    expect(performance.now() - started).toBeLessThan(250);
+  });
+
+  it('still names a backend the bundle really points at', () => {
+    const withRef = `${identifierRun} https://my-app.firebaseio.com/x`;
+    expect(detectStack({ sources: withRef, host: 'example.test', headers: {} }).backend).toBe(
+      'Firebase',
+    );
   });
 });

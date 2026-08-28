@@ -1,174 +1,171 @@
 # Leakpeek
 
-**What is this app exposing to anyone who has the URL?**
+Leakpeek checks what a public web application exposes to someone who has only
+its URL.
 
-Leakpeek reads the page and its scripts, and where the bundle points at a
-backend, it reads that too. Then it reports what a stranger can already reach.
+It reads the served document and JavaScript bundles, discovers supported backend
+configuration, and makes a small set of read-only verification requests. The
+result appears as one reading in the shared [Readout console](../../apps/console).
 
-It is one of the readings in [Readout](../../apps/console), which runs every
-tool you pick against one address and lands them on a single verdict. This is
-Leakpeek's own section of that report:
+![A Leakpeek report showing an unauthenticated database read](../../assets/leakpeek.png)
 
-![Leakpeek's section of the report: a Wide Open score of 40, and a critical
-finding that a database table is readable without signing in](../../assets/leakpeek.png)
+## Score
 
-*Reading [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/), a
-deliberately vulnerable app kept for testing. "Sets the verdict above" means
-this was the worst of the readings that ran, so the site's overall score is
-this one.*
-
-## Who it is for
-
-Someone who built an app quickly, often with an AI builder, put it on the
-internet, and has no idea whether it is leaking. They are not a security
-engineer. They will not read a CVE. They need to know, in one screen, whether
-strangers can read their users' data right now.
-
-The answer has to be provable. "You might have a misconfiguration" is worthless;
-"this table returned 3 rows to an unauthenticated request, columns `id`, `name`,
-`email`" is not.
-
-## The verdict
-
-Score is **0–100 and HIGHER IS BETTER**, matching every other score in the
-suite and the app it hands off to. It is an exposure ladder, not a health score,
-and no surface may render it as one: a hundred means nothing was found leaking,
-never that the app is secure.
+The score runs from 0 to 100, with higher being better. It measures observed
+exposure, not overall security.
 
 | Tier | Score | Meaning |
 |---|---|---|
-| Sealed | 81–100 | Nothing obvious is leaking from the browser |
-| Exposed | 61–80 | Something is readable that should not be |
-| Cracked | 41–60 | More than one, or one that matters |
-| Wide Open | 0–40 | Anyone with the URL can read this app's data right now |
+| Sealed | 81-100 | Nothing obvious is leaking through the browser |
+| Exposed | 61-80 | Public output reveals a secret or weak configuration |
+| Cracked | 41-60 | Readable data or a live credential needs attention |
+| Wide Open | 0-40 | An unauthenticated visitor can read application data |
 
-**Any critical finding pins the score down to 40 or below.** A leaked database
-is Wide Open however tidy the rest of the site is.
+A critical finding caps the score at 40. No collection of low-severity results
+can make a readable database look less serious.
+
+The score says only what this outside-in scan found. A score of 100 does not
+certify the application, its server code, its authorization model, or paths that
+require an account.
 
 ## What it checks
 
-### Passive: readable from the served response, on any URL
+### Public response and bundles
 
-- **Secrets in the bundle.** `service_role` JWTs (decoded, `role` claim checked),
-  Stripe `sk_live_`, AWS `AKIA`, Google `AIza`, OpenAI `sk-`, GitHub tokens.
-  A Supabase **anon key is never reported**. It is public by design, and calling
-  it a leak is the false positive that destroys trust in the whole report.
-- **Source maps reachable.** A served `.js.map` ships readable source, comments,
-  and sometimes keys the minified bundle hid.
-- **Security headers.** CSP, HSTS, X-Frame-Options.
-- **Privacy.** Trackers running with no consent gate, and data collection with no
-  privacy policy linked. Trackers are matched by the DOMAIN they load from, never
-  by a function name a minifier reproduces by coincidence.
+- server-side or privileged keys embedded in client JavaScript;
+- reachable source maps;
+- missing CSP, HSTS, or X-Frame-Options headers;
+- trackers running without a consent gate;
+- data collection with no linked privacy policy;
+- public `/.env` and `/.git/config` files, with SPA fallbacks rejected.
 
-### Active: read-only probes of the app's own backend
+Secret detection includes Supabase `service_role` JWTs, Stripe live secret keys,
+AWS access keys, Google API keys, OpenAI keys, and GitHub tokens. A Supabase anon
+key is public by design and is not a finding by itself.
 
-- **Supabase RLS.** Reads discovered tables with the anon key from the bundle.
-  Rows returned unauthenticated means row-level security is off. This is the
-  headline finding and the reason the tool exists.
-- **Exposed files.** `/.env` and `/.git/config` from the web root, guarded
-  against the SPA that answers `200` with its shell for any path.
+Tracker detection uses the domain a page contacts. It does not infer a tracker
+from a JavaScript function name that minification might reproduce by accident.
 
-**Not built yet, and no surface may claim them:** open storage buckets,
-unauthenticated RPC, Base44-style auth bypass, and the Firebase / PocketBase /
-Appwrite variants of open rules. Those platforms are fingerprinted today but
-never probed.
+### Read-only backend probes
 
-## Only scan what you own
+When a bundle exposes a Supabase URL and anon key, Leakpeek asks discovered
+tables whether they return rows without authentication. Rows returned means the
+table is publicly readable, commonly because Row Level Security is absent or
+ineffective.
 
-Leakpeek proves a finding by reading the target's backend: it asks a discovered
-table for rows and reports whether any came back. That is a real request against
-someone else's infrastructure, and whether it is welcome is not something a tool
-can decide for you.
+The report records whether data came back, the row count, and column names. It
+does not retain or display row values.
 
-Scan a site you own, or one whose owner has asked you to. The guarantees below
-are what keep the read honest; they are not permission.
+Open storage buckets, unauthenticated RPC, Base44 authorization bypasses, and
+equivalent Firebase, PocketBase, or Appwrite rules are not probed yet. Some of
+those platforms may be identified as stack information, but identification is
+not proof of exposure.
 
-## The three guarantees
+The generated [rule catalogue](../../.documentation/RULES.md) lists the checks
+implemented today.
 
-**Read, never write.** The probe engine issues `GET` only. No
-`INSERT`/`UPDATE`/`DELETE`, no mutating RPC, no account creation, no write to
-storage. It is enforced structurally, by one request primitive in `ProbeRunner`
-and no code path that writes, because the line between assessing a hole and
-exploiting it is the line between a read and a write. A finding that could only
-be proven by a write is reported as unverified, never proven.
+## Common failures in quickly built apps
 
-**One URL per human action.** There is no bulk or list mode, deliberately. That
-is what separates a scanner from a sweep.
+The console also shows a short reference list of problems repeatedly reported
+in reviews of AI-built applications. The order reflects how often each problem
+appeared in the source review, not a severity judgement:
 
-**The report is not the leak.** Evidence is structural and redacted by
-construction: that data returned and its shape (`1,240 rows; columns email,
-stripe_id`), never the values. Keys are masked. The report renders on sites the
-visitor does not own, so it must prove a hole without becoming one.
+| Reports | Problem | Reports | Problem |
+|---:|---|---:|---|
+| 5 | Missing Row Level Security | 5 | Secrets in frontend code |
+| 4 | Admin enforced only in the UI | 3 | Records fetched by unchecked id |
+| 3 | User-writable protected fields | 3 | Unbounded costly endpoints |
+| 2 | Price trusted from the client | 2 | Public `.env` or `.git` files |
+| 2 | Authorization trusted from local storage | 2 | Tokens not fully verified |
 
-It names the issue and proves it. It does not hand out the fix.
+This reference list is broader than Leakpeek's detector. Most authorization and
+account-isolation failures require source access, an account, or two test users.
+The public scanner does not claim to check them.
 
-## Running it
+## Safety guarantees
+
+### Read, never write
+
+Target probes issue `GET` only through one request primitive. Leakpeek does not
+create accounts, submit forms, mutate RPCs, insert or update rows, delete data,
+or write to storage. A weakness that requires a write to verify remains
+unverified.
+
+### One target per action
+
+The product has no bulk input or sweep mode. One human submission starts one
+bounded reading of one site.
+
+### The report is not another leak
+
+Sensitive evidence is reduced where it is produced. Keys are masked. Database
+results become counts and column names before they reach mappers or the console.
+
+These guarantees reduce impact; they do not grant permission. Only scan a site
+you own or have been asked to assess.
+
+## Run locally
+
+Start every service:
 
 ```bash
 pnpm install
-pnpm dev            # every tool, plus the console on http://127.0.0.1:5200
+pnpm dev
 ```
 
-The console is the only page, so running this tool on its own means running its
-Worker and pointing the console at it:
+Or start Leakpeek and the console:
 
 ```bash
-pnpm --filter @lumioguard/leakpeek-api dev   # http://127.0.0.1:8820
-pnpm --filter @lumioguard/console dev        # http://127.0.0.1:5200
+pnpm --filter @lumioguard/leakpeek-api dev
+pnpm --filter @lumioguard/console dev
 ```
 
-Turn the other readings off in the picker, or put `?tools=leakpeek` in the
-address. The console proxies `/leakpeek/api` to the Worker above.
+The console is at `http://127.0.0.1:5200`; the Worker is at
+`http://127.0.0.1:8820`. Use the Leakpeek page or add `?tools=leakpeek` to the
+scan URL.
 
-```
-POST /api/scan   { "url": "example.com" }
+```text
+POST /api/scan  { "url": "example.com" }
 GET  /api/health
 ```
 
-## How it is built
+## Package layout
 
+```text
+core/
+  passive/      evidence already present in responses
+  probes/       bounded read-only backend checks
+  scoring/      findings to score, tier, and headline
+  domain/       internal finding model
+api/
+  Cloudflare Worker responsible for fetching, timeouts, and mapping
 ```
-core/   the engine. Isomorphic, no I/O, no network, so the suite runs offline
-  passive/   what the served response reveals
-  probes/    what a read-only request to the backend reveals
-  scoring/   findings → score, tier, headline
-  domain/    the finding shape the engine speaks
-api/    Cloudflare Worker (Hono). Owns fetching, timeouts and the clock
-```
 
-`core` never imports from `api`, and `web` never imports `core`, which would ship
-the detection logic to the browser. Anything both need is domain vocabulary and
-lives in `@lumioguard/shared`.
-
-The drawn surface, transport and browser-side plumbing are shared with the other
-tools via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
+The core contains no network or filesystem I/O. The console never imports it.
+Shared contracts live in `@lumioguard/shared`; the report surface lives in
+`apps/console/src/tools/leakpeek`.
 
 ## Configuration
 
-| Variable | Where | Default |
+| Variable | Used by | Default |
 |---|---|---|
-| `ALLOWED_ORIGINS` | api | `*` in development |
-| `LEAKPEEK_INGEST_SECRET` | api | unset (nothing is sent anywhere) |
-| `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
-| `VITE_LEAKPEEK_API_URL` | console | empty (the console proxies `/leakpeek/api`) |
-| `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
-| `VITE_POSTHOG_KEY` | console | unset (no analytics: nothing loads, nothing is sent) |
+| `ALLOWED_ORIGINS` | Worker | `*` during development |
+| `LEAKPEEK_INGEST_SECRET` | Worker | unset; no reading is recorded |
+| `LUMIOGUARD_API_BASE_URL` | Worker | unset; required with the ingest secret |
+| `VITE_LEAKPEEK_API_URL` | Console | relative local proxy |
+| `VITE_LUMIOGUARD_APP_URL` | Console | unset; no hand-off or branding |
+| `VITE_POSTHOG_KEY` | Console | unset; analytics disabled |
 
-All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Leakpeek is a
-complete tool with none of them set. With `VITE_LUMIOGUARD_APP_URL` unset, which
-is the default, the word LumioGuard does not appear on the page at all.
+All variables are optional for local use. See `api/.dev.vars.example` and
+`../../apps/console/.env.example`.
 
-The two api variables are required together: a secret without an address records
-nothing, deliberately, so a fork cannot post its readings to an API it does not
-own. Set all three and the report becomes the front of the
-[LumioGuard](https://lumioguard.dev) funnel, where a completed reading turns into
-tracked issues.
+The ingest address and secret are required together. Partial configuration
+records nothing, preventing a fork from sending unsigned readings to a service
+it does not own.
 
 ## Principles
 
-1. **Prove it or do not claim it.** A finding is a read that returned what it
-   should not, never a header that looked suspicious.
-2. **Read, never write.** The engine assesses; it does not exploit.
-3. **A public key is not a vulnerability.** Report what is exploitable, not what
-   is merely visible.
-4. **The report must not become the leak.**
+1. Prove exposure with a read or label it unverified.
+2. Do not call a public client key a vulnerability.
+3. Redact evidence before it crosses a boundary.
+4. Prefer a missed finding to a confident false accusation.
