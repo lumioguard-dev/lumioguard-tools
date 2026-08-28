@@ -65,10 +65,10 @@ const CONNECTORS = [
   'nevertheless,',
 ] as const;
 
-export const copyRules: readonly Rule[] = [
+export const voiceRules: readonly Rule[] = [
   defineRule({
-    id: 'copy.buzzwords',
-    category: RuleCategory.Copy,
+    id: 'voice.sales-vocabulary',
+    category: RuleCategory.Voice,
     weight: 12,
     label: 'Marketing buzzwords',
     phrase: 'buzzwords like seamless and effortless',
@@ -79,24 +79,32 @@ export const copyRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.emdash',
-    category: RuleCategory.Copy,
+    id: 'voice.dash-density',
+    category: RuleCategory.Voice,
     weight: 10,
     label: 'Em-dashes on almost every line',
     phrase: 'em dashes in nearly every line',
     // Density, not a flat count: a long article using a few em-dashes is fine;
-    // a short page with one per clause is the tell.
+    // a short page with one per clause is the tell. Written as an escape
+    // because a literal em-dash may not appear in this repo's source.
     evaluate: (ctx) => {
-      const count = countMatches(ctx.content.text, /: /g);
+      // Title and headings carry the habit as much as the body does, and a
+      // short page keeps most of its em-dashes there.
+      const written = [
+        ctx.document.title,
+        ...ctx.document.headings.map((heading) => heading.text),
+        ctx.content.text,
+      ].join('\n');
+      const count = countMatches(written, /\u2014/g);
       if (count < 4) return null;
-      const length = Math.max(ctx.content.text.length, 1);
+      const length = Math.max(written.length, 1);
       return evidence(count / length > 1 / 500, `${count} em-dashes in ${length} chars`);
     },
   }),
 
   defineRule({
-    id: 'copy.ai-vocabulary',
-    category: RuleCategory.Copy,
+    id: 'voice.chatbot-register',
+    category: RuleCategory.Voice,
     weight: 10,
     label: 'The vocabulary chatbots reach for',
     phrase: 'the vocabulary chatbots reach for',
@@ -107,8 +115,8 @@ export const copyRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.emoji-headers',
-    category: RuleCategory.Copy,
+    id: 'voice.emoji-headings',
+    category: RuleCategory.Voice,
     weight: 8,
     label: 'Headings that start with an emoji',
     phrase: 'an emoji opening every heading',
@@ -120,8 +128,8 @@ export const copyRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.filler-phrases',
-    category: RuleCategory.Copy,
+    id: 'voice.empty-openers',
+    category: RuleCategory.Voice,
     weight: 8,
     label: 'Filler phrases that say nothing',
     phrase: 'sentences that take a breath and say nothing',
@@ -132,8 +140,8 @@ export const copyRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.negative-parallelism',
-    category: RuleCategory.Copy,
+    id: 'voice.not-x-but-y',
+    category: RuleCategory.Voice,
     weight: 6,
     label: 'The it-is-not-just-X-it-is-Y construction',
     phrase: 'the not-just-X-but-Y construction',
@@ -150,8 +158,8 @@ export const copyRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'copy.formal-connectors',
-    category: RuleCategory.Copy,
+    id: 'voice.stiff-connectors',
+    category: RuleCategory.Voice,
     weight: 5,
     label: 'Stiff connectors: moreover, furthermore',
     phrase: 'connectors like moreover and furthermore',

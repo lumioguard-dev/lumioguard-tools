@@ -2,23 +2,33 @@ import { RuleCategory } from '../../domain/RuleCategory.js';
 import { type Rule, defineRule } from '../Rule.js';
 import { countMatches, evidence } from '../support.js';
 
-export const layoutRules: readonly Rule[] = [
+export const compositionRules: readonly Rule[] = [
   defineRule({
-    id: 'layout.bento',
-    category: RuleCategory.Layout,
+    id: 'composition.uneven-tiles',
+    category: RuleCategory.Composition,
     weight: 9,
     label: 'A bento grid',
     phrase: 'a bento grid',
-    evaluate: (ctx) =>
-      evidence(
-        ctx.usesClass(/\bbento\b/i) || /\bbento\b/i.test(ctx.content.text),
+    evaluate: (ctx) => {
+      if (ctx.usesClass(/\bbento\b/i) || /\bbento\b/i.test(ctx.content.text)) {
+        return 'the boxes-of-different-sizes layout';
+      }
+      // What makes a grid bento is cells spanning BOTH ways; spans in one
+      // direction alone are an ordinary responsive grid.
+      const colSpan = /grid-(?:column|area)\s*:[^;}]*span\s+[2-9]/i;
+      const rowSpan = /grid-row\s*:[^;}]*span\s+[2-9]/i;
+      const css = `${ctx.styles.authorPaintingCss} ${ctx.document.styleText}`;
+      return evidence(
+        (colSpan.test(css) && rowSpan.test(css)) ||
+          ctx.document.hasSameClassAttr(/\bcol-span-[2-9]\b/, /\brow-span-[2-9]\b/),
         'the boxes-of-different-sizes layout',
-      ),
+      );
+    },
   }),
 
   defineRule({
-    id: 'layout.gradient-blob',
-    category: RuleCategory.Layout,
+    id: 'composition.blurred-glow',
+    category: RuleCategory.Composition,
     weight: 9,
     label: 'A blurry coloured glow behind the page',
     phrase: 'a blurred glow behind the page',
@@ -46,8 +56,8 @@ export const layoutRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'layout.ai-palette',
-    category: RuleCategory.Layout,
+    id: 'composition.house-gradient',
+    category: RuleCategory.Composition,
     weight: 8,
     label: 'The indigo-to-violet gradient every AI tool ships',
     phrase: 'the indigo-into-violet house gradient',
@@ -68,8 +78,8 @@ export const layoutRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'layout.trusted-by',
-    category: RuleCategory.Layout,
+    id: 'composition.logo-wall',
+    category: RuleCategory.Composition,
     weight: 7,
     label: 'A trusted-by logo row',
     phrase: 'a trusted-by row of logos',
@@ -81,21 +91,28 @@ export const layoutRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'layout.three-card-grid',
-    category: RuleCategory.Layout,
+    id: 'composition.three-across',
+    category: RuleCategory.Composition,
     weight: 6,
     label: 'Three feature cards side by side',
     phrase: 'three feature cards in a row',
-    evaluate: (ctx) =>
-      evidence(
-        ctx.usesClass(/\b(?:md:|lg:|sm:)?grid-cols-3\b/),
+    evaluate: (ctx) => {
+      if (ctx.usesClass(/\b(?:md:|lg:|sm:)?grid-cols-3\b/)) {
+        return 'the standard three-across card row';
+      }
+      // Same row, written as CSS rather than a utility class.
+      const threeUp =
+        /grid-template-columns\s*:\s*(?:repeat\(\s*3\s*,|(?:(?:minmax\([^)]*\)|1fr)\s+){2}(?:minmax\([^)]*\)|1fr))/i;
+      return evidence(
+        threeUp.test(ctx.styles.authorPaintingCss) || threeUp.test(ctx.document.styleText),
         'the standard three-across card row',
-      ),
+      );
+    },
   }),
 
   defineRule({
-    id: 'layout.dark-neon',
-    category: RuleCategory.Layout,
+    id: 'composition.neon-on-dark',
+    category: RuleCategory.Composition,
     weight: 5,
     label: 'Dark background with neon accents',
     evaluate: (ctx) => {

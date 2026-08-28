@@ -39,21 +39,18 @@ const PLACEHOLDER_BRANDS = [
 ] as const;
 
 /**
- * "Your Company" as a brand slot rather than as English, checked
- * case-SENSITIVELY. A template leaves the brand title-cased ("Your Company will
- * transform…"); prose writes it lowercase ("Start your company", "your
- * company's entire memory") and a sentence start gives only "Your company".
- * At weight 16 the loose version was the single largest false positive in the
- * set, firing on 0% of generated pages and 7.7% of hand-built ones.
+ * "Your Company" as a brand slot rather than as English, so case-SENSITIVELY: a
+ * template leaves it title-cased, prose writes "Start your company". At weight 16
+ * the loose version fired on 0% of generated pages and 7.7% of hand-built ones.
  */
 const COMPANY_SLOT = /\bYour Company\b(?!['’]s)/;
 const COMPANY_SLOT_ANY_CASE =
   /(?:©|\(c\)|copyright)\s*(?:\d{4}\s*)?(?:[-–]\s*\d{4}\s*)?your company\b|your company,?\s+(?:inc|llc|ltd|corp|co)\b/i;
 
-export const leftoverRules: readonly Rule[] = [
+export const unfinishedRules: readonly Rule[] = [
   defineRule({
-    id: 'leftover.ai-citation-tokens',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.citation-tokens',
+    category: RuleCategory.Unfinished,
     weight: 35,
     label: 'Chatbot citation codes left in the text',
     phrase: 'chatbot citation markers left in the text',
@@ -64,8 +61,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.assistant-phrases',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.assistant-reply',
+    category: RuleCategory.Unfinished,
     weight: 30,
     label: 'A chatbot reply left in the copy',
     phrase: "a chatbot's reply sitting in the copy",
@@ -76,8 +73,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.create-next-app',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.scaffold-title',
+    category: RuleCategory.Unfinished,
     weight: 24,
     label: 'The scaffold own title, never changed',
     phrase: "the scaffold's title never changed",
@@ -97,8 +94,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.lorem',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.lorem',
+    category: RuleCategory.Unfinished,
     weight: 22,
     label: 'Lorem ipsum',
     phrase: 'lorem ipsum still in the copy',
@@ -110,8 +107,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.your-company',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.brand-slot',
+    category: RuleCategory.Unfinished,
     weight: 16,
     label: 'A placeholder company name',
     phrase: 'Your Company still sitting in the copy',
@@ -127,8 +124,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.template-placeholders',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.template-slots',
+    category: RuleCategory.Unfinished,
     weight: 16,
     label: 'An unfilled template slot',
     phrase: 'an unfilled slot from the template',
@@ -147,8 +144,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.unrendered-markdown',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.raw-markdown',
+    category: RuleCategory.Unfinished,
     weight: 12,
     label: 'Raw markdown showing as text',
     phrase: 'raw markdown showing as text',
@@ -163,8 +160,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.placeholder-links',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.dead-links',
+    category: RuleCategory.Unfinished,
     weight: 10,
     label: 'Links that go nowhere',
     phrase: 'links that go nowhere',
@@ -180,8 +177,8 @@ export const leftoverRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'leftover.placeholder-images',
-    category: RuleCategory.Leftover,
+    id: 'unfinished.placeholder-art',
+    category: RuleCategory.Unfinished,
     weight: 8,
     label: 'Placeholder images',
     phrase: "the theme's placeholder images",

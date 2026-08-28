@@ -1,12 +1,9 @@
 import { AnalysisLimits } from './Limits.js';
 
 /**
- * An inline sheet that a framework generated, not the author.
- *
- * React Native Web ships a preallocated atomic sheet inline: twitter.com serves
- * 62.5KB and 1540 rules under this id against 6KB of class attributes actually
- * used. Read as authored CSS it credited X with gradient blobs and coloured
- * glows it never paints.
+ * An inline sheet a framework generated, not the author. React Native Web
+ * preallocates one: 62.5KB and 1540 rules on twitter.com against 6KB of class
+ * attributes used, which credited X with gradients and glows it never paints.
  */
 const FRAMEWORK_SHEET = /react-native-stylesheet|\[stylesheet-group/i;
 
@@ -15,10 +12,9 @@ const CDN_UTILITY_FRAMEWORK =
   /cdn\.tailwindcss\.com|unpkg\.com\/tailwindcss|jsdelivr\.net\/npm\/tailwindcss|bootstrap[.@][\d.]*\/dist\/css/i;
 
 /**
- * Removes what a stylesheet contains but does not paint: `@keyframes` bodies
- * (an animation step is not a component) and custom-property declarations (a
- * declared token may never be referenced, and `--x-box-shadow:` otherwise reads
- * as `box-shadow:`). `var(--x)` references survive: they have no colon.
+ * Removes what a sheet contains but does not paint: `@keyframes` bodies, and
+ * custom-property declarations, without which `--x-box-shadow:` reads as
+ * `box-shadow:`. `var(--x)` references survive: they have no colon.
  */
 function stripNonPainting(css: string): string {
   return css
@@ -26,15 +22,23 @@ function stripNonPainting(css: string): string {
     .replace(/--[\w-]+\s*:[^;}]*/g, ' ');
 }
 
+/** The naive `[^{}]` split is load-bearing, so it is stated once. */
+function* blockBodies(css: string): Generator<string> {
+  const blockPattern = /\{([^{}]*)\}/g;
+  for (let match = blockPattern.exec(css); match !== null; match = blockPattern.exec(css)) {
+    yield match[1] ?? '';
+  }
+}
+
 export class StyleSheets {
   /** Inline `<style>` written for this page, framework sheets excluded. */
   public readonly authorCss: string;
-  /** Linked stylesheets. */
   public readonly bundleCss: string;
-  /** Whether the page ships a sheet containing every utility, used or not. */
   public readonly shipsEveryUtility: boolean;
 
   private appliedCache: string | null = null;
+  private allCache: string | null = null;
+  private lowerCache: string | null = null;
   private authorPaintingCache: string | null = null;
 
   private constructor(init: { authorCss: string; bundleCss: string; shipsEveryUtility: boolean }) {
@@ -60,12 +64,9 @@ export class StyleSheets {
   }
 
   /**
-   * CSS that can reasonably be treated as describing THIS page.
-   *
-   * A linked sheet is usually a compiled, tree-shaken build, so it counts:
-   * many generated sites ship 0 bytes of inline CSS and 180KB of bundle, and
-   * excluding it made every CSS rule silently miss them. The exception is a
-   * sheet that ships everything, where presence never implies use.
+   * CSS that can reasonably be treated as describing THIS page. A linked sheet
+   * counts: generated sites often ship 0 bytes of inline CSS and 180KB of
+   * bundle. A sheet that ships every utility does not: presence implies nothing.
    */
   public get appliedCss(): string {
     if (this.appliedCache === null) {
@@ -78,12 +79,14 @@ export class StyleSheets {
   }
 
   public get authorCssLower(): string {
-    return this.authorCss.toLowerCase();
+    if (this.lowerCache === null) this.lowerCache = this.authorCss.toLowerCase();
+    return this.lowerCache;
   }
 
-  /** Author CSS plus every linked sheet, unfiltered. Used by `@font-face` checks. */
+  /** Author CSS plus every linked sheet, unstripped: keyframes and tokens survive. */
   public get allCss(): string {
-    return `${this.authorCss}\n${this.bundleCss}`;
+    if (this.allCache === null) this.allCache = `${this.authorCss}\n${this.bundleCss}`;
+    return this.allCache;
   }
 
   public get authorPaintingCss(): string {
@@ -93,13 +96,23 @@ export class StyleSheets {
     return this.authorPaintingCache;
   }
 
+  /**
+   * How many blocks of the page's OWN CSS carry all of these. Deliberately not
+   * `appliedCss`: a compiled bundle ships components the page never renders, and
+   * counting those credited three sites with rows and labels they do not have.
+   */
+  public authorBlockCount(...patterns: readonly RegExp[]): number {
+    let count = 0;
+    for (const body of blockBodies(this.authorPaintingCss)) {
+      if (patterns.every((pattern) => pattern.test(body))) count += 1;
+    }
+    return count;
+  }
+
   /** Do both patterns appear in the SAME declaration block? */
   public blockHas(first: RegExp, second: RegExp): boolean {
-    const blockPattern = /\{([^{}]*)\}/g;
-    for (let match = blockPattern.exec(this.appliedCss); match !== null; ) {
-      const body = match[1] ?? '';
+    for (const body of blockBodies(this.appliedCss)) {
       if (first.test(body) && second.test(body)) return true;
-      match = blockPattern.exec(this.appliedCss);
     }
     return false;
   }

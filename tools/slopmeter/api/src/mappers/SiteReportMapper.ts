@@ -1,4 +1,4 @@
-import type { CrawlResponse } from '@lumioguard/shared';
+import { type CrawlResponse, confidenceFor } from '@lumioguard/shared';
 import type { SiteReport, TierResolver } from '@lumioguard/slopmeter-core';
 import type { ScreenshotProvider } from '../services/ScreenshotProvider.js';
 
@@ -15,6 +15,7 @@ export class SiteReportMapper {
     return {
       entry: report.entry,
       pagesScanned: report.pagesScanned,
+      confidence: confidenceFor(report.pagesScanned),
       maxDepthReached: report.maxDepthReached,
       requestedDepth: report.requestedDepth,
       requestedMaxPages: report.requestedMaxPages,

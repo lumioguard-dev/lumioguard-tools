@@ -1,6 +1,6 @@
 {
   "name": "@lumioguard/slopmeter-core",
-  "version": "0.1.0",
+  "version": "0.12.0",
   "private": true,
   "type": "module",
   "description": "Slopmeter engine: page analysis, the rule catalogue, crawl and scoring. Isomorphic, no I/O.",
@@ -14,7 +14,8 @@
     "test": "vitest run"
   },
   "dependencies": {
-    "@lumioguard/shared": "workspace:*"
+    "@lumioguard/shared": "workspace:*",
+    "linkedom": "^0.18.13"
   },
   "devDependencies": {
     "typescript": "^5.7.2",

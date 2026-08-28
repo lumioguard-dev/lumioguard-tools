@@ -15,7 +15,6 @@ const CONFIG = {
   timestampHeader: 'x-slopmeter-timestamp',
 };
 
-/** The recorder now takes the mapped payload and the host, not the raw report. */
 function recorded(r: CrawlResponse = report()) {
   return [readingFrom(r, hostOf(r.entry)), CONFIG, hostOf(r.entry)] as const;
 }
@@ -24,6 +23,7 @@ function report(overrides: Partial<CrawlResponse> = {}): CrawlResponse {
   return {
     entry: 'https://www.example.com/pricing',
     pagesScanned: 12,
+    confidence: 'measured',
     maxDepthReached: 2,
     requestedDepth: 2,
     requestedMaxPages: 15,
@@ -56,7 +56,6 @@ function signal(label: string, weight: number) {
   return { id: 's0', label, weight, evidence: null, pages: 1, firstSeen: 'x', onHomepage: true };
 }
 
-/** Capture what the recorder sent, and answer with a minted key. */
 function captor(options: { status?: number; body?: unknown } = {}) {
   const status = options.status ?? 200;
   // `in` rather than `??`: one of the cases below is a body that IS null, and a
@@ -119,10 +118,9 @@ describe('the recorded reading', () => {
     const timestamp = sent.headers['x-slopmeter-timestamp'];
     expect(timestamp).toMatch(/^\d+$/);
 
-    // Computed independently, the way LumioGuard verifies it: the secret is
-    // hex-decoded to raw bytes BEFORE it keys the HMAC, and the signed material
-    // is `timestamp.body`. Keying with the UTF-8 of the hex string verifies here
-    // and fails every real ingest; signing the body alone never expires.
+    // Computed independently, as LumioGuard verifies it: the secret is hex-decoded
+    // BEFORE it keys the HMAC, over `timestamp.body`. Keying with the hex string's
+    // UTF-8 passes here and fails every real ingest; a body-only signature never expires.
     const expected = createHmac('sha256', Buffer.from(SECRET, 'hex'))
       .update(`${timestamp}.${sent.body}`)
       .digest('hex');
@@ -167,6 +165,21 @@ describe('the recorded reading', () => {
     expect(body).not.toContain('category');
     expect(JSON.parse(body).payload.signals[0]).not.toHaveProperty('id');
     expect(JSON.parse(body).findings[0]).not.toHaveProperty('id');
+  });
+
+  /**
+   * Stored without it, a one-page reading is indistinguishable from a fifteen
+   * page one, and every later query reads the band as if it had been earned.
+   */
+  it('carries how far the crawl actually got', async () => {
+    const { calls, send } = captor();
+    await new ReadingRecorder(send).record(
+      ...recorded(report({ pagesScanned: 1, confidence: 'provisional' })),
+    );
+
+    const { payload } = JSON.parse(calls[0]?.body ?? '{}');
+    expect(payload.pagesScanned).toBe(1);
+    expect(payload.confidence).toBe('provisional');
   });
 });
 

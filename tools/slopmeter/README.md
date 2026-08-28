@@ -1,159 +1,150 @@
 # Slopmeter
 
-**How much of what visitors see is still the template a generator shipped?**
+Slopmeter measures how much of a published site still looks, reads, and behaves
+like the template that produced it.
 
-Slopmeter crawls a few pages and scores how closely the site's visual and verbal
-choices match the defaults every generated site ships with.
+It crawls several pages, runs a transparent rule set, and returns the evidence
+behind every scored tell. It is one of the readings shown in the shared
+[Readout console](../../apps/console).
 
-It is one of the readings in [Readout](../../apps/console), which runs every tool
-you pick against one address and lands them on a single verdict. This is
-Slopmeter's own section of that report:
+![A Slopmeter report with a Lightly Templated score and weighted tells](../../assets/slopmeter.png)
 
-![Slopmeter's section of the report: a Lightly Templated score of 74, and the
-weighted tells that produced it](../../assets/slopmeter.png)
+## Score
 
-*Reading [leakpeek-demo.vercel.app](https://leakpeek-demo.vercel.app/). Every
-point comes with the reason it was scored, so the number can be argued with.*
-
-## Who it is for
-
-Someone who shipped a site fast and wants to know whether it looks like everyone
-else's. Success is a stranger understanding the verdict, and why it landed there,
-within seconds, then trusting it enough to pass it on.
-
-## The verdict
-
-Score is **0–100 and HIGHER IS BETTER**, matching every other score in the
-suite and the app it hands off to.
+The score runs from 0 to 100, with higher being better.
 
 | Tier | Score | Meaning |
 |---|---|---|
-| Handmade | 81–100 | Somebody made decisions here |
-| Lightly Templated | 61–80 | Mostly deliberate, leaning on a few defaults |
-| Heavily Templated | 41–60 | The template is doing most of the talking |
-| Slop | 0–40 | Stock everything |
+| Handmade | 81-100 | Almost nothing here comes out of a box |
+| Lightly Templated | 61-80 | Mostly deliberate, with recognisable defaults |
+| Heavily Templated | 41-60 | Untouched defaults shape much of the result |
+| Slop | 0-40 | Stock choices dominate the page |
 
-## What it judges, and what it refuses to
+The engine subtracts penalties from 100. Evidence of deliberate work can return
+some points, but credits cannot erase more than half of the penalties. Every
+finding exposes its own weight so the result can be checked rather than trusted
+blindly.
 
-**It judges the OUTPUT, never the author and never the tool.** Which builder made
-a page is reported and scores exactly zero. A site built with an AI builder that
-someone actually designed scores clean; a hand-coded page of stock defaults does
-not. A detector that charges for the builder's fingerprint has to call the first
-one slop, and is wrong.
+## What counts
 
-Two further claims that hold because of how the engine is built:
+Slopmeter judges published output, not the author's identity or workflow.
 
-- **Rules are measured, not asserted.** Each rule's weight is validated against a
-  labelled corpus. Six intuitively appealing rules were measured *off* the score
-  because they fire more often on hand-built pages than generated ones.
-- **It crawls.** Breadth across a level and depth through levels, because the
-  tells worth finding are rarely on the front page.
+It checks copy, typography, colour, composition, component defaults, document
+quality, visible builder residue, working navigation, and signs of manual craft.
+A hand-coded page full of defaults may score poorly; a carefully designed page
+made with a builder may score well.
 
-Each tell carries a weight and its own evidence, and the report shows the
-arithmetic. A number you cannot see the reasons for is a number you cannot argue
-with.
+Builder residue can cost points when it remains in the output. Examples include
+generator metadata, builder-specific attributes, attribution badges, and
+builder-hosted addresses. Ordinary hosting provenance, including Vercel and
+Netlify, is reported without affecting the score.
 
-### What it cannot see
+The generated [rule catalogue](../../.documentation/RULES.md) contains the
+current list of checks.
 
-**No JavaScript is executed.** A client-rendered shell is read as a shell. The
-score is computed the same way either way, so a reader currently cannot tell a
-page that was fully read from one that was mostly empty. `caveats.isClientRendered`
-is returned by the API and not yet surfaced. That is a known, open gap, recorded
-here rather than hidden.
+## How pages are read
 
-## The rule pack is the product
+The engine parses HTML with `linkedom`; it does not search raw markup with one
+large regular expression. Structural rules inspect the parsed tree, which keeps
+text inside scripts from masquerading as visible content.
 
-Rule ids, categories and the catalogue **never cross the wire**. The report shows
-a tell's label and its evidence, which is what the visitor needs, and nothing
-that reconstructs the detector. There is no route that returns the rule pack, and
-`api/__tests__/wire-boundary.test.ts` exists because the boundary is invisible:
-nothing breaks and no screen looks wrong if a mapper quietly spreads the domain
-object onto a response.
+Rules that can use a page's own CSS inspect inline styles and inline `<style>`
+blocks as well as familiar utility classes. They deliberately do not search an
+entire linked bundle. Compiled styles often contain components the page never
+renders, which would create findings with no visible evidence.
 
-## Running it
+## Limits and confidence
+
+Slopmeter does not execute JavaScript. A client-rendered application may be read
+as an empty shell. The API records `caveats.isClientRendered`, but the console
+does not yet display that caveat.
+
+A crawl covering fewer than `EVIDENCE_FLOOR_PAGES` pages is marked
+`provisional`. The score still reports what the rules found, but the interface
+does not present its tier as a confident placement of the whole site. This flag
+measures crawl breadth, not whether each page contained a complete server render.
+
+Linked CSS bundles remain outside the fallback described above. Closing that
+gap requires evidence from a rendered DOM, not broader pattern matching.
+
+## Rule-pack boundary
+
+The rule pack is private implementation data. Rule ids, categories, definitions,
+and the complete weight table do not cross the API boundary. The response carries
+only the finding label, evidence needed by the report, and the cost assigned by
+the server.
+
+The console never imports `@lumioguard/slopmeter-core`. Wire-boundary tests guard
+against accidentally serialising a domain object with private fields.
+
+## Run locally
+
+Start the whole product:
 
 ```bash
 pnpm install
-pnpm dev            # every tool, plus the console on http://127.0.0.1:5200
+pnpm dev
 ```
 
-The console is the only page, so running this tool on its own means running its
-Worker and pointing the console at it:
+Or run only the Worker and shared console:
 
 ```bash
-pnpm --filter @lumioguard/slopmeter-api dev   # http://127.0.0.1:8810
-pnpm --filter @lumioguard/console dev        # http://127.0.0.1:5200
+pnpm --filter @lumioguard/slopmeter-api dev
+pnpm --filter @lumioguard/console dev
 ```
 
-Turn the other readings off in the picker, or put `?tools=slopmeter` in the
-address. The console proxies `/slopmeter/api` to the Worker above.
+The console is at `http://127.0.0.1:5200`; the Worker is at
+`http://127.0.0.1:8810`. Use the Slopmeter page or add `?tools=slopmeter` to the
+scan URL.
 
-```
+```text
 POST /api/crawl  { "url": "example.com", "maxPages": 15, "depth": 2 }
-POST /api/scan   { "url": "example.com" }        one page
+POST /api/scan   { "url": "example.com" }
 GET  /api/health
 ```
 
-## How it is built
+## Package layout
 
+```text
+core/
+  analysis/      parsed document and style evidence
+  rules/         definitions, weights, and registry
+  scoring/       findings to score, tier, and headline
+  crawl/         bounded traversal and site roll-up
+api/
+  Cloudflare Worker responsible for fetching, screenshots, and time
 ```
-core/   the engine. Isomorphic, no I/O, no network, so the suite runs offline
-  rules/       the catalogue, its weights and the registry
-  analysis/    the page, parsed into what rules ask about
-  scoring/     tells → score, tier, headline
-  crawl/       breadth and depth across a site
-api/    Cloudflare Worker (Hono). Owns fetching, screenshots and the clock
-```
 
-Its surface lives with the other tools' in the console, at
-`apps/console/src/tools/slopmeter/`: a client, the report panels, its ink, and the
-descriptor that puts it in the picker and the consolidated score.
+Shared contracts and domain terms live in `@lumioguard/shared`. The console
+surface lives in `apps/console/src/tools/slopmeter`.
 
-`core` never imports from `api`, and the console never imports `core`, which
-would ship the whole rule pack to the browser where anyone could read it.
-Anything both need lives in `@lumioguard/shared`, and a number the surface needs
-from the scorer, such as what a finding cost, is put on the wire by the mapper
-rather than recomputed from a second copy of the table.
+## Parity suite
 
-The drawn surface, transport and browser-side plumbing are shared with the other
-tools via `@lumioguard/ui`, `@lumioguard/api-core` and `@lumioguard/web-core`.
+The core can compare its scores with the earlier JavaScript detector using a
+cached external corpus. Set `SLOPMETER_PARITY_ROOT` to that corpus to enable the
+suite. Without it, parity tests skip.
 
-### The parity suite
-
-`core` carries a parity test that re-scores a cached corpus against the
-JavaScript detector this engine was ported from, and requires **exact** matches.
-That corpus is not in this repository, so the suite skips itself unless
-`SLOPMETER_PARITY_ROOT` points at a checkout of it.
-
-Where it runs, it is the safety net for any engine change: if it drifts, the
-change altered scoring, whether or not that was the intent. Never retune the
-fixtures to make it pass.
+Matches are exact. A mismatch means scoring changed, even if the edit looked
+structural. Do not alter fixtures solely to make the suite pass.
 
 ## Configuration
 
-| Variable | Where | Default |
+| Variable | Used by | Default |
 |---|---|---|
-| `ALLOWED_ORIGINS` | api | `*` in development |
-| `SLOPMETER_INGEST_SECRET` | api | unset (nothing is sent anywhere) |
-| `LUMIOGUARD_API_BASE_URL` | api | unset (required alongside the secret) |
-| `VITE_SLOPMETER_API_URL` | console | empty (the console proxies `/slopmeter/api`) |
-| `VITE_LUMIOGUARD_APP_URL` | console | unset (no button, no offer, no wordmark) |
-| `VITE_POSTHOG_KEY` | console | unset (no analytics: nothing loads, nothing is sent) |
-| `SLOPMETER_PARITY_ROOT` | tests | unset (the parity suite skips) |
+| `ALLOWED_ORIGINS` | Worker | `*` during development |
+| `SLOPMETER_INGEST_SECRET` | Worker | unset; no reading is recorded |
+| `LUMIOGUARD_API_BASE_URL` | Worker | unset; required with the ingest secret |
+| `VITE_SLOPMETER_API_URL` | Console | relative local proxy |
+| `VITE_LUMIOGUARD_APP_URL` | Console | unset; no hand-off or branding |
+| `VITE_POSTHOG_KEY` | Console | unset; analytics disabled |
+| `SLOPMETER_PARITY_ROOT` | Tests | unset; parity skipped |
 
-All optional; see `api/.dev.vars.example` and `apps/console/.env.example`. Slopmeter is a
-complete tool with none of them set. With `VITE_LUMIOGUARD_APP_URL` unset, which
-is the default, the word LumioGuard does not appear on the page at all.
-
-The two api variables are required together: a secret without an address records
-nothing, deliberately, so a fork cannot post its readings to an API it does not
-own. Set all three and the report becomes the front of the
-[LumioGuard](https://lumioguard.dev) funnel, where a completed reading turns into
-tracked issues.
+All variables are optional for local use. See `api/.dev.vars.example` and
+`../../apps/console/.env.example`.
 
 ## Principles
 
-1. **Judge the output, never the author.** The tiers describe what shipped.
-2. **Every number shows its reasons.** A score without its tells is an opinion.
-3. **Weights are measured against a corpus, not argued for.**
-4. **The rule pack does not cross the wire.**
+1. Score observable output, not presumed authorship.
+2. Show the evidence and arithmetic behind the verdict.
+3. Test rules against pages that should match and pages that must not.
+4. Keep the detector server-side and the engine free of I/O.

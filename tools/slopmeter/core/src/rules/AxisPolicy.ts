@@ -4,24 +4,24 @@ import type { Rule } from './Rule.js';
 
 /** Findings that describe our own blindness rather than the page. */
 export const RENDER_DEPENDENT_RULES: ReadonlySet<string> = new Set([
-  'structure.thin-shell',
-  'structure.no-h1',
-  'structure.div-soup',
-  'structure.oversized-payload',
+  'document.thin-shell',
+  'document.no-title-heading',
+  'document.generic-boxes',
+  'document.heavy-payload',
   'impeccable.numbered-section-labels',
   'impeccable.shape-assembled-illustration',
 ]);
 
 /** Reported, never scored. */
 export const QUALITY_AXIS_RULES: ReadonlySet<string> = new Set([
-  'quality.missing-meta',
-  'quality.no-alt-text',
-  'quality.missing-lang',
-  'quality.skipped-heading',
-  'quality.console-log-inline',
-  'quality.huge-dom',
-  'quality.inline-style-soup',
-  'quality.duplicate-headings',
+  'quality.no-social-card',
+  'quality.unlabelled-images',
+  'quality.no-language',
+  'quality.heading-gap',
+  'quality.debug-logging',
+  'quality.heavy-dom',
+  'quality.inline-styles',
+  'quality.repeated-headings',
   'impeccable.undersized-functional-text',
   'impeccable.all-caps-body',
   'impeccable.wide-tracking-body',
@@ -30,14 +30,14 @@ export const QUALITY_AXIS_RULES: ReadonlySet<string> = new Set([
   'impeccable.gray-on-colored',
 
   // Measured off the axis: fires on 0% of generated pages, 18% of hand-built.
-  'structure.oversized-payload',
+  'document.heavy-payload',
   // 0% vs 16%: the generated templates all ship a viewport tag.
-  'structure.no-viewport',
+  'document.no-viewport',
   // 0.6% vs 17%: real sites ship far more href="#" than templates do.
-  'leftover.placeholder-links',
+  'unfinished.dead-links',
   'impeccable.flat-type-hierarchy',
   'impeccable.hover-scale-transform',
-  'craft.layout-transition',
+  'finish.layout-animation',
 ]);
 
 /**
@@ -46,10 +46,10 @@ export const QUALITY_AXIS_RULES: ReadonlySet<string> = new Set([
  * looks, so they are reported as context and score zero.
  */
 const INFORMATIONAL_RULES: ReadonlySet<string> = new Set([
-  'default.radix',
-  'default.vite-build',
-  'default.next-default',
-  'default.tailwind-cdn',
+  'stock.primitives',
+  'stock.vite-scaffold',
+  'stock.next-scaffold',
+  'stock.utility-cdn',
 ]);
 
 export interface AxisPolicyOptions {

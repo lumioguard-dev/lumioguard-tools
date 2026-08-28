@@ -13,7 +13,7 @@ export { Score } from './domain/Score.js';
 export { ScoreAxis, type ScoreAxisValue } from './domain/ScoreAxis.js';
 export { SCORE_MAX, SCORE_MIN, TIER_BANDS, Tier, type TierBand } from '@lumioguard/shared';
 
-export { AxisPolicy, QUALITY_AXIS_RULES, RENDER_DEPENDENT_RULES } from './rules/AxisPolicy.js';
+export { AxisPolicy } from './rules/AxisPolicy.js';
 export { defineRule, PredicateRule, Rule, type RuleSpec } from './rules/Rule.js';
 export { RuleRegistry, type RuleFilter } from './rules/RuleRegistry.js';
 export { createDefaultRegistry } from './rules/definitions/index.js';

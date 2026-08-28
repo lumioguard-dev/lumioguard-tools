@@ -1,18 +1,16 @@
 import { RuleCategory } from '../../domain/RuleCategory.js';
 import { type Rule, defineRule } from '../Rule.js';
-import { evidence } from '../support.js';
+import { countMatches, evidence } from '../support.js';
 
 /**
- * Stock defaults a visitor can SEE score; invisible build machinery does not.
- * A Radix primitive, a Vite chunk name and a `_next` path are invisible, so
- * those four are routed to the provenance axis by `AxisPolicy`. Stock shadcn
- * tokens and an untouched lucide set are literally the default look, so they
- * stay scored.
+ * Stock defaults a visitor can SEE score; invisible build machinery does not, so
+ * `AxisPolicy` routes the Radix, Vite and `_next` rules to provenance. Stock
+ * shadcn tokens and an untouched lucide set are the default look, so they score.
  */
-export const defaultStackRules: readonly Rule[] = [
+export const stockRules: readonly Rule[] = [
   defineRule({
-    id: 'default.tailwind-cdn',
-    category: RuleCategory.Default,
+    id: 'stock.utility-cdn',
+    category: RuleCategory.Stock,
     weight: 14,
     label: 'Tailwind loaded from the play CDN',
     phrase: 'Tailwind straight off the play CDN',
@@ -21,8 +19,8 @@ export const defaultStackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'default.shadcn',
-    category: RuleCategory.Default,
+    id: 'stock.component-theme',
+    category: RuleCategory.Stock,
     weight: 12,
     label: 'Stock shadcn/ui theme values',
     phrase: 'stock shadcn values',
@@ -45,8 +43,8 @@ export const defaultStackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'default.radix',
-    category: RuleCategory.Default,
+    id: 'stock.primitives',
+    category: RuleCategory.Stock,
     weight: 10,
     label: 'Radix UI components',
     phrase: 'Radix left exactly as it arrives',
@@ -58,22 +56,31 @@ export const defaultStackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'default.lucide',
-    category: RuleCategory.Default,
+    id: 'stock.icon-set',
+    category: RuleCategory.Stock,
     weight: 8,
     label: 'The default lucide icon set, untouched',
     phrase: 'untouched stock icons',
-    evaluate: (ctx) =>
-      evidence(
+    evaluate: (ctx) => {
+      if (
         ctx.usesClass(/\blucide(?:-[a-z-]+)?\b/) ||
-          /lucide-react|lucide\.dev/i.test(ctx.document.assetRefs),
-        'every icon comes straight from the stock set',
-      ),
+        /lucide-react|lucide\.dev/i.test(ctx.document.assetRefs)
+      ) {
+        return 'every icon comes straight from the stock set';
+      }
+      // The set's own signature, for a page that strips the class name: a 24px
+      // box, 2px round-capped strokes, no fill. Several of them, not one.
+      const signature = countMatches(
+        ctx.html,
+        /<svg\b[^>]*\bviewBox\s*=\s*["']0 0 24 24["'][^>]*\bstroke-width\s*=\s*["']2["'][^>]*\bstroke-linecap\s*=\s*["']round["']/gi,
+      );
+      return evidence(signature >= 3, 'every icon comes straight from the stock set');
+    },
   }),
 
   defineRule({
-    id: 'default.vite-build',
-    category: RuleCategory.Default,
+    id: 'stock.vite-scaffold',
+    category: RuleCategory.Stock,
     weight: 8,
     label: 'A default Vite build',
     phrase: 'a Vite scaffold nobody changed',
@@ -85,8 +92,8 @@ export const defaultStackRules: readonly Rule[] = [
   }),
 
   defineRule({
-    id: 'default.next-default',
-    category: RuleCategory.Default,
+    id: 'stock.next-scaffold',
+    category: RuleCategory.Stock,
     weight: 6,
     label: 'A stock Next.js scaffold',
     phrase: 'the Next.js scaffold as it shipped',
