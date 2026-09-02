@@ -94,6 +94,16 @@ function member(block, name) {
   return (dot === -1 ? token : token.slice(dot + 1)) || null;
 }
 
+/** The `[...]` a named declaration is built from, as its raw text. */
+function listBody(path, name) {
+  const source = read(join(ROOT, path));
+  const at = source.indexOf(name);
+  if (at === -1) return '';
+  const open = source.indexOf('[', at);
+  const close = source.indexOf('])', open);
+  return open === -1 || close === -1 ? '' : source.slice(open, close);
+}
+
 function filesUnder(dir) {
   if (!existsSync(dir)) return [];
   return readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
@@ -131,6 +141,50 @@ function collect(dirs, marker, idKey, titleKeys, groupKey, weightKey) {
   return out;
 }
 
+const AXIS_POLICY = 'tools/slopmeter/core/src/rules/AxisPolicy.ts';
+const RULE_CATEGORY = 'tools/slopmeter/core/src/domain/RuleCategory.ts';
+
+/**
+ * `AxisPolicy` decides what a slop rule may do to a score, so the grouping below
+ * reads its sets rather than restating them. `Unassessable` is left out: it needs
+ * an option the Worker never passes, so no published scan produces one.
+ */
+const quoted = (body) => new Set([...body.matchAll(/'([^']+)'/g)].map((match) => match[1]));
+
+const UNSCORED_RULES = new Set([
+  ...quoted(listBody(AXIS_POLICY, 'QUALITY_AXIS_RULES')),
+  ...quoted(listBody(AXIS_POLICY, 'INFORMATIONAL_RULES')),
+]);
+
+const UNSCORED_CATEGORIES = new Set(
+  [...listBody(RULE_CATEGORY, 'PROVENANCE_CATEGORIES').matchAll(/RuleCategory\.(\w+)/g)].map(
+    (match) => match[1],
+  ),
+);
+
+function slopGroup(rule) {
+  if (UNSCORED_RULES.has(rule.id) || UNSCORED_CATEGORIES.has(rule.group)) return 'unscored';
+  return (rule.weight ?? 0) < 0 ? 'credit' : 'penalty';
+}
+
+const SLOP_GROUPS = [
+  {
+    key: 'penalty',
+    heading: 'Costs points',
+    note: 'Each of these subtracts its weight from 100.',
+  },
+  {
+    key: 'credit',
+    heading: 'Earns points back',
+    note: 'Evidence of deliberate work. Together these can return at most half of what the penalties took.',
+  },
+  {
+    key: 'unscored',
+    heading: 'Reported, never scored',
+    note: 'Shown with the rest of the evidence and worth zero: real defects the report should still name, tells measured to fire more on hand-built pages than generated ones, and where the site was deployed.',
+  },
+];
+
 /**
  * `name` is what the site's Tools menu calls each one, so a reader arriving from
  * lumioguard.dev finds the same word here. The engine folder keeps its own name.
@@ -140,13 +194,15 @@ const TOOLS = [
     name: 'AI slop',
     slug: 'slopmeter',
     path: '/tools/ai-slop-check',
+    groups: SLOP_GROUPS,
+    groupOf: slopGroup,
     rules: collect(
       ['tools/slopmeter/core/src/rules/definitions'],
       'defineRule({',
       'id',
       ['label'],
-      null,
-      null,
+      'category',
+      'weight',
     ),
   },
   {
@@ -207,9 +263,26 @@ function lines(tool) {
     }
     if (!text || seen.has(text.toLowerCase())) continue;
     seen.add(text.toLowerCase());
-    out.push(text);
+    out.push({ text, group: tool.groupOf ? tool.groupOf(rule) : null });
   }
   return out;
+}
+
+/** A group with nothing in it is dropped, so an emptied set stops appearing here. */
+function grouped(tool, items) {
+  if (!tool.groups) return [...items.map((item) => `- ${item.text}`), ''];
+  return tool.groups.flatMap((group) => {
+    const texts = items.filter((item) => item.group === group.key).map((item) => item.text);
+    if (texts.length === 0) return [];
+    return [
+      `### ${group.heading} (${texts.length})`,
+      '',
+      group.note,
+      '',
+      ...texts.map((text) => `- ${text}`),
+      '',
+    ];
+  });
 }
 
 const sections = TOOLS.map((tool) => {
@@ -233,8 +306,7 @@ const doc = [
     // are one line here, which is what a reader sees in the report too.
     `${s.count} things it looks for, at [\`${s.tool.path}\`](https://lumioguard.dev${s.tool.path}). What they mean and how they score is in [\`tools/${s.tool.slug}/README.md\`](../tools/${s.tool.slug}/README.md).`,
     '',
-    ...s.items.map((text) => `- ${text}`),
-    '',
+    ...grouped(s.tool, s.items),
   ]),
 ].join('\n');
 

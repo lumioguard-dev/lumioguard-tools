@@ -10,6 +10,10 @@ when this file and the engines disagree.
 
 112 things it looks for, at [`/tools/ai-slop-check`](https://lumioguard.dev/tools/ai-slop-check). What they mean and how they score is in [`tools/slopmeter/README.md`](../tools/slopmeter/README.md).
 
+### Costs points (76)
+
+Each of these subtracts its weight from 100.
+
 - A bento grid
 - A blurry coloured glow behind the page
 - The indigo-to-violet gradient every AI tool ships
@@ -22,10 +26,8 @@ when this file and the engines disagree.
 - Emoji used as decoration
 - Navigation links that go nowhere
 - Almost no text in the page itself
-- A very heavy page
 - A pile-up of third-party trackers
 - Generic boxes instead of real structure
-- Not set up for phones
 - No main heading
 - No canonical address
 - A thick coloured stripe down one edge
@@ -42,16 +44,9 @@ when this file and the engines disagree.
 - Body text set too tight to read comfortably
 - Text too small to read comfortably
 - Justified text without hyphenation
-- Animating width and height, which stutters
 - The italic serif headline of the moment
 - Copy written in clipped slogans
 - Cards inside cards
-- Real pages behind the front door
-- Links to its own source
-- Someone actually wrote this
-- Metadata that was thought about
-- Type chosen, not inherited
-- A favicon of its own
 - A hairline border under a big soft shadow
 - A little pill above a giant headline
 - Spotlight glows used as decoration
@@ -60,20 +55,12 @@ when this file and the engines disagree.
 - A whole sentence set at poster size
 - Letters squeezed together
 - Sections numbered 01, 02, 03
-- Things that grow when you point at them
 - A fake blinking cursor
 - The warm cream background of the moment
 - Every gap the same size
 - Illustrations built from basic shapes
-- Every text size nearly the same
 - One font doing every job
 - The "it is just theatre" line
-- Text too small to read
-- Long passages in capitals
-- Body text spaced too wide to read
-- The same words repeated inside one card
-- Text too faint against its background
-- Grey text on a coloured background
 - Built with v0
 - Built with Lovable
 - Built with Bolt
@@ -84,28 +71,10 @@ when this file and the engines disagree.
 - Made with Wix
 - AI site-builder artifact
 - Builder attribution badge
-- Hosted on Vercel
-- Hosted on Netlify
-- Supabase backend
-- AI-build-adjacent backend
-- Classic vibe-coding stack
-- Stock shadcn component stack
-- No description for search or sharing
-- Images with no alt text
 - No favicon of its own
 - A placeholder page title
-- Page language never declared
-- Heading levels skip a step
-- Debug logging left switched on
-- An unusually complex page
-- Styles written inline all over the markup
-- The same heading repeated over and over
-- Tailwind loaded from the play CDN
 - Stock shadcn/ui theme values
-- Radix UI components
 - The default lucide icon set, untouched
-- A default Vite build
-- A stock Next.js scaffold
 - Chatbot citation codes left in the text
 - A chatbot reply left in the copy
 - The scaffold own title, never changed
@@ -113,7 +82,6 @@ when this file and the engines disagree.
 - A placeholder company name
 - An unfilled template slot
 - Raw markdown showing as text
-- Links that go nowhere
 - Placeholder images
 - Marketing buzzwords
 - Em-dashes on almost every line
@@ -122,6 +90,52 @@ when this file and the engines disagree.
 - Filler phrases that say nothing
 - The it-is-not-just-X-it-is-Y construction
 - Stiff connectors: moreover, furthermore
+
+### Earns points back (6)
+
+Evidence of deliberate work. Together these can return at most half of what the penalties took.
+
+- Real pages behind the front door
+- Links to its own source
+- Someone actually wrote this
+- Metadata that was thought about
+- Type chosen, not inherited
+- A favicon of its own
+
+### Reported, never scored (30)
+
+Shown with the rest of the evidence and worth zero: real defects the report should still name, tells measured to fire more on hand-built pages than generated ones, and where the site was deployed.
+
+- A very heavy page
+- Not set up for phones
+- Animating width and height, which stutters
+- Things that grow when you point at them
+- Every text size nearly the same
+- Text too small to read
+- Long passages in capitals
+- Body text spaced too wide to read
+- The same words repeated inside one card
+- Text too faint against its background
+- Grey text on a coloured background
+- Hosted on Vercel
+- Hosted on Netlify
+- Supabase backend
+- AI-build-adjacent backend
+- Classic vibe-coding stack
+- Stock shadcn component stack
+- No description for search or sharing
+- Images with no alt text
+- Page language never declared
+- Heading levels skip a step
+- Debug logging left switched on
+- An unusually complex page
+- Styles written inline all over the markup
+- The same heading repeated over and over
+- Tailwind loaded from the play CDN
+- Radix UI components
+- A default Vite build
+- A stock Next.js scaffold
+- Links that go nowhere
 
 ## Security
 

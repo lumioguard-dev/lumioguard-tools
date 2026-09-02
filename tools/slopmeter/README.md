@@ -39,8 +39,15 @@ generator metadata, builder-specific attributes, attribution badges, and
 builder-hosted addresses. Ordinary hosting provenance, including Vercel and
 Netlify, is reported without affecting the score.
 
+Not every check moves the score. A finding is always reported; its axis decides
+whether it can count. Penalties and credits are scored. Two other groups are
+reported at zero: real defects a reader should still see, such as missing alt
+text or an undeclared language, and tells measured to fire more often on
+hand-built pages than on generated ones. Provenance sits there too, which is why
+the hosting above is named without being charged.
+
 The generated [rule catalogue](../../.documentation/RULES.md) contains the
-current list of checks.
+current list of checks, grouped by what each one does to the score.
 
 ## How pages are read
 
